@@ -1,9 +1,9 @@
-import stihlLogo from "../assets/marcas/stihl.png";
-import hondaLogo from "../assets/marcas/honda.png";
-import husqvarnaLogo from "../assets/marcas/Husqvarna.png";
-import mebaLogo from "../assets/marcas/meba.png";
-import ptkLogo from "../assets/marcas/PTK.png";
-import truperLogo from "../assets/marcas/truper.png";
+import stihlLogo from "../assets/Marcas/stihl.png";
+import hondaLogo from "../assets/Marcas/honda.png";
+import husqvarnaLogo from "../assets/Marcas/Husqvarna.png";
+import mebaLogo from "../assets/Marcas/meba.png";
+import ptkLogo from "../assets/Marcas/PTK.png";
+import truperLogo from "../assets/Marcas/truper.png";
 
 function Marcas() {
   const marcas = [
