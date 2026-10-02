@@ -7,7 +7,7 @@ import {
   guardarProducto,
   actualizarProducto,
   obtenerProductoPorId,
-} from "../services/productoService";
+} from "../Services/productoService";
 
 import { obtenerCategorias } from "../Services/categoriaService";
 

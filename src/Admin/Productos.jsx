@@ -4,7 +4,7 @@ import MenuAdmin from "../Components/MenuAdmin";
 import {
   obtenerProductos,
   eliminarProducto,
-} from "../services/productoService";
+} from "../Services/productoService";
 
 function Productos() {
   const [productos, setProductos] = useState([]);
