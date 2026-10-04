@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/api/categorias";
+const API_URL = "https://grupocomercialjg-backend.onrender.com/api/categorias";
 
 export const obtenerCategorias = async () => {
   const response = await fetch(API_URL);

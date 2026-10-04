@@ -1,5 +1,4 @@
-const API_URL = "http://localhost:8080/api/auth";
-
+const API_URL = "https://grupocomercialjg-backend.onrender.com/api/auth";
 export const login = async (correo, password) => {
   const response = await fetch(`${API_URL}/login`, {
     method: "POST",

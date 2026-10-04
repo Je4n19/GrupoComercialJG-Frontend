@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/configuracion";
+const API_URL =
+  "https://grupocomercialjg-backend.onrender.com/api/configuracion";
 
 export const obtenerConfiguracion = async () => {
   const response = await axios.get(API_URL);
