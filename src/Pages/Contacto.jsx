@@ -39,90 +39,107 @@ ${formulario.mensaje}
 
   return (
     <>
-      {/* Banner */}
+      {/* HERO */}
 
-      <section className="bg-gradient-to-r from-orange-600 to-orange-500 text-white py-20">
+      <section className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white py-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-5xl font-bold">Contáctanos</h1>
+          <span className="bg-white/20 px-5 py-2 rounded-full font-semibold">
+            Grupo Comercial J&G
+          </span>
 
-          <p className="text-xl mt-4 text-orange-100">
-            Grupo Comercial J&G - Soluciones en maquinaria, equipos y repuestos.
+          <h1 className="text-6xl font-black mt-8">Contáctanos</h1>
+
+          <p className="text-xl text-orange-100 mt-6 max-w-3xl mx-auto">
+            Estamos listos para ayudarte con maquinaria, repuestos, cotizaciones
+            y asesoría técnica especializada.
           </p>
         </div>
       </section>
 
-      {/* Información */}
+      {/* TARJETAS */}
 
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h3 className="text-2xl font-bold text-orange-600 mb-4">
-              WhatsApp
-            </h3>
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="bg-white rounded-3xl shadow-xl p-8 border-t-4 border-green-500">
+            <div className="text-5xl mb-5">📱</div>
+
+            <h3 className="text-2xl font-bold mb-4">WhatsApp</h3>
 
             <p className="text-gray-600 mb-4">
-              Atención rápida para cotizaciones y consultas.
+              Atención inmediata para consultas y cotizaciones.
             </p>
 
-            <p className="font-bold text-xl">+51 979 501 557</p>
+            <p className="text-2xl font-black text-green-600">
+              +51 979 501 557
+            </p>
 
             <a
               href="https://wa.me/51979501557"
               target="_blank"
               rel="noreferrer"
-              className="inline-block mt-5 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700"
+              className="inline-block mt-6 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition"
             >
               Escribir Ahora
             </a>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h3 className="text-2xl font-bold text-orange-600 mb-4">Horario</h3>
+          <div className="bg-white rounded-3xl shadow-xl p-8 border-t-4 border-orange-500">
+            <div className="text-5xl mb-5">🕒</div>
 
-            <p className="mb-3">Lunes - Viernes</p>
+            <h3 className="text-2xl font-bold mb-4">Horarios</h3>
 
-            <p className="font-bold">08:00 AM - 06:00 PM</p>
+            <p className="text-gray-600 mb-3">Lunes a Viernes</p>
 
-            <hr className="my-4" />
+            <p className="font-bold text-xl">08:00 AM - 06:00 PM</p>
 
-            <p className="mb-3">Sábados</p>
+            <hr className="my-5" />
 
-            <p className="font-bold">08:00 AM - 01:00 PM</p>
+            <p className="text-gray-600 mb-3">Sábados</p>
+
+            <p className="font-bold text-xl">08:00 AM - 01:00 PM</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h3 className="text-2xl font-bold text-orange-600 mb-4">Empresa</h3>
+          <div className="bg-white rounded-3xl shadow-xl p-8 border-t-4 border-orange-500">
+            <div className="text-5xl mb-5">🏢</div>
 
-            <p className="mb-3">Grupo Comercial J&G</p>
-
-            <p className="mb-3">
-              Venta de maquinaria agrícola, forestal e industrial.
-            </p>
+            <h3 className="text-2xl font-bold mb-4">Grupo Comercial J&G</h3>
 
             <p className="text-gray-600">
-              Repuestos originales y asesoría especializada.
+              Especialistas en maquinaria agrícola, forestal e industrial.
             </p>
+
+            <div className="mt-5 space-y-2">
+              <p>✅ Productos originales</p>
+              <p>✅ Repuestos garantizados</p>
+              <p>✅ Soporte técnico</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Formulario */}
+      {/* FORMULARIO */}
 
-      <section className="bg-gray-100 py-16">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="bg-white rounded-3xl shadow-xl p-10">
-            <h2 className="text-4xl font-bold text-center mb-8">
-              Solicita Información
-            </h2>
+      <section className="bg-orange-50 py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="bg-white rounded-[40px] shadow-2xl p-10 md:p-14">
+            <div className="text-center mb-10">
+              <h2 className="text-5xl font-black text-gray-900">
+                Solicita una Cotización
+              </h2>
 
-            <form onSubmit={enviarWhatsApp} className="space-y-5">
+              <p className="text-gray-600 mt-4">
+                Completa el formulario y te responderemos por WhatsApp.
+              </p>
+            </div>
+
+            <form onSubmit={enviarWhatsApp} className="space-y-6">
               <input
                 type="text"
                 name="nombre"
                 value={formulario.nombre}
                 onChange={handleChange}
                 placeholder="Nombre Completo"
-                className="w-full border p-4 rounded-lg"
+                className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-orange-500 outline-none"
                 required
               />
 
@@ -132,7 +149,7 @@ ${formulario.mensaje}
                 value={formulario.correo}
                 onChange={handleChange}
                 placeholder="Correo Electrónico"
-                className="w-full border p-4 rounded-lg"
+                className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-orange-500 outline-none"
                 required
               />
 
@@ -141,24 +158,24 @@ ${formulario.mensaje}
                 name="telefono"
                 value={formulario.telefono}
                 onChange={handleChange}
-                placeholder="Teléfono"
-                className="w-full border p-4 rounded-lg"
+                placeholder="Número de Teléfono"
+                className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-orange-500 outline-none"
                 required
               />
 
               <textarea
-                rows="5"
+                rows="6"
                 name="mensaje"
                 value={formulario.mensaje}
                 onChange={handleChange}
                 placeholder="Escribe tu consulta..."
-                className="w-full border p-4 rounded-lg"
+                className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-orange-500 outline-none"
                 required
-              ></textarea>
+              />
 
               <button
                 type="submit"
-                className="w-full bg-orange-500 text-white py-4 rounded-lg font-bold hover:bg-orange-600 transition"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-5 rounded-xl font-bold text-lg transition"
               >
                 Enviar Consulta por WhatsApp
               </button>

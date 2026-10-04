@@ -13,7 +13,7 @@ function Repuestos() {
   const cargarRepuestos = async () => {
     try {
       const data = await obtenerRepuestos();
-      setRepuestos(data);
+      setRepuestos(data || []);
     } catch (error) {
       console.error("Error al cargar repuestos:", error);
     }
@@ -30,106 +30,137 @@ function Repuestos() {
     }
   };
 
+  const stockTotal = repuestos.reduce(
+    (acc, item) => acc + (item.stock || 0),
+    0,
+  );
+
+  const valorInventario = repuestos.reduce(
+    (acc, item) => acc + (item.precio || 0) * (item.stock || 0),
+    0,
+  );
+
   return (
     <div className="flex">
       <MenuAdmin />
 
-      <div className="flex-1 min-h-screen bg-gray-100 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-800">
-              Gestión de Repuestos
-            </h1>
+      <div className="flex-1 min-h-screen bg-orange-50">
+        {/* HEADER */}
 
-            <p className="text-gray-500 mt-2">
-              Administra los repuestos registrados
-            </p>
-          </div>
+        <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white">
+          <div className="px-10 py-10 flex justify-between items-center">
+            <div>
+              <p className="uppercase tracking-widest text-orange-100 text-sm">
+                Administración
+              </p>
 
-          <Link
-            to="/admin/repuestos/nuevo"
-            className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700"
-          >
-            + Nuevo Repuesto
-          </Link>
-        </div>
+              <h1 className="text-5xl font-black mt-2">Gestión de Repuestos</h1>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <p className="text-gray-500">Repuestos</p>
+              <p className="mt-3 text-orange-100">
+                Control de repuestos y accesorios.
+              </p>
+            </div>
 
-            <h2 className="text-4xl font-bold mt-2">{repuestos.length}</h2>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <p className="text-gray-500">Stock Total</p>
-
-            <h2 className="text-4xl font-bold mt-2">
-              {repuestos.reduce((acc, item) => acc + item.stock, 0)}
-            </h2>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <p className="text-gray-500">Valor Inventario</p>
-
-            <h2 className="text-4xl font-bold mt-2 text-green-600">
-              S/.{" "}
-              {repuestos.reduce(
-                (acc, item) => acc + item.precio * item.stock,
-                0,
-              )}
-            </h2>
+            <Link
+              to="/admin/repuestos/nuevo"
+              className="bg-white text-orange-600 px-8 py-4 rounded-2xl font-bold shadow-lg hover:scale-105 transition"
+            >
+              + Nuevo Repuesto
+            </Link>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-green-600 text-white">
-              <tr>
-                <th className="p-4">ID</th>
-                <th>Nombre</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+        <div className="p-8">
+          {/* KPIS */}
 
-            <tbody>
-              {repuestos.map((repuesto) => (
-                <tr key={repuesto.id} className="border-b">
-                  <td className="p-4">{repuesto.id}</td>
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-3xl shadow-xl p-8">
+              <p className="text-gray-500">Repuestos Registrados</p>
 
-                  <td>{repuesto.nombre}</td>
+              <h2 className="text-5xl font-black text-orange-600 mt-3">
+                {repuestos.length}
+              </h2>
+            </div>
 
-                  <td>S/. {repuesto.precio}</td>
+            <div className="bg-white rounded-3xl shadow-xl p-8">
+              <p className="text-gray-500">Stock Total</p>
 
-                  <td>{repuesto.stock}</td>
+              <h2 className="text-5xl font-black text-orange-600 mt-3">
+                {stockTotal}
+              </h2>
+            </div>
 
-                  <td>
-                    <div className="flex justify-center gap-2">
-                      <Link
-                        to={`/admin/repuestos/editar/${repuesto.id}`}
-                        className="bg-blue-500 text-white px-3 py-2 rounded-lg"
-                      >
-                        Editar
-                      </Link>
+            <div className="bg-white rounded-3xl shadow-xl p-8">
+              <p className="text-gray-500">Valor Inventario</p>
 
-                      <button
-                        onClick={() => handleEliminar(repuesto.id)}
-                        className="bg-red-500 text-white px-3 py-2 rounded-lg"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              <h2 className="text-4xl font-black text-green-600 mt-3">
+                S/. {valorInventario.toFixed(2)}
+              </h2>
+            </div>
+          </div>
 
-        <div className="mt-6 text-gray-500">
-          Mostrando {repuestos.length} repuestos registrados.
+          {/* TABLA */}
+
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+            <div className="bg-orange-600 text-white px-8 py-5">
+              <h2 className="text-2xl font-bold">Repuestos Registrados</h2>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-orange-50">
+                  <tr>
+                    <th className="p-5 text-left">ID</th>
+                    <th className="text-left">Nombre</th>
+                    <th className="text-left">Precio</th>
+                    <th className="text-left">Stock</th>
+                    <th className="text-center">Acciones</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {repuestos.map((repuesto) => (
+                    <tr
+                      key={repuesto.id}
+                      className="border-b hover:bg-orange-50 transition"
+                    >
+                      <td className="p-5">{repuesto.id}</td>
+
+                      <td className="font-semibold">{repuesto.nombre}</td>
+
+                      <td className="font-bold text-green-600">
+                        S/. {repuesto.precio}
+                      </td>
+
+                      <td>{repuesto.stock}</td>
+
+                      <td>
+                        <div className="flex justify-center gap-3">
+                          <Link
+                            to={`/admin/repuestos/editar/${repuesto.id}`}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+                          >
+                            Editar
+                          </Link>
+
+                          <button
+                            onClick={() => handleEliminar(repuesto.id)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p className="mt-6 text-gray-500">
+            Mostrando {repuestos.length} repuestos registrados.
+          </p>
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import Servicios from "../Components/Servicios";
 import Nosotros from "../Components/Nosotros";
 import ContactoRapido from "../Components/ContactoRapido";
 import Footer from "../Components/Footer";
+import Ventajas from "../Components/Ventajas";
 import CategoriasHome from "../Components/CategoriasHome";
 import { obtenerProductos } from "../Services/productoService";
 
@@ -38,6 +39,8 @@ function Inicio() {
       <Marcas />
 
       <ProductosDestacados productos={productos.slice(0, 6)} />
+
+      <Ventajas />
 
       <Servicios />
 

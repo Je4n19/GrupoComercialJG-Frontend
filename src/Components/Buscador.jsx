@@ -1,6 +1,6 @@
 function Buscador({ valor, onChange }) {
   return (
-    <div className="relative w-full">
+    <div className="relative group">
       <input
         type="text"
         placeholder="Buscar maquinaria, repuestos o marcas..."
@@ -8,24 +8,54 @@ function Buscador({ valor, onChange }) {
         onChange={(e) => onChange(e.target.value)}
         className="
           w-full
-          border
-          border-gray-300
-          rounded-xl
+          bg-white
+          border-2
+          border-gray-200
+          rounded-2xl
           py-4
-          pl-12
-          pr-4
+          pl-14
+          pr-5
           text-gray-700
-          focus:outline-none
-          focus:ring-2
-          focus:ring-orange-500
-          focus:border-orange-500
+          text-lg
           shadow-sm
+          transition-all
+          duration-300
+          focus:outline-none
+          focus:border-orange-500
+          focus:ring-4
+          focus:ring-orange-100
         "
       />
 
-      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
+      <div
+        className="
+          absolute
+          left-5
+          top-1/2
+          -translate-y-1/2
+          text-orange-500
+          text-xl
+        "
+      >
         🔍
-      </span>
+      </div>
+
+      {valor && (
+        <button
+          onClick={() => onChange("")}
+          className="
+            absolute
+            right-4
+            top-1/2
+            -translate-y-1/2
+            text-gray-400
+            hover:text-red-500
+            transition
+          "
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }

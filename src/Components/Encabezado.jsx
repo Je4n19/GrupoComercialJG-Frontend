@@ -6,17 +6,22 @@ function Encabezado() {
     <>
       {/* Barra superior */}
 
-      <div className="bg-green-900 text-white">
-        <div className="max-w-7xl mx-auto px-6 py-2 flex justify-between items-center text-sm">
-          <div>📞 +51 979 501 557</div>
+      <div className="bg-orange-600 text-white">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center text-sm">
+          <div className="flex gap-6">
+            <span>📞 +51 979 501 557</span>
+            <span>🚚 Cobertura a nivel nacional</span>
+          </div>
 
-          <div>Especialistas en maquinaria agrícola y forestal</div>
+          <div className="hidden md:block">
+            Maquinaria • Repuestos • Servicio Técnico
+          </div>
         </div>
       </div>
 
-      {/* Header principal */}
+      {/* Header */}
 
-      <header className="bg-white shadow-lg sticky top-0 z-50">
+      <header className="bg-white shadow-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-24">
             {/* Logo */}
@@ -25,43 +30,43 @@ function Encabezado() {
               <img src={logo} alt="Grupo Comercial J&G" className="h-16" />
 
               <div>
-                <h1 className="font-bold text-2xl text-gray-800">
+                <h1 className="font-black text-2xl text-gray-900">
                   Grupo Comercial J&G
                 </h1>
 
-                <p className="text-sm text-gray-500">
-                  Equipos • Repuestos • Servicio Técnico
+                <p className="text-sm text-orange-500 font-semibold">
+                  Agricultura • Forestal • Industria
                 </p>
               </div>
             </Link>
 
-            {/* Menú */}
+            {/* Menu */}
 
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-8">
               <Link
                 to="/"
-                className="font-semibold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-gray-700 hover:text-orange-500 transition"
               >
                 Inicio
               </Link>
 
               <Link
                 to="/catalogo"
-                className="font-semibold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-gray-700 hover:text-orange-500 transition"
               >
                 Productos
               </Link>
 
               <Link
                 to="/repuestos"
-                className="font-semibold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-gray-700 hover:text-orange-500 transition"
               >
                 Repuestos
               </Link>
 
               <Link
                 to="/contacto"
-                className="font-semibold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-gray-700 hover:text-orange-500 transition"
               >
                 Contacto
               </Link>
@@ -74,7 +79,7 @@ function Encabezado() {
                 href="https://wa.me/51979501557"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden lg:flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-green-700 transition"
+                className="hidden xl:flex bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition"
               >
                 WhatsApp
               </a>
@@ -83,15 +88,16 @@ function Encabezado() {
                 href="https://wa.me/51979501557?text=Hola,%20deseo%20una%20cotización"
                 target="_blank"
                 rel="noreferrer"
-                className="bg-orange-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg transition"
               >
                 Cotizar Ahora
               </a>
+
               <Link
                 to="/login"
-                className="bg-slate-700 text-white px-5 py-3 rounded-xl font-semibold hover:bg-slate-800 transition"
+                className="bg-gray-900 hover:bg-black text-white px-5 py-3 rounded-xl font-bold transition"
               >
-                🔐 Intranet
+                Intranet
               </Link>
             </div>
           </div>

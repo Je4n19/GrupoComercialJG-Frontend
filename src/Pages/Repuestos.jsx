@@ -22,8 +22,8 @@ function Repuestos() {
       const repuestosData = await obtenerRepuestos();
       const categoriasData = await obtenerCategoriasRepuesto();
 
-      setRepuestos(repuestosData);
-      setCategorias(categoriasData);
+      setRepuestos(repuestosData || []);
+      setCategorias(categoriasData || []);
     } catch (error) {
       console.error(error);
     }
@@ -44,36 +44,73 @@ function Repuestos() {
     <>
       {/* HERO */}
 
-      <section className="bg-gradient-to-r from-green-900 to-green-700 text-white py-20">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <span className="bg-white/20 px-4 py-2 rounded-full text-sm">
+      <section className="relative bg-gradient-to-r from-gray-950 via-gray-900 to-orange-900 text-white py-28 overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/20 blur-3xl rounded-full"></div>
+
+        <div className="relative max-w-7xl mx-auto px-6 text-center">
+          <span className="bg-orange-500/20 border border-orange-400/30 px-5 py-2 rounded-full font-semibold">
             Grupo Comercial J&G
           </span>
 
-          <h1 className="text-5xl md:text-6xl font-bold mt-6">
-            Repuestos Originales
+          <h1 className="text-5xl md:text-7xl font-black mt-8">
+            Repuestos
+            <span className="block text-orange-400">Originales</span>
           </h1>
 
-          <p className="text-xl text-green-100 mt-6 max-w-3xl mx-auto">
-            Carburadores, pistones, filtros, bobinas, bujías y más repuestos
-            para maquinaria agrícola y forestal.
+          <p className="text-xl text-gray-300 mt-8 max-w-3xl mx-auto">
+            Amplio stock de repuestos para maquinaria agrícola, forestal e
+            industrial. Calidad garantizada y disponibilidad inmediata.
           </p>
+        </div>
+      </section>
+
+      {/* ESTADISTICAS */}
+
+      <section className="-mt-12 relative z-20 max-w-7xl mx-auto px-6">
+        <div className="grid md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-3xl shadow-xl p-6 text-center">
+            <h3 className="text-4xl font-black text-orange-500">
+              {repuestos.length}
+            </h3>
+
+            <p className="text-gray-500 mt-2">Repuestos</p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl p-6 text-center">
+            <h3 className="text-4xl font-black text-orange-500">
+              {categorias.length}
+            </h3>
+
+            <p className="text-gray-500 mt-2">Categorías</p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl p-6 text-center">
+            <h3 className="text-4xl font-black text-orange-500">100%</h3>
+
+            <p className="text-gray-500 mt-2">Originales</p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl p-6 text-center">
+            <h3 className="text-4xl font-black text-orange-500">Perú</h3>
+
+            <p className="text-gray-500 mt-2">Cobertura</p>
+          </div>
         </div>
       </section>
 
       {/* FILTROS */}
 
-      <section className="max-w-7xl mx-auto px-6 py-12">
-        <div className="bg-white rounded-3xl shadow-xl p-8">
-          <h2 className="text-3xl font-bold mb-6">Buscar Repuestos</h2>
+      <section className="max-w-7xl mx-auto px-6 py-16">
+        <div className="bg-white rounded-[32px] shadow-xl p-8 border border-gray-100">
+          <h2 className="text-3xl font-black mb-8">Buscar Repuestos</h2>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-5">
             <Buscador valor={busqueda} onChange={setBusqueda} />
 
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
-              className="border border-gray-300 p-4 rounded-xl"
+              className="border border-gray-300 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="">Todas las categorías</option>
 
@@ -89,60 +126,64 @@ function Repuestos() {
 
       {/* CONTADOR */}
 
-      <section className="max-w-7xl mx-auto px-6 mb-8">
-        <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-bold">Repuestos Disponibles</h2>
+      <section className="max-w-7xl mx-auto px-6 mb-10">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <h2 className="text-4xl font-black">Repuestos Disponibles</h2>
 
-          <span className="bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
+          <span className="bg-orange-100 text-orange-600 px-6 py-3 rounded-full font-bold">
             {repuestosFiltrados.length} resultados
           </span>
         </div>
       </section>
 
-      {/* REPUESTOS */}
+      {/* GRID */}
 
-      <section className="max-w-7xl mx-auto px-6 pb-16">
+      <section className="max-w-7xl mx-auto px-6 pb-20">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {repuestosFiltrados.map((repuesto) => (
             <div
               key={repuesto.id}
-              className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden hover:-translate-y-2"
+              className="group bg-white rounded-[30px] overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
             >
-              <div className="h-56 bg-gray-100">
+              <div className="h-64 overflow-hidden bg-gray-100">
                 <img
                   src={
                     repuesto.imagen ||
                     "https://via.placeholder.com/400x300?text=Repuesto"
                   }
                   alt={repuesto.nombre}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                 />
               </div>
 
-              <div className="p-6">
-                <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-sm font-semibold">
+              <div className="p-7">
+                <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-bold">
                   {repuesto.categoria}
                 </span>
 
-                <h3 className="text-2xl font-bold mt-4">{repuesto.nombre}</h3>
+                <h3 className="text-2xl font-black mt-5">{repuesto.nombre}</h3>
 
                 <p className="text-gray-500 mt-2">Marca: {repuesto.marca}</p>
 
-                <p className="text-gray-600 mt-2">{repuesto.descripcion}</p>
+                <p className="text-gray-600 mt-4 line-clamp-3">
+                  {repuesto.descripcion}
+                </p>
 
-                <div className="mt-5">
-                  <p className="text-3xl font-bold text-green-700">
+                <div className="mt-6">
+                  <p className="text-4xl font-black text-green-700">
                     S/. {repuesto.precio}
                   </p>
 
-                  <p className="text-gray-500 mt-2">Stock: {repuesto.stock}</p>
+                  <p className="text-gray-500 mt-2">
+                    Stock disponible: {repuesto.stock}
+                  </p>
                 </div>
 
                 <a
                   href={`https://wa.me/51979501557?text=Hola,%20deseo%20información%20sobre%20${repuesto.nombre}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="block text-center mt-6 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition"
+                  className="block text-center mt-7 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold transition"
                 >
                   Consultar Disponibilidad
                 </a>
@@ -154,19 +195,20 @@ function Repuestos() {
 
       {/* CTA */}
 
-      <section className="bg-orange-500 text-white py-16">
+      <section className="bg-gradient-to-r from-orange-600 to-orange-500 text-white py-24">
         <div className="max-w-5xl mx-auto text-center px-6">
-          <h2 className="text-4xl font-bold">¿No encuentras el repuesto?</h2>
+          <h2 className="text-5xl font-black">¿No encuentras el repuesto?</h2>
 
-          <p className="mt-4 text-xl">
-            Escríbenos por WhatsApp y te ayudaremos a ubicarlo.
+          <p className="text-xl mt-6 text-orange-100">
+            Nuestro equipo puede ayudarte a localizar el repuesto exacto para tu
+            maquinaria.
           </p>
 
           <a
             href="https://wa.me/51979501557"
             target="_blank"
             rel="noreferrer"
-            className="inline-block mt-8 bg-white text-orange-600 px-8 py-4 rounded-xl font-bold"
+            className="inline-block mt-10 bg-white text-orange-600 px-10 py-5 rounded-2xl font-black hover:scale-105 transition"
           >
             Solicitar Repuesto
           </a>

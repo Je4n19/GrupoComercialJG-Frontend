@@ -53,61 +53,84 @@ function Catalogo() {
 
   return (
     <>
-      <section className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 text-white py-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <span className="bg-white/20 px-4 py-2 rounded-full font-semibold">
-            Catálogo J&G
+      {/* HERO */}
+
+      <section
+        className="relative py-32 overflow-hidden"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=2000')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/65"></div>
+
+        <div className="relative max-w-7xl mx-auto px-6 text-white">
+          <span className="bg-orange-500 px-5 py-2 rounded-full font-bold">
+            Grupo Comercial J&G
           </span>
 
-          <h1 className="text-5xl font-black mt-5 mb-4">
+          <h1 className="text-6xl lg:text-7xl font-black mt-6">
             Catálogo de Productos
           </h1>
 
-          <p className="text-xl text-orange-100">
-            Maquinaria agrícola, forestal e industrial de las mejores marcas.
+          <p className="text-xl text-gray-200 mt-5 max-w-3xl">
+            Maquinaria agrícola, forestal e industrial de las mejores marcas,
+            respaldada por garantía y soporte técnico especializado.
           </p>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
+      {/* ESTADÍSTICAS */}
+
+      <section className="max-w-7xl mx-auto px-6 -mt-14 relative z-20">
         <div className="grid md:grid-cols-4 gap-6">
-          <div className="bg-white shadow-xl rounded-3xl p-6 text-center">
-            <h3 className="text-4xl font-black text-orange-500">
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center border border-orange-100">
+            <h3 className="text-5xl font-black text-orange-500">
               {productos.length}
             </h3>
-            <p className="text-gray-600">Productos</p>
+
+            <p className="text-gray-600 mt-2">Productos</p>
           </div>
 
-          <div className="bg-white shadow-xl rounded-3xl p-6 text-center">
-            <h3 className="text-4xl font-black text-orange-500">
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center border border-orange-100">
+            <h3 className="text-5xl font-black text-orange-500">
               {categorias.length}
             </h3>
-            <p className="text-gray-600">Categorías</p>
+
+            <p className="text-gray-600 mt-2">Categorías</p>
           </div>
 
-          <div className="bg-white shadow-xl rounded-3xl p-6 text-center">
-            <h3 className="text-4xl font-black text-orange-500">100%</h3>
-            <p className="text-gray-600">Garantía</p>
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center border border-orange-100">
+            <h3 className="text-5xl font-black text-orange-500">100%</h3>
+
+            <p className="text-gray-600 mt-2">Garantía</p>
           </div>
 
-          <div className="bg-white shadow-xl rounded-3xl p-6 text-center">
-            <h3 className="text-4xl font-black text-orange-500">Perú</h3>
-            <p className="text-gray-600">Cobertura</p>
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center border border-orange-100">
+            <h3 className="text-5xl font-black text-orange-500">Perú</h3>
+
+            <p className="text-gray-600 mt-2">Cobertura Nacional</p>
           </div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6">
-        <div className="bg-white rounded-3xl shadow-xl p-8">
-          <h2 className="text-3xl font-black mb-6">Buscar Productos</h2>
+      {/* FILTROS */}
 
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
+      <section className="max-w-7xl mx-auto px-6 py-16">
+        <div className="bg-white rounded-[40px] shadow-2xl p-10 border border-gray-100">
+          <h2 className="text-4xl font-black mb-8 text-gray-900">
+            Buscar Productos
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-5 mb-8">
             <Buscador valor={busqueda} onChange={setBusqueda} />
 
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
-              className="border border-gray-300 rounded-xl p-3"
+              className="border border-gray-200 rounded-2xl p-4 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="">Todas las categorías</option>
 
@@ -122,7 +145,11 @@ function Catalogo() {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setCategoria("")}
-              className="bg-gray-200 px-4 py-2 rounded-full font-semibold"
+              className={`px-5 py-3 rounded-full font-semibold transition ${
+                categoria === ""
+                  ? "bg-orange-500 text-white"
+                  : "bg-gray-100 text-gray-700"
+              }`}
             >
               Todas
             </button>
@@ -131,10 +158,10 @@ function Catalogo() {
               <button
                 key={cat.id}
                 onClick={() => setCategoria(cat.nombre)}
-                className={`px-4 py-2 rounded-full font-semibold transition ${
+                className={`px-5 py-3 rounded-full font-semibold transition ${
                   categoria === cat.nombre
                     ? "bg-orange-500 text-white"
-                    : "bg-orange-100 text-orange-600"
+                    : "bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white"
                 }`}
               >
                 {cat.nombre}
@@ -144,23 +171,27 @@ function Catalogo() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-12">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-black">Productos Disponibles</h2>
+      {/* PRODUCTOS */}
 
-          <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
+      <section className="max-w-7xl mx-auto px-6 pb-20">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
+          <h2 className="text-4xl font-black text-gray-900">
+            Productos Disponibles
+          </h2>
+
+          <span className="bg-orange-500 text-white px-6 py-3 rounded-full font-bold shadow-lg">
             {productosFiltrados.length} productos
           </span>
         </div>
 
         {productosFiltrados.length === 0 ? (
-          <div className="bg-white rounded-3xl shadow-lg p-12 text-center">
-            <h3 className="text-2xl font-bold text-gray-700">
+          <div className="bg-white rounded-[40px] shadow-2xl p-16 text-center border border-gray-100">
+            <h3 className="text-3xl font-bold text-gray-800">
               No se encontraron productos
             </h3>
 
-            <p className="text-gray-500 mt-3">
-              Intenta cambiar la categoría o búsqueda.
+            <p className="text-gray-500 mt-4">
+              Intenta modificar los filtros o realizar otra búsqueda.
             </p>
           </div>
         ) : (

@@ -11,100 +11,113 @@ function Hero() {
         backgroundPosition: "center",
       }}
     >
-      {/* Overlay oscuro */}
-      <div className="absolute inset-0 bg-black/55"></div>
+      {/* Overlay más suave */}
+      <div className="absolute inset-0 bg-black/35"></div>
 
-      {/* Overlay naranja */}
-      <div className="absolute inset-0 bg-black/25"></div>
+      {/* Degradado naranja */}
+      <div className="absolute inset-0 bg-gradient-to-r from-orange-900/70 via-orange-800/40 to-transparent"></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* IZQUIERDA */}
+        <div className="max-w-3xl">
+          {/* Logo */}
+          <div className="inline-flex items-center gap-3 bg-white/15 backdrop-blur-md border border-white/20 px-5 py-3 rounded-full mb-8">
+            <img src={logoJ} alt="Grupo Comercial J&G" className="w-10 h-10" />
 
-          <div>
-            <div className="inline-flex items-center gap-3 bg-white/15 backdrop-blur-md border border-white/20 px-5 py-3 rounded-full mb-8">
-              <img
-                src={logoJ}
-                alt="Grupo Comercial J&G"
-                className="w-10 h-10"
-              />
+            <span className="font-bold text-white">Grupo Comercial J&G</span>
+          </div>
 
-              <span className="font-bold text-white">Grupo Comercial J&G</span>
+          {/* Título */}
+          <h1 className="text-5xl lg:text-7xl font-black text-white leading-tight">
+            Equipos y Repuestos
+            <span className="block text-orange-300">
+              para Agricultura e Industria
+            </span>
+          </h1>
+
+          {/* Descripción */}
+          <p className="text-xl text-white/90 mt-8 leading-relaxed max-w-2xl">
+            Distribuimos maquinaria agrícola, forestal e industrial, repuestos
+            originales y servicio técnico especializado para todo el Perú.
+          </p>
+
+          {/* Botones */}
+          <div className="flex flex-wrap gap-4 mt-10">
+            <a
+              href="/catalogo"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold shadow-2xl transition"
+            >
+              Ver Catálogo
+            </a>
+
+            <a
+              href="https://wa.me/51979501557"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white text-orange-600 hover:bg-orange-100 px-8 py-4 rounded-xl font-bold shadow-2xl transition"
+            >
+              Cotizar por WhatsApp
+            </a>
+          </div>
+
+          {/* Datos */}
+          <div className="flex flex-wrap gap-10 mt-12">
+            <div>
+              <p className="text-orange-200 uppercase text-sm font-bold">
+                Atención
+              </p>
+
+              <h3 className="text-white text-xl font-bold">+51 979 501 557</h3>
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-black text-white leading-tight">
-              Maquinaria y Repuestos para el Sector
-              <span className="block text-orange-200">
-                Agrícola, Forestal e Industrial
-              </span>
-            </h1>
+            <div>
+              <p className="text-orange-200 uppercase text-sm font-bold">
+                Cobertura
+              </p>
 
-            <p className="text-xl text-orange-100 mt-8 max-w-2xl leading-relaxed">
-              Distribuimos maquinaria, equipos y repuestos originales de marcas
-              líderes para agricultura, forestación e industria, ofreciendo
-              calidad, garantía y soporte técnico especializado.
-            </p>
-
-            <div className="flex flex-wrap gap-4 mt-10">
-              <a
-                href="/catalogo"
-                className="bg-white text-orange-600 px-8 py-4 rounded-xl font-bold shadow-xl hover:scale-105 transition"
-              >
-                Ver Catálogo
-              </a>
-
-              <a
-                href="https://wa.me/51979501557"
-                target="_blank"
-                rel="noreferrer"
-                className="bg-green-600 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-green-700 hover:scale-105 transition"
-              >
-                Cotizar por WhatsApp
-              </a>
+              <h3 className="text-white text-xl font-bold">Todo el Perú</h3>
             </div>
 
-            <div className="flex gap-10 mt-12">
-              <div>
-                <p className="text-orange-200 uppercase text-sm font-bold">
-                  Atención
-                </p>
+            <div>
+              <p className="text-orange-200 uppercase text-sm font-bold">
+                Garantía
+              </p>
 
-                <h3 className="text-white text-xl font-bold">
-                  +51 979 501 557
-                </h3>
-              </div>
-
-              <div>
-                <p className="text-orange-200 uppercase text-sm font-bold">
-                  Cobertura
-                </p>
-
-                <h3 className="text-white text-xl font-bold">Todo el Perú</h3>
-              </div>
+              <h3 className="text-white text-xl font-bold">
+                Productos Originales
+              </h3>
             </div>
           </div>
 
-          {/* DERECHA */}
+          {/* Tarjeta flotante */}
+          <div className="mt-12 bg-white rounded-3xl p-6 shadow-2xl max-w-xl">
+            <p className="text-gray-500 font-semibold mb-3">
+              Trabajamos con marcas líderes
+            </p>
 
-          <div className="hidden lg:flex justify-center">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-[40px] p-10 shadow-2xl">
-              <img
-                src={logoJ}
-                alt="Grupo Comercial J&G"
-                className="w-72 mx-auto"
-              />
+            <div className="flex flex-wrap gap-3">
+              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
+                STIHL
+              </span>
 
-              <div className="text-center mt-8">
-                <h2 className="text-3xl font-black text-white">
-                  Grupo Comercial J&G
-                </h2>
+              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
+                HONDA
+              </span>
 
-                <p className="text-orange-100 mt-3">
-                  Equipos • Repuestos • Servicio Técnico
-                </p>
+              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
+                HUSQVARNA
+              </span>
 
-                <div className="w-24 h-1 bg-orange-400 rounded-full mx-auto mt-5"></div>
-              </div>
+              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
+                MEBA
+              </span>
+
+              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
+                PTK
+              </span>
+
+              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
+                TRUPER
+              </span>
             </div>
           </div>
         </div>

@@ -2,37 +2,56 @@ import { Link } from "react-router-dom";
 
 function TarjetaProducto({ producto }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-      <img
-        src={
-          producto.imagen || "https://via.placeholder.com/400x300?text=Producto"
-        }
-        alt={producto.nombre}
-        className="w-full h-56 object-cover"
-      />
+    <div className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-gray-100">
+      <div className="relative overflow-hidden">
+        <img
+          src={
+            producto.imagen ||
+            "https://via.placeholder.com/400x300?text=Producto"
+          }
+          alt={producto.nombre}
+          className="w-full h-72 object-cover group-hover:scale-110 transition duration-500"
+        />
 
-      <div className="p-5">
-        <span className="text-orange-600 font-semibold">{producto.marca}</span>
+        <div className="absolute top-4 left-4">
+          <span className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+            {producto.categoria}
+          </span>
+        </div>
+      </div>
 
-        <h3 className="text-xl font-bold mt-2">{producto.nombre}</h3>
+      <div className="p-6">
+        <span className="text-orange-500 font-bold uppercase tracking-wide text-sm">
+          {producto.marca}
+        </span>
 
-        <p className="text-gray-500">{producto.categoria}</p>
+        <h3 className="text-2xl font-black text-gray-900 mt-3 min-h-[64px]">
+          {producto.nombre}
+        </h3>
 
-        <p className="mt-3 text-gray-700">{producto.descripcion}</p>
+        <p className="text-gray-500 mt-3 line-clamp-2">
+          {producto.descripcion}
+        </p>
 
-        <div className="mt-4">
-          <p className="text-2xl font-bold text-green-700">
-            S/. {producto.precio}
-          </p>
+        <div className="flex justify-between items-center mt-6">
+          <div>
+            <p className="text-sm text-gray-500">Precio</p>
 
-          <p className="text-sm text-gray-500">
-            Stock disponible: {producto.stock}
-          </p>
+            <p className="text-3xl font-black text-orange-500">
+              S/. {producto.precio}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Stock</p>
+
+            <p className="font-bold text-green-600">{producto.stock}</p>
+          </div>
         </div>
 
         <Link
           to={`/producto/${producto.id}`}
-          className="block text-center w-full mt-5 bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+          className="block text-center mt-6 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold transition"
         >
           Ver Detalles
         </Link>

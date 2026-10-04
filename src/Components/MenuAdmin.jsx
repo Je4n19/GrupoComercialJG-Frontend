@@ -1,113 +1,123 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/logoJ&G.png";
 
 function MenuAdmin() {
+  const location = useLocation();
+
   const cerrarSesion = () => {
     localStorage.removeItem("auth");
     window.location.href = "/login";
   };
 
-  return (
-    <aside className="w-72 min-h-screen bg-slate-900 text-white flex flex-col shadow-2xl">
-      {/* Logo */}
+  const menus = [
+    {
+      nombre: "Dashboard",
+      ruta: "/admin",
+      icono: "📊",
+    },
+    {
+      nombre: "Productos",
+      ruta: "/admin/productos",
+      icono: "📦",
+    },
+    {
+      nombre: "Repuestos",
+      ruta: "/admin/repuestos",
+      icono: "🔧",
+    },
+    {
+      nombre: "Categorías Productos",
+      ruta: "/admin/categorias",
+      icono: "📂",
+    },
+    {
+      nombre: "Categorías Repuestos",
+      ruta: "/admin/categorias-repuesto",
+      icono: "🏷️",
+    },
+    {
+      nombre: "Inventario",
+      ruta: "/admin/inventario",
+      icono: "📋",
+    },
+    {
+      nombre: "Configuración",
+      ruta: "/admin/configuracion",
+      icono: "⚙️",
+    },
+  ];
 
-      <div className="p-6 border-b border-slate-700">
+  return (
+    <aside className="w-72 min-h-screen bg-slate-950 text-white flex flex-col shadow-2xl border-r border-slate-800">
+      {/* CABECERA */}
+
+      <div className="p-6 border-b border-slate-800">
         <div className="flex items-center gap-4">
-          <img
-            src={logo}
-            alt="J&G"
-            className="w-14 h-14 object-contain bg-white rounded-xl p-1"
-          />
+          <div className="bg-white rounded-2xl p-2">
+            <img
+              src={logo}
+              alt="Grupo Comercial J&G"
+              className="w-14 h-14 object-contain"
+            />
+          </div>
 
           <div>
-            <h1 className="font-bold text-lg">Grupo Comercial J&G</h1>
+            <h1 className="font-black text-lg text-white">
+              Grupo Comercial J&G
+            </h1>
 
-            <p className="text-slate-400 text-sm">Sistema de Gestión</p>
+            <p className="text-slate-400 text-sm">Panel Administrativo</p>
           </div>
         </div>
       </div>
 
-      {/* Navegación */}
+      {/* MENÚ */}
 
       <nav className="flex-1 p-4">
+        <p className="text-xs uppercase tracking-widest text-slate-500 px-3 mb-4">
+          Navegación
+        </p>
+
         <ul className="space-y-2">
-          <li>
-            <Link
-              to="/admin"
-              className="block p-3 rounded-xl hover:bg-orange-500 transition"
-            >
-              📊 Dashboard
-            </Link>
-          </li>
+          {menus.map((item) => (
+            <li key={item.ruta}>
+              <Link
+                to={item.ruta}
+                className={`flex items-center gap-4 px-4 py-4 rounded-2xl font-medium transition-all duration-300 ${
+                  location.pathname === item.ruta
+                    ? "bg-orange-500 text-white shadow-lg"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <span className="text-xl">{item.icono}</span>
 
-          <li>
-            <Link
-              to="/admin/productos"
-              className="block p-3 rounded-xl hover:bg-orange-500 transition"
-            >
-              📦 Productos
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              to="/admin/repuestos"
-              className="block p-3 rounded-xl hover:bg-orange-500 transition"
-            >
-              🔧 Repuestos
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              to="/admin/categorias"
-              className="block p-3 rounded-xl hover:bg-orange-500 transition"
-            >
-              📂 Categorías Productos
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              to="/admin/categorias-repuesto"
-              className="block p-3 rounded-xl hover:bg-orange-500 transition"
-            >
-              🏷️ Categorías Repuestos
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              to="/admin/inventario"
-              className="block p-3 rounded-xl hover:bg-orange-500 transition"
-            >
-              📋 Inventario
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              to="/admin/configuracion"
-              className="block p-3 rounded-xl hover:bg-orange-500 transition"
-            >
-              ⚙️ Configuración
-            </Link>
-          </li>
+                <span>{item.nombre}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
 
-      {/* Usuario */}
+      {/* TARJETA USUARIO */}
 
-      <div className="border-t border-slate-700 p-5">
-        <div className="bg-slate-800 rounded-xl p-4 mb-4">
-          <p className="font-semibold">Administrador</p>
+      <div className="p-5 border-t border-slate-800">
+        <div className="bg-slate-900 rounded-2xl p-4 border border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center font-black text-lg">
+              A
+            </div>
 
-          <p className="text-sm text-slate-400">Grupo Comercial J&G</p>
+            <div>
+              <h3 className="font-bold">Administrador</h3>
+
+              <p className="text-sm text-slate-400">Grupo Comercial J&G</p>
+            </div>
+          </div>
         </div>
 
         <button
           onClick={cerrarSesion}
-          className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold transition"
+          className="w-full mt-4 bg-red-500 hover:bg-red-600 py-3 rounded-xl font-semibold transition-all"
         >
           🚪 Cerrar Sesión
         </button>
