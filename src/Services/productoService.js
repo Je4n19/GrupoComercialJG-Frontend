@@ -1,11 +1,12 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/productos";
+const API_URL = "https://grupocomercialjg-backend.onrender.com/api/productos";
 
 export const obtenerProductos = async () => {
   const response = await axios.get(API_URL);
   return response.data;
 };
+
 export const obtenerProductoPorId = async (id) => {
   const response = await axios.get(`${API_URL}/${id}`);
   return response.data;
