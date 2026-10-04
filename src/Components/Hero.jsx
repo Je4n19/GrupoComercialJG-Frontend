@@ -15,7 +15,7 @@ function Hero() {
       <div className="absolute inset-0 bg-black/55"></div>
 
       {/* Overlay naranja */}
-      <div className="absolute inset-0 bg-gradient-to-r from-orange-700/95 via-orange-600/90 to-orange-500/75"></div>
+      <div className="absolute inset-0 bg-black/25"></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
         <div className="grid lg:grid-cols-2 gap-16 items-center">

@@ -8,7 +8,7 @@ import Servicios from "../Components/Servicios";
 import Nosotros from "../Components/Nosotros";
 import ContactoRapido from "../Components/ContactoRapido";
 import Footer from "../Components/Footer";
-
+import CategoriasHome from "../Components/CategoriasHome";
 import { obtenerProductos } from "../Services/productoService";
 
 function Inicio() {
@@ -30,6 +30,8 @@ function Inicio() {
   return (
     <>
       <Hero />
+
+      <CategoriasHome />
 
       <Estadisticas />
 
