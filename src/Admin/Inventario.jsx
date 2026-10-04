@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import MenuAdmin from "../Components/MenuAdmin";
 
 import { obtenerProductos } from "../Services/productoService";
@@ -85,102 +84,157 @@ function Inventario() {
     <div className="flex">
       <MenuAdmin />
 
-      <div className="flex-1 min-h-screen bg-gray-100">
-        <div className="bg-orange-600 text-white p-6 shadow-lg">
-          <h1 className="text-3xl font-bold">Gestión de Inventario</h1>
+      <div className="flex-1 min-h-screen bg-orange-50">
+        {/* HEADER */}
 
-          <p className="mt-2">Control de stock de productos y repuestos</p>
+        <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white shadow-2xl">
+          <div className="px-10 py-10">
+            <p className="uppercase tracking-widest text-orange-100 text-sm">
+              Grupo Comercial J&G
+            </p>
+
+            <h1 className="text-5xl font-bold mt-2">Gestión de Inventario</h1>
+
+            <p className="text-orange-100 mt-3 text-lg">
+              Control total del stock de productos y repuestos.
+            </p>
+          </div>
         </div>
 
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="p-8">
+          {/* KPI */}
+
           <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-green-500 text-white p-6 rounded-2xl shadow-lg">
-              <p className="text-sm">Stock Alto</p>
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-3xl p-8 shadow-xl">
+              <p>Stock Alto</p>
 
-              <h2 className="text-4xl font-bold mt-2">{stockAlto}</h2>
+              <h2 className="text-5xl font-bold mt-3">{stockAlto}</h2>
             </div>
 
-            <div className="bg-yellow-500 text-white p-6 rounded-2xl shadow-lg">
-              <p className="text-sm">Stock Medio</p>
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-3xl p-8 shadow-xl">
+              <p>Stock Medio</p>
 
-              <h2 className="text-4xl font-bold mt-2">{stockMedio}</h2>
+              <h2 className="text-5xl font-bold mt-3">{stockMedio}</h2>
             </div>
 
-            <div className="bg-orange-500 text-white p-6 rounded-2xl shadow-lg">
-              <p className="text-sm">Stock Bajo</p>
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl p-8 shadow-xl">
+              <p>Stock Bajo</p>
 
-              <h2 className="text-4xl font-bold mt-2">{stockBajo}</h2>
+              <h2 className="text-5xl font-bold mt-3">{stockBajo}</h2>
             </div>
 
-            <div className="bg-red-500 text-white p-6 rounded-2xl shadow-lg">
-              <p className="text-sm">Sin Stock</p>
+            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-3xl p-8 shadow-xl">
+              <p>Sin Stock</p>
 
-              <h2 className="text-4xl font-bold mt-2">{sinStock}</h2>
+              <h2 className="text-5xl font-bold mt-3">{sinStock}</h2>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b">
-              <h2 className="text-2xl font-bold">Estado del Inventario</h2>
+          {/* RESUMEN */}
+
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-3xl p-8 shadow-xl">
+              <p className="text-gray-500">Total de Registros</p>
+
+              <h3 className="text-4xl font-bold mt-2 text-orange-600">
+                {inventario.length}
+              </h3>
             </div>
 
-            <table className="w-full">
-              <thead className="bg-orange-500 text-white">
-                <tr>
-                  <th className="p-4 text-left">ID</th>
-                  <th className="text-left">Nombre</th>
-                  <th className="text-left">Tipo</th>
-                  <th className="text-left">Categoría</th>
-                  <th className="text-left">Stock</th>
-                  <th className="text-left">Estado</th>
-                </tr>
-              </thead>
+            <div className="bg-white rounded-3xl p-8 shadow-xl">
+              <p className="text-gray-500">Productos con Riesgo</p>
 
-              <tbody>
-                {inventario.map((item) => (
-                  <tr
-                    key={`${item.tipo}-${item.id}`}
-                    className="border-b hover:bg-gray-50"
-                  >
-                    <td className="p-4">{item.id}</td>
+              <h3 className="text-4xl font-bold mt-2 text-red-600">
+                {stockBajo + sinStock}
+              </h3>
+            </div>
 
-                    <td>{item.nombre}</td>
+            <div className="bg-white rounded-3xl p-8 shadow-xl">
+              <p className="text-gray-500">Inventario Saludable</p>
 
-                    <td>{item.tipo}</td>
+              <h3 className="text-4xl font-bold mt-2 text-green-600">
+                {stockAlto + stockMedio}
+              </h3>
+            </div>
+          </div>
 
-                    <td>{item.categoria}</td>
+          {/* TABLA */}
 
-                    <td>{item.stock}</td>
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+            <div className="bg-orange-500 text-white px-8 py-5">
+              <h2 className="text-2xl font-bold">
+                Estado General del Inventario
+              </h2>
+            </div>
 
-                    <td>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-semibold ${obtenerColor(
-                          obtenerEstado(item.stock),
-                        )}`}
-                      >
-                        {obtenerEstado(item.stock)}
-                      </span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-orange-100">
+                  <tr>
+                    <th className="p-4 text-left">ID</th>
+                    <th className="text-left">Nombre</th>
+                    <th className="text-left">Tipo</th>
+                    <th className="text-left">Categoría</th>
+                    <th className="text-left">Stock</th>
+                    <th className="text-left">Estado</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+                  {inventario.map((item) => (
+                    <tr
+                      key={`${item.tipo}-${item.id}`}
+                      className="border-b hover:bg-orange-50 transition"
+                    >
+                      <td className="p-4">{item.id}</td>
+
+                      <td className="font-semibold">{item.nombre}</td>
+
+                      <td>{item.tipo}</td>
+
+                      <td>{item.categoria}</td>
+
+                      <td>{item.stock}</td>
+
+                      <td>
+                        <span
+                          className={`px-4 py-2 rounded-full text-sm font-semibold ${obtenerColor(
+                            obtenerEstado(item.stock),
+                          )}`}
+                        >
+                          {obtenerEstado(item.stock)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="mt-8 bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">Alertas de Inventario</h2>
+          {/* ALERTAS */}
 
-            <div className="space-y-3">
-              {inventario
-                .filter((item) => item.stock <= 5)
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-orange-100 border-l-4 border-orange-500 p-4"
-                  >
-                    ⚠ {item.nombre} tiene stock crítico ({item.stock} unidades)
-                  </div>
-                ))}
+          <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
+            <h2 className="text-2xl font-bold mb-6">Alertas de Inventario</h2>
+
+            <div className="space-y-4">
+              {inventario.filter((item) => item.stock <= 5).length > 0 ? (
+                inventario
+                  .filter((item) => item.stock <= 5)
+                  .map((item) => (
+                    <div
+                      key={`${item.tipo}-${item.id}`}
+                      className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl"
+                    >
+                      ⚠ {item.nombre} tiene stock crítico ({item.stock}{" "}
+                      unidades)
+                    </div>
+                  ))
+              ) : (
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl">
+                  ✅ No existen productos ni repuestos con stock crítico.
+                </div>
+              )}
             </div>
           </div>
         </div>

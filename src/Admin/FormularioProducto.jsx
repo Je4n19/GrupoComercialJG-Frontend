@@ -31,7 +31,7 @@ function FormularioProducto() {
     const cargarCategorias = async () => {
       try {
         const data = await obtenerCategorias();
-        setCategorias(data);
+        setCategorias(data || []);
       } catch (error) {
         console.error(error);
       }
@@ -43,7 +43,7 @@ function FormularioProducto() {
           const data = await obtenerProductoPorId(id);
           setProducto(data);
         } catch (error) {
-          console.error("Error al cargar producto:", error);
+          console.error(error);
         }
       }
     };
@@ -79,141 +79,207 @@ function FormularioProducto() {
   };
 
   return (
-    <div className="flex bg-gray-100 min-h-screen">
+    <div className="flex">
       <MenuAdmin />
 
-      <div className="flex-1 p-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl">
-          <h1 className="text-3xl font-bold mb-2">
-            {id ? "Editar Producto" : "Registrar Producto"}
-          </h1>
+      <div className="flex-1 min-h-screen bg-orange-50">
+        {/* HEADER */}
 
-          <p className="text-gray-500 mb-8">
-            Complete la información del producto.
-          </p>
+        <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white shadow-2xl">
+          <div className="px-10 py-10">
+            <p className="uppercase tracking-widest text-orange-100 text-sm">
+              Grupo Comercial J&G
+            </p>
 
-          <form onSubmit={handleSubmit}>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="font-semibold block mb-2">Nombre</label>
+            <h1 className="text-5xl font-bold mt-2">
+              {id ? "Editar Producto" : "Registrar Producto"}
+            </h1>
 
-                <input
-                  type="text"
-                  name="nombre"
-                  value={producto.nombre}
+            <p className="text-orange-100 mt-3 text-lg">
+              Gestión de maquinaria y equipos comerciales.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-8">
+          <div className="bg-white rounded-[30px] shadow-2xl overflow-hidden">
+            <div className="bg-orange-500 text-white px-8 py-5">
+              <h2 className="text-2xl font-bold">Información del Producto</h2>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-8">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Nombre del Producto
+                  </label>
+
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={producto.nombre}
+                    onChange={handleChange}
+                    placeholder="Ej. Motosierra STIHL MS 250"
+                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Marca
+                  </label>
+
+                  <input
+                    type="text"
+                    name="marca"
+                    value={producto.marca}
+                    onChange={handleChange}
+                    placeholder="Ej. STIHL"
+                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Categoría
+                  </label>
+
+                  <select
+                    name="categoria"
+                    value={producto.categoria}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                    required
+                  >
+                    <option value="">Seleccione una categoría</option>
+
+                    {categorias.map((categoria) => (
+                      <option key={categoria.id} value={categoria.nombre}>
+                        {categoria.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Precio
+                  </label>
+
+                  <input
+                    type="number"
+                    name="precio"
+                    value={producto.precio}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Stock Disponible
+                  </label>
+
+                  <input
+                    type="number"
+                    name="stock"
+                    value={producto.stock}
+                    onChange={handleChange}
+                    placeholder="0"
+                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Imagen URL
+                  </label>
+
+                  <input
+                    type="text"
+                    name="imagen"
+                    value={producto.imagen}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <label className="block mb-2 font-semibold text-gray-700">
+                  Descripción
+                </label>
+
+                <textarea
+                  rows="6"
+                  name="descripcion"
+                  value={producto.descripcion}
                   onChange={handleChange}
-                  placeholder="Ej. MS 250"
-                  className="w-full border rounded-lg p-3"
-                  required
+                  placeholder="Describe las características del producto..."
+                  className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 />
               </div>
 
-              <div>
-                <label className="font-semibold block mb-2">Marca</label>
+              {/* PREVIEW */}
 
-                <input
-                  type="text"
-                  name="marca"
-                  value={producto.marca}
-                  onChange={handleChange}
-                  placeholder="Ej. STIHL"
-                  className="w-full border rounded-lg p-3"
-                  required
-                />
+              <div className="mt-8 bg-orange-50 border border-orange-200 rounded-3xl p-6">
+                <h3 className="font-bold text-xl text-orange-600 mb-4">
+                  Vista Previa
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <p>
+                      <strong>Producto:</strong> {producto.nombre || "-"}
+                    </p>
+
+                    <p>
+                      <strong>Marca:</strong> {producto.marca || "-"}
+                    </p>
+
+                    <p>
+                      <strong>Categoría:</strong> {producto.categoria || "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p>
+                      <strong>Precio:</strong> S/. {producto.precio || "0"}
+                    </p>
+
+                    <p>
+                      <strong>Stock:</strong> {producto.stock || "0"}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="font-semibold block mb-2">Categoría</label>
+              {/* BOTONES */}
 
-                <select
-                  name="categoria"
-                  value={producto.categoria}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  required
+              <div className="flex flex-wrap gap-4 mt-8">
+                <button
+                  type="submit"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-bold transition"
                 >
-                  <option value="">Seleccione una categoría</option>
+                  {id ? "Actualizar Producto" : "Guardar Producto"}
+                </button>
 
-                  {categorias.map((categoria) => (
-                    <option key={categoria.id} value={categoria.nombre}>
-                      {categoria.nombre}
-                    </option>
-                  ))}
-                </select>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/productos")}
+                  className="bg-gray-300 hover:bg-gray-400 px-8 py-4 rounded-2xl font-bold transition"
+                >
+                  Cancelar
+                </button>
               </div>
-
-              <div>
-                <label className="font-semibold block mb-2">Precio</label>
-
-                <input
-                  type="number"
-                  name="precio"
-                  value={producto.precio}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  className="w-full border rounded-lg p-3"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold block mb-2">Stock</label>
-
-                <input
-                  type="number"
-                  name="stock"
-                  value={producto.stock}
-                  onChange={handleChange}
-                  placeholder="0"
-                  className="w-full border rounded-lg p-3"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold block mb-2">Imagen URL</label>
-
-                <input
-                  type="text"
-                  name="imagen"
-                  value={producto.imagen}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="w-full border rounded-lg p-3"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <label className="font-semibold block mb-2">Descripción</label>
-
-              <textarea
-                rows="5"
-                name="descripcion"
-                value={producto.descripcion}
-                onChange={handleChange}
-                className="w-full border rounded-lg p-3"
-                placeholder="Descripción del producto..."
-              />
-            </div>
-
-            <div className="flex gap-4 mt-8">
-              <button
-                type="submit"
-                className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700"
-              >
-                {id ? "Actualizar Producto" : "Guardar Producto"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate("/admin/productos")}
-                className="bg-gray-300 px-8 py-3 rounded-lg hover:bg-gray-400"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </div>

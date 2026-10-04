@@ -60,66 +60,146 @@ function FormularioCategoria() {
   };
 
   return (
-    <div className="flex bg-gray-100 min-h-screen">
+    <div className="flex">
       <MenuAdmin />
 
-      <div className="flex-1 p-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-3xl">
-          <h1 className="text-3xl font-bold mb-2">
-            {id ? "Editar Categoría" : "Nueva Categoría"}
-          </h1>
+      <div className="flex-1 min-h-screen bg-orange-50">
+        {/* HEADER */}
 
-          <p className="text-gray-500 mb-8">
-            Complete la información de la categoría.
-          </p>
+        <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white shadow-xl">
+          <div className="px-10 py-10">
+            <p className="uppercase tracking-widest text-orange-100 text-sm">
+              Grupo Comercial J&G
+            </p>
 
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              <div>
-                <label className="font-semibold block mb-2">Nombre</label>
+            <h1 className="text-5xl font-black mt-2">
+              {id ? "Editar Categoría" : "Nueva Categoría"}
+            </h1>
 
-                <input
-                  type="text"
-                  name="nombre"
-                  value={categoria.nombre}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  placeholder="Ej. Motosierras"
-                  required
-                />
-              </div>
+            <p className="text-orange-100 mt-3 text-lg">
+              Gestión y organización del catálogo de productos.
+            </p>
+          </div>
+        </div>
 
-              <div>
-                <label className="font-semibold block mb-2">Descripción</label>
+        {/* FORMULARIO */}
 
-                <textarea
-                  rows="5"
-                  name="descripcion"
-                  value={categoria.descripcion}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  placeholder="Descripción de la categoría..."
-                />
-              </div>
+        <div className="p-8">
+          <div className="max-w-4xl mx-auto bg-white rounded-[30px] shadow-2xl overflow-hidden">
+            <div className="bg-orange-500 text-white p-6">
+              <h2 className="text-2xl font-bold">
+                Información de la Categoría
+              </h2>
+
+              <p className="text-orange-100 mt-2">
+                Complete los datos necesarios para registrar la categoría.
+              </p>
             </div>
 
-            <div className="flex gap-4 mt-8">
-              <button
-                type="submit"
-                className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700"
-              >
-                {id ? "Actualizar Categoría" : "Guardar Categoría"}
-              </button>
+            <form onSubmit={handleSubmit} className="p-8">
+              <div className="space-y-8">
+                <div>
+                  <label className="block font-bold text-gray-700 mb-3">
+                    Nombre de la Categoría
+                  </label>
 
-              <button
-                type="button"
-                onClick={() => navigate("/admin/categorias")}
-                className="bg-gray-300 px-8 py-3 rounded-lg hover:bg-gray-400"
-              >
-                Cancelar
-              </button>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={categoria.nombre}
+                    onChange={handleChange}
+                    placeholder="Ejemplo: Motosierras"
+                    required
+                    className="
+                      w-full
+                      border-2
+                      border-gray-200
+                      rounded-2xl
+                      p-4
+                      focus:outline-none
+                      focus:border-orange-500
+                    "
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 mb-3">
+                    Descripción
+                  </label>
+
+                  <textarea
+                    rows="6"
+                    name="descripcion"
+                    value={categoria.descripcion}
+                    onChange={handleChange}
+                    placeholder="Describe esta categoría..."
+                    className="
+                      w-full
+                      border-2
+                      border-gray-200
+                      rounded-2xl
+                      p-4
+                      resize-none
+                      focus:outline-none
+                      focus:border-orange-500
+                    "
+                  />
+                </div>
+              </div>
+
+              {/* BOTONES */}
+
+              <div className="flex flex-wrap gap-4 mt-10">
+                <button
+                  type="submit"
+                  className="
+                    bg-orange-500
+                    hover:bg-orange-600
+                    text-white
+                    px-8
+                    py-4
+                    rounded-2xl
+                    font-bold
+                    transition
+                  "
+                >
+                  {id ? "Actualizar Categoría" : "Guardar Categoría"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/categorias")}
+                  className="
+                    bg-gray-200
+                    hover:bg-gray-300
+                    px-8
+                    py-4
+                    rounded-2xl
+                    font-bold
+                    transition
+                  "
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* TARJETA INFO */}
+
+          <div className="max-w-4xl mx-auto mt-8">
+            <div className="bg-white rounded-[30px] shadow-xl p-8">
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                Recomendación
+              </h3>
+
+              <p className="text-gray-600 leading-relaxed">
+                Mantén categorías claras y organizadas para facilitar la
+                búsqueda de maquinaria y mejorar la experiencia de los clientes
+                dentro del catálogo de Grupo Comercial J&G.
+              </p>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ function Categorias() {
   const cargarCategorias = async () => {
     try {
       const data = await obtenerCategorias();
-      setCategorias(data);
+      setCategorias(data || []);
     } catch (error) {
       console.error("Error al cargar categorías:", error);
     }
@@ -36,92 +36,148 @@ function Categorias() {
     <div className="flex">
       <MenuAdmin />
 
-      <div className="flex-1 min-h-screen bg-gray-100">
-        <div className="bg-orange-600 text-white p-6 shadow-lg">
-          <h1 className="text-3xl font-bold">Gestión de Categorías</h1>
+      <div className="flex-1 min-h-screen bg-orange-50">
+        {/* HEADER */}
 
-          <p className="mt-2">Administra las categorías del catálogo</p>
+        <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white shadow-2xl">
+          <div className="px-10 py-10 flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="uppercase tracking-widest text-orange-100 text-sm">
+                Grupo Comercial J&G
+              </p>
+
+              <h1 className="text-5xl font-bold mt-2">Gestión de Categorías</h1>
+
+              <p className="text-orange-100 mt-3 text-lg">
+                Administración de categorías para productos y maquinaria.
+              </p>
+            </div>
+
+            <Link
+              to="/admin/categorias/nuevo"
+              className="mt-6 lg:mt-0 bg-white text-orange-600 px-8 py-4 rounded-2xl font-bold hover:scale-105 transition"
+            >
+              + Nueva Categoría
+            </Link>
+          </div>
         </div>
 
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="p-8">
+          {/* KPIs */}
+
           <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-3xl shadow-xl p-8">
               <p className="text-gray-500">Categorías Registradas</p>
 
-              <h2 className="text-4xl font-bold text-orange-600 mt-2">
+              <h2 className="text-5xl font-black text-orange-600 mt-3">
                 {categorias.length}
               </h2>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <p className="text-gray-500">Estado</p>
+            <div className="bg-white rounded-3xl shadow-xl p-8">
+              <p className="text-gray-500">Estado del Sistema</p>
 
-              <h2 className="text-2xl font-bold text-green-600 mt-2">
-                Activas
+              <h2 className="text-3xl font-black text-green-600 mt-3">
+                Activo
               </h2>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-3xl shadow-xl p-8">
               <p className="text-gray-500">Gestión</p>
 
-              <h2 className="text-2xl font-bold text-blue-600 mt-2">
+              <h2 className="text-3xl font-black text-orange-500 mt-3">
                 Categorías
               </h2>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-            <div className="flex justify-end">
-              <Link
-                to="/admin/categorias/nuevo"
-                className="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600"
-              >
-                + Nueva Categoría
-              </Link>
+          {/* TABLA */}
+
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+            <div className="bg-orange-500 text-white px-8 py-5">
+              <h2 className="text-2xl font-bold">Listado de Categorías</h2>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-orange-100">
+                  <tr>
+                    <th className="p-5 text-left font-bold">ID</th>
+
+                    <th className="text-left font-bold">Nombre</th>
+
+                    <th className="text-left font-bold">Descripción</th>
+
+                    <th className="text-center font-bold">Acciones</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {categorias.length > 0 ? (
+                    categorias.map((categoria) => (
+                      <tr
+                        key={categoria.id}
+                        className="border-b hover:bg-orange-50 transition"
+                      >
+                        <td className="p-5 font-semibold">#{categoria.id}</td>
+
+                        <td>
+                          <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-semibold">
+                            {categoria.nombre}
+                          </span>
+                        </td>
+
+                        <td className="text-gray-600">
+                          {categoria.descripcion}
+                        </td>
+
+                        <td>
+                          <div className="flex justify-center gap-3">
+                            <Link
+                              to={`/admin/categorias/editar/${categoria.id}`}
+                              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold transition"
+                            >
+                              Editar
+                            </Link>
+
+                            <button
+                              onClick={() => handleEliminar(categoria.id)}
+                              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-semibold transition"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="4"
+                        className="text-center py-12 text-gray-500"
+                      >
+                        No existen categorías registradas.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-orange-500 text-white">
-                <tr>
-                  <th className="p-4 text-left">ID</th>
-                  <th className="text-left">Nombre</th>
-                  <th className="text-left">Descripción</th>
-                  <th className="text-left">Acciones</th>
-                </tr>
-              </thead>
+          {/* RESUMEN */}
 
-              <tbody>
-                {categorias.map((categoria) => (
-                  <tr key={categoria.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4">{categoria.id}</td>
+          <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
+            <h2 className="text-2xl font-bold mb-4">Información General</h2>
 
-                    <td className="font-semibold">{categoria.nombre}</td>
-
-                    <td>{categoria.descripcion}</td>
-
-                    <td>
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/admin/categorias/editar/${categoria.id}`}
-                          className="bg-blue-500 text-white px-3 py-2 rounded-lg"
-                        >
-                          Editar
-                        </Link>
-
-                        <button
-                          onClick={() => handleEliminar(categoria.id)}
-                          className="bg-red-500 text-white px-3 py-2 rounded-lg"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p className="text-gray-600">
+              Actualmente existen{" "}
+              <span className="font-bold text-orange-600">
+                {categorias.length}
+              </span>{" "}
+              categorías registradas dentro del sistema administrativo de Grupo
+              Comercial J&G.
+            </p>
           </div>
         </div>
       </div>
