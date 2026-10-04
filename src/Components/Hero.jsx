@@ -4,120 +4,92 @@ import heroImg from "../assets/Hero/hero-maquinaria.jpg";
 function Hero() {
   return (
     <section
-      className="relative min-h-[850px] flex items-center overflow-hidden"
+      className="relative min-h-[750px] lg:min-h-[820px] flex items-center overflow-hidden bg-gray-900"
       style={{
         backgroundImage: `url(${heroImg})`,
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: "center right",
       }}
     >
-      {/* Overlay más suave */}
-      <div className="absolute inset-0 bg-black/35"></div>
+      {/* Overlay oscuro profesional estilo marcas de maquinaria */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent"></div>
 
-      {/* Degradado naranja */}
-      <div className="absolute inset-0 bg-gradient-to-r from-orange-900/70 via-orange-800/40 to-transparent"></div>
+      {/* Degradado sutil de la marca */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
-        <div className="max-w-3xl">
-          {/* Logo */}
-          <div className="inline-flex items-center gap-3 bg-white/15 backdrop-blur-md border border-white/20 px-5 py-3 rounded-full mb-8">
-            <img src={logoJ} alt="Grupo Comercial J&G" className="w-10 h-10" />
-
-            <span className="font-bold text-white">Grupo Comercial J&G</span>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full py-16">
+        <div className="max-w-2xl">
+          {/* Badge corporativo */}
+          <div className="inline-flex items-center gap-3 bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 rounded-full mb-6">
+            <img
+              src={logoJ}
+              alt="Grupo Comercial J&G"
+              className="w-7 h-7 object-contain"
+            />
+            <span className="text-xs uppercase tracking-widest font-extrabold text-white">
+              Grupo Comercial J&G
+            </span>
           </div>
 
-          {/* Título */}
-          <h1 className="text-5xl lg:text-7xl font-black text-white leading-tight">
-            Equipos y Repuestos
-            <span className="block text-orange-300">
-              para Agricultura e Industria
-            </span>
+          {/* Título principal con jerarquía limpia */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
+            Potencia y Rendimiento <br />
+            <span className="text-orange-500">para el Campo e Industria</span>
           </h1>
 
           {/* Descripción */}
-          <p className="text-xl text-white/90 mt-8 leading-relaxed max-w-2xl">
+          <p className="text-base sm:text-lg text-gray-200 mt-6 leading-relaxed max-w-xl font-normal">
             Distribuimos maquinaria agrícola, forestal e industrial, repuestos
-            originales y servicio técnico especializado para todo el Perú.
+            originales y brindamos servicio técnico especializado en todo el
+            Perú.
           </p>
 
-          {/* Botones */}
-          <div className="flex flex-wrap gap-4 mt-10">
+          {/* Botones de Acción directos */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <a
               href="/catalogo"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold shadow-2xl transition"
+              className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-bold text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-orange-500/20 active:scale-95"
             >
-              Ver Catálogo
+              Explorar Catálogo
             </a>
 
             <a
               href="https://wa.me/51979501557"
               target="_blank"
               rel="noreferrer"
-              className="bg-white text-orange-600 hover:bg-orange-100 px-8 py-4 rounded-xl font-bold shadow-2xl transition"
+              className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-sm px-8 py-4 rounded-lg font-bold text-sm uppercase tracking-wider transition-all active:scale-95"
             >
               Cotizar por WhatsApp
             </a>
           </div>
 
-          {/* Datos */}
-          <div className="flex flex-wrap gap-10 mt-12">
+          {/* Franja ligera de métricas / confianza (Estilo STIHL) */}
+          <div className="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-white/15">
             <div>
-              <p className="text-orange-200 uppercase text-sm font-bold">
+              <span className="block text-xs uppercase tracking-wider text-orange-400 font-bold mb-1">
                 Atención
+              </span>
+              <p className="text-white text-base sm:text-lg font-extrabold">
+                +51 979 501 557
               </p>
-
-              <h3 className="text-white text-xl font-bold">+51 979 501 557</h3>
             </div>
 
             <div>
-              <p className="text-orange-200 uppercase text-sm font-bold">
+              <span className="block text-xs uppercase tracking-wider text-orange-400 font-bold mb-1">
                 Cobertura
+              </span>
+              <p className="text-white text-base sm:text-lg font-extrabold">
+                Todo el Perú
               </p>
-
-              <h3 className="text-white text-xl font-bold">Todo el Perú</h3>
             </div>
 
             <div>
-              <p className="text-orange-200 uppercase text-sm font-bold">
+              <span className="block text-xs uppercase tracking-wider text-orange-400 font-bold mb-1">
                 Garantía
+              </span>
+              <p className="text-white text-base sm:text-lg font-extrabold">
+                100% Originales
               </p>
-
-              <h3 className="text-white text-xl font-bold">
-                Productos Originales
-              </h3>
-            </div>
-          </div>
-
-          {/* Tarjeta flotante */}
-          <div className="mt-12 bg-white rounded-3xl p-6 shadow-2xl max-w-xl">
-            <p className="text-gray-500 font-semibold mb-3">
-              Trabajamos con marcas líderes
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
-                STIHL
-              </span>
-
-              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
-                HONDA
-              </span>
-
-              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
-                HUSQVARNA
-              </span>
-
-              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
-                MEBA
-              </span>
-
-              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
-                PTK
-              </span>
-
-              <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-bold">
-                TRUPER
-              </span>
             </div>
           </div>
         </div>
