@@ -1,41 +1,37 @@
 function Servicios() {
   const servicios = [
     {
-      icono: "🚜",
       titulo: "Venta de Maquinaria",
       descripcion:
-        "Comercializamos maquinaria agrícola, forestal e industrial de marcas reconocidas.",
+        "Equipos agrícolas, forestales e industriales de marcas reconocidas.",
     },
     {
-      icono: "⚙️",
-      titulo: "Venta de Repuestos",
+      titulo: "Repuestos Originales",
       descripcion:
-        "Disponemos de repuestos originales y accesorios para diferentes equipos y marcas.",
+        "Amplio stock de repuestos y accesorios para diversas marcas.",
     },
     {
-      icono: "🛠️",
       titulo: "Servicio Técnico",
-      descripcion:
-        "Mantenimiento y reparación especializada para motosierras, fumigadoras y desbrozadoras.",
+      descripcion: "Mantenimiento y reparación especializada para maquinaria.",
     },
     {
-      icono: "👨‍🔧",
-      titulo: "Asesoría Especializada",
-      descripcion:
-        "Nuestro equipo te ayuda a elegir el equipo adecuado según tu necesidad.",
+      titulo: "Asesoría Comercial",
+      descripcion: "Te ayudamos a elegir el equipo ideal para tu negocio.",
     },
   ];
 
   return (
-    <section className="bg-gray-100 py-20">
+    <section className="bg-orange-50 py-24">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-14">
-          <h2 className="text-4xl font-bold text-gray-800">
-            Nuestros Servicios
+        <div className="text-center mb-16">
+          <span className="text-orange-600 font-bold uppercase">Servicios</span>
+
+          <h2 className="text-5xl font-black text-gray-900 mt-4">
+            Todo lo que Necesitas
           </h2>
 
-          <p className="text-gray-600 mt-4 text-lg">
-            Soluciones integrales para agricultura, forestación e industria.
+          <p className="text-gray-600 mt-6 text-lg max-w-3xl mx-auto">
+            Soluciones completas para agricultura, forestación e industria.
           </p>
         </div>
 
@@ -43,22 +39,13 @@ function Servicios() {
           {servicios.map((servicio, index) => (
             <div
               key={index}
-              className="
-                bg-white
-                rounded-2xl
-                p-8
-                shadow-md
-                hover:shadow-2xl
-                hover:-translate-y-2
-                transition-all
-                duration-300
-              "
+              className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
             >
-              <div className="text-5xl mb-5">{servicio.icono}</div>
+              <div className="w-16 h-16 bg-orange-500 text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-6">
+                {index + 1}
+              </div>
 
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
-                {servicio.titulo}
-              </h3>
+              <h3 className="text-2xl font-bold mb-4">{servicio.titulo}</h3>
 
               <p className="text-gray-600">{servicio.descripcion}</p>
             </div>
