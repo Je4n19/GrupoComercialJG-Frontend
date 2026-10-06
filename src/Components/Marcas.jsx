@@ -34,80 +34,117 @@ function Marcas() {
   ];
 
   return (
-    <section className="bg-gradient-to-b from-white to-orange-50 py-28">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* TITULO */}
+    <section className="relative bg-gray-50 py-24 lg:py-28 overflow-hidden">
+      {/* Decoración de fondo */}
 
-        <div className="text-center mb-16">
-          <span className="bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-bold text-sm uppercase tracking-wider">
-            Marcas Líderes
-          </span>
+      <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-[#e84d05]/5 rounded-full blur-3xl"></div>
 
-          <h2 className="text-5xl font-black text-gray-900 mt-6">
-            Distribuidores de Marcas Reconocidas
-          </h2>
+      <div className="absolute -bottom-40 -right-32 w-[450px] h-[450px] bg-orange-100/60 rounded-full blur-3xl"></div>
 
-          <p className="text-gray-600 text-lg mt-5 max-w-3xl mx-auto">
-            Comercializamos equipos y repuestos originales respaldados por
-            fabricantes líderes en maquinaria agrícola, forestal e industrial.
-          </p>
+      <div className="relative max-w-7xl mx-auto px-6">
+        {/* =========================
+            ENCABEZADO
+        ========================== */}
+
+        <div className="grid lg:grid-cols-2 gap-10 items-end mb-14">
+          <div>
+            <span className="inline-flex items-center gap-3 text-[#e84d05] font-black uppercase tracking-[0.18em] text-sm">
+              <span className="w-10 h-[3px] bg-[#e84d05] rounded-full"></span>
+              Nuestras Marcas
+            </span>
+
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-950 mt-6 leading-[1.05]">
+              Marcas reconocidas,
+              <span className="block text-[#e84d05] mt-2">
+                equipos para cada trabajo.
+              </span>
+            </h2>
+          </div>
+
+          <div className="lg:pb-2">
+            <p className="text-gray-600 text-lg leading-relaxed max-w-xl lg:ml-auto">
+              Trabajamos con diferentes marcas de maquinaria, herramientas y
+              equipos para ofrecer alternativas según las necesidades de cada
+              cliente.
+            </p>
+          </div>
         </div>
 
-        {/* LOGOS */}
+        {/* =========================
+            CONTENEDOR DE MARCAS
+        ========================== */}
 
-        <div className="bg-white rounded-[40px] shadow-2xl border border-gray-100 p-10">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+        <div className="bg-white rounded-[35px] shadow-xl border border-gray-100 p-6 md:p-10 lg:p-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {marcas.map((marca, index) => (
               <div
                 key={index}
                 className="
-                  bg-white
-                  rounded-3xl
-                  border
-                  border-gray-100
-                  p-6
+                  group
+                  relative
+                  min-h-[180px]
                   flex
-                  flex-col
                   items-center
                   justify-center
-                  hover:shadow-xl
-                  hover:-translate-y-2
+                  p-6
+                  border-b
+                  border-gray-100
+                  last:border-b-0
+
+                  md:border-r
+                  lg:border-b-0
+
+                  hover:bg-orange-50/70
                   transition-all
                   duration-300
                 "
               >
-                <img
-                  src={marca.logo}
-                  alt={marca.nombre}
-                  className="h-16 object-contain mb-4"
-                />
+                {/* Línea superior al hacer hover */}
 
-                <span className="font-bold text-gray-700">{marca.nombre}</span>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-[4px] bg-[#e84d05] rounded-full group-hover:w-16 transition-all duration-300"></div>
+
+                {/* Logo */}
+
+                <div className="flex flex-col items-center justify-center">
+                  <img
+                    src={marca.logo}
+                    alt={marca.nombre}
+                    className="
+                      max-h-20
+                      max-w-[140px]
+                      w-auto
+                      object-contain
+                      transition-all
+                      duration-300
+                      group-hover:scale-110
+                    "
+                  />
+
+                  <span className="text-gray-400 text-sm font-bold mt-5 group-hover:text-[#e84d05] transition">
+                    {marca.nombre}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* INDICADORES */}
+        {/* =========================
+            MENSAJE INFERIOR
+        ========================== */}
 
-        <div className="grid md:grid-cols-3 gap-8 mt-14">
-          <div className="bg-orange-500 text-white rounded-3xl p-8 text-center shadow-xl">
-            <h3 className="text-5xl font-black">6+</h3>
-
-            <p className="mt-3 text-orange-100">Marcas Internacionales</p>
+        <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-3 text-center">
+          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#e84d05] font-black">
+            ✓
           </div>
 
-          <div className="bg-white rounded-3xl p-8 text-center shadow-xl border">
-            <h3 className="text-5xl font-black text-orange-500">100%</h3>
-
-            <p className="mt-3 text-gray-600">Productos Originales</p>
-          </div>
-
-          <div className="bg-white rounded-3xl p-8 text-center shadow-xl border">
-            <h3 className="text-5xl font-black text-orange-500">Perú</h3>
-
-            <p className="mt-3 text-gray-600">Cobertura Nacional</p>
-          </div>
+          <p className="text-gray-600">
+            Diferentes marcas y alternativas para
+            <span className="font-black text-gray-900">
+              {" "}
+              agricultura, trabajo forestal e industria.
+            </span>
+          </p>
         </div>
       </div>
     </section>

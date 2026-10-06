@@ -2,121 +2,231 @@ import nosotrosImg from "../assets/Nosotros/nosotros.jpg";
 
 function Nosotros() {
   return (
-    <section className="bg-gradient-to-b from-white to-orange-50 py-28">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
-          {/* IMAGEN */}
+    <section className="relative bg-white py-24 lg:py-32 overflow-hidden">
+      {/* Decoración de fondo */}
+      <div className="absolute -right-40 top-20 w-[500px] h-[500px] bg-orange-100/60 rounded-full blur-3xl"></div>
+      <div className="absolute -left-40 bottom-0 w-[400px] h-[400px] bg-[#e84d05]/5 rounded-full blur-3xl"></div>
+
+      <div className="relative max-w-7xl mx-auto px-6">
+        <div className="grid lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+          {/* =========================
+              IMAGEN
+          ========================== */}
 
           <div className="relative">
-            <div className="absolute -top-8 -left-8 w-full h-full bg-orange-500 rounded-[40px] opacity-20"></div>
+            {/* Marco naranja detrás */}
+            <div className="absolute -left-5 -top-5 w-full h-full bg-[#e84d05] rounded-[35px]"></div>
 
-            <img
-              src={nosotrosImg}
-              alt="Grupo Comercial J&G"
-              className="relative w-full rounded-[40px] shadow-2xl object-cover"
-            />
+            {/* Imagen */}
+            <div className="relative rounded-[35px] overflow-hidden shadow-2xl">
+              <img
+                src={nosotrosImg}
+                alt="Grupo Comercial J&G"
+                className="w-full h-[520px] lg:h-[650px] object-cover"
+              />
 
-            <div className="absolute bottom-8 left-8 bg-white p-6 rounded-3xl shadow-2xl">
-              <h3 className="text-5xl font-black text-orange-500">J&G</h3>
+              {/* Degradado */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent"></div>
 
-              <p className="text-gray-600 font-semibold mt-2">
-                Equipos • Repuestos • Servicio Técnico
-              </p>
+              {/* Texto inferior de imagen */}
+              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10 text-white">
+                <span className="text-orange-300 font-bold text-sm uppercase tracking-[0.2em]">
+                  Grupo Comercial J&G
+                </span>
+
+                <h3 className="text-3xl md:text-4xl font-black mt-2">
+                  Soluciones para cada trabajo
+                </h3>
+
+                <p className="text-gray-200 mt-3 max-w-md">
+                  Maquinaria, repuestos y atención especializada para nuestros
+                  clientes.
+                </p>
+              </div>
+            </div>
+
+            {/* Tarjeta flotante */}
+            <div className="absolute -right-4 md:-right-8 top-10 bg-white rounded-2xl shadow-2xl p-5 md:p-6 border border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">
+                  ✓
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-gray-400 font-bold">
+                    Nuestro compromiso
+                  </p>
+
+                  <p className="font-black text-gray-900 mt-1">
+                    Calidad y confianza
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* CONTENIDO */}
+          {/* =========================
+              CONTENIDO
+          ========================== */}
 
           <div>
-            <span className="bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-bold uppercase">
+            {/* Etiqueta */}
+            <span className="inline-flex items-center gap-2 text-[#e84d05] font-black uppercase tracking-[0.18em] text-sm">
+              <span className="w-10 h-[3px] bg-[#e84d05] rounded-full"></span>
               Quiénes Somos
             </span>
 
-            <h2 className="text-5xl lg:text-6xl font-black text-gray-900 mt-6 leading-tight">
-              Más que Maquinaria,
-              <span className="block text-orange-500">
-                Somos tu Socio Estratégico
-              </span>
+            {/* Título */}
+            <h2 className="text-4xl md:text-5xl xl:text-6xl font-black text-gray-950 mt-6 leading-[1.05]">
+              Más que vender
+              <span className="block text-[#e84d05] mt-2">maquinaria.</span>
             </h2>
 
-            <p className="text-lg text-gray-600 mt-8 leading-relaxed">
-              Grupo Comercial J&G es una empresa especializada en la
-              comercialización de maquinaria, equipos y repuestos para los
-              sectores agrícola, forestal e industrial.
+            <h3 className="text-2xl md:text-3xl font-black text-gray-800 mt-3">
+              Queremos ser parte de tu trabajo.
+            </h3>
+
+            {/* Descripción */}
+            <p className="text-lg text-gray-600 mt-7 leading-relaxed">
+              En Grupo Comercial J&G nos especializamos en maquinaria, equipos y
+              repuestos para los sectores agrícola, forestal e industrial.
             </p>
 
-            <p className="text-lg text-gray-600 mt-6 leading-relaxed">
-              Trabajamos con marcas reconocidas del mercado ofreciendo productos
-              de calidad, garantía y asesoría especializada para cada necesidad
-              de nuestros clientes.
+            <p className="text-lg text-gray-600 mt-4 leading-relaxed">
+              Buscamos que cada cliente encuentre el equipo adecuado para su
+              trabajo, acompañado de productos de calidad y una atención cercana
+              y especializada.
             </p>
+
+            {/* Línea */}
+            <div className="w-full h-px bg-gray-200 my-9"></div>
 
             {/* BENEFICIOS */}
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+              {/* 1 */}
+              <div className="flex gap-4 group">
+                <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
+                  🚜
+                </div>
 
-            <div className="grid md:grid-cols-2 gap-5 mt-10">
-              <div className="bg-white p-6 rounded-3xl shadow-lg">
-                <div className="text-3xl mb-3">🚜</div>
+                <div>
+                  <h3 className="font-black text-gray-900 text-lg">
+                    Equipos Profesionales
+                  </h3>
 
-                <h3 className="font-bold text-xl mb-2">
-                  Equipos Profesionales
-                </h3>
-
-                <p className="text-gray-600">
-                  Maquinaria de alto rendimiento para trabajos exigentes.
-                </p>
+                  <p className="text-gray-500 text-sm mt-1 leading-relaxed">
+                    Equipos preparados para trabajos exigentes.
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl shadow-lg">
-                <div className="text-3xl mb-3">⚙️</div>
+              {/* 2 */}
+              <div className="flex gap-4 group">
+                <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
+                  ⚙️
+                </div>
 
-                <h3 className="font-bold text-xl mb-2">Repuestos Originales</h3>
+                <div>
+                  <h3 className="font-black text-gray-900 text-lg">
+                    Repuestos
+                  </h3>
 
-                <p className="text-gray-600">
-                  Amplio stock para prolongar la vida útil de tus equipos.
-                </p>
+                  <p className="text-gray-500 text-sm mt-1 leading-relaxed">
+                    Alternativas para mantener tus equipos operativos.
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl shadow-lg">
-                <div className="text-3xl mb-3">🛠️</div>
+              {/* 3 */}
+              <div className="flex gap-4 group">
+                <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
+                  🛠️
+                </div>
 
-                <h3 className="font-bold text-xl mb-2">Soporte Técnico</h3>
+                <div>
+                  <h3 className="font-black text-gray-900 text-lg">
+                    Soporte Técnico
+                  </h3>
 
-                <p className="text-gray-600">
-                  Asistencia especializada y mantenimiento profesional.
-                </p>
+                  <p className="text-gray-500 text-sm mt-1 leading-relaxed">
+                    Orientación y asistencia para tus equipos.
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl shadow-lg">
-                <div className="text-3xl mb-3">🚚</div>
+              {/* 4 */}
+              <div className="flex gap-4 group">
+                <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
+                  🚚
+                </div>
 
-                <h3 className="font-bold text-xl mb-2">Cobertura Nacional</h3>
+                <div>
+                  <h3 className="font-black text-gray-900 text-lg">
+                    Cobertura Nacional
+                  </h3>
 
-                <p className="text-gray-600">
-                  Atendemos clientes en todo el Perú.
-                </p>
+                  <p className="text-gray-500 text-sm mt-1 leading-relaxed">
+                    Atención para clientes en diferentes partes del Perú.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* ESTADÍSTICAS */}
+            {/* CTA */}
+            <div className="flex flex-wrap items-center gap-4 mt-10">
+              <a
+                href="/catalogo"
+                className="bg-[#e84d05] hover:bg-[#c94104] text-white px-7 py-4 rounded-xl font-black shadow-lg transition hover:-translate-y-1"
+              >
+                Conocer Productos
+              </a>
 
-            <div className="grid grid-cols-3 gap-6 mt-12">
-              <div className="text-center">
-                <h3 className="text-5xl font-black text-orange-500">12+</h3>
+              <a
+                href="https://wa.me/51979501557?text=Hola,%20deseo%20recibir%20asesoría%20sobre%20sus%20productos"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-gray-950 hover:bg-black text-white px-7 py-4 rounded-xl font-black transition hover:-translate-y-1"
+              >
+                Hablar con un Asesor
+              </a>
+            </div>
+          </div>
+        </div>
 
-                <p className="text-gray-600 font-semibold">Productos</p>
-              </div>
+        {/* =========================
+            FRANJA INFERIOR
+        ========================== */}
 
-              <div className="text-center">
-                <h3 className="text-5xl font-black text-orange-500">8+</h3>
+        <div className="mt-24 bg-gray-950 rounded-[35px] overflow-hidden shadow-2xl">
+          <div className="grid md:grid-cols-3">
+            <div className="p-8 lg:p-10 border-b md:border-b-0 md:border-r border-white/10">
+              <span className="text-[#e84d05] font-black text-3xl">01</span>
 
-                <p className="text-gray-600 font-semibold">Repuestos</p>
-              </div>
+              <h3 className="text-white text-xl font-black mt-3">Asesoría</h3>
 
-              <div className="text-center">
-                <h3 className="text-5xl font-black text-orange-500">6+</h3>
+              <p className="text-gray-400 mt-2 leading-relaxed">
+                Te orientamos para encontrar el equipo adecuado para tu trabajo.
+              </p>
+            </div>
 
-                <p className="text-gray-600 font-semibold">Marcas</p>
-              </div>
+            <div className="p-8 lg:p-10 border-b md:border-b-0 md:border-r border-white/10">
+              <span className="text-[#e84d05] font-black text-3xl">02</span>
+
+              <h3 className="text-white text-xl font-black mt-3">Confianza</h3>
+
+              <p className="text-gray-400 mt-2 leading-relaxed">
+                Buscamos construir relaciones duraderas con nuestros clientes.
+              </p>
+            </div>
+
+            <div className="p-8 lg:p-10">
+              <span className="text-[#e84d05] font-black text-3xl">03</span>
+
+              <h3 className="text-white text-xl font-black mt-3">Respaldo</h3>
+
+              <p className="text-gray-400 mt-2 leading-relaxed">
+                Te acompañamos también después de elegir tu maquinaria.
+              </p>
             </div>
           </div>
         </div>
