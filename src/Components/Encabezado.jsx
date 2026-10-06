@@ -23,7 +23,7 @@ function Encabezado() {
 
       {/* Header principal */}
 
-      <header className="bg-[#964723] shadow-xl sticky top-0 z-50 border-b border-[#7d381b]">
+      <header className="bg-[#c94e14] shadow-xl sticky top-0 z-50 border-b border-[#c94104]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-24">
             {/* Logo y empresa */}
