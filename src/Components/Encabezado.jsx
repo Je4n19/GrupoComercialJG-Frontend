@@ -10,7 +10,9 @@ function Encabezado() {
         <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center text-sm">
           <div className="flex gap-6">
             <span>📞 +51 979 501 557</span>
-            <span>🚚 Cobertura a nivel nacional</span>
+            <span className="hidden sm:inline">
+              🚚 Cobertura a nivel nacional
+            </span>
           </div>
 
           <div className="hidden md:block">
@@ -19,54 +21,60 @@ function Encabezado() {
         </div>
       </div>
 
-      {/* Header */}
+      {/* Header principal */}
 
-      <header className="bg-white shadow-xl sticky top-0 z-50">
+      <header className="bg-[#964723] shadow-xl sticky top-0 z-50 border-b border-[#7d381b]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-24">
-            {/* Logo */}
+            {/* Logo y empresa */}
 
-            <Link to="/" className="flex items-center gap-4">
-              <img src={logo} alt="Grupo Comercial J&G" className="h-16" />
+            <Link to="/" className="flex items-center gap-4 group">
+              <div className="bg-white rounded-xl p-2 shadow-md group-hover:scale-105 transition">
+                <img
+                  src={logo}
+                  alt="Grupo Comercial J&G"
+                  className="h-14 w-auto"
+                />
+              </div>
 
-              <div>
-                <h1 className="font-black text-2xl text-gray-900">
+              <div className="hidden sm:block">
+                <h1 className="font-black text-2xl text-white">
                   Grupo Comercial J&G
                 </h1>
 
-                <p className="text-sm text-orange-500 font-semibold">
+                <p className="text-sm text-orange-200 font-semibold">
                   Agricultura • Forestal • Industria
                 </p>
               </div>
             </Link>
 
-            {/* Menu */}
+            {/* Menú */}
 
             <nav className="hidden lg:flex items-center gap-8">
               <Link
                 to="/"
-                className="font-bold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-white hover:text-orange-200 transition"
               >
                 Inicio
               </Link>
 
               <Link
                 to="/catalogo"
-                className="font-bold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-white hover:text-orange-200 transition"
               >
                 Productos
               </Link>
 
               <Link
                 to="/repuestos"
-                className="font-bold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-white hover:text-orange-200 transition"
               >
                 Repuestos
               </Link>
 
               <Link
                 to="/contacto"
-                className="font-bold text-gray-700 hover:text-orange-500 transition"
+                className="font-bold text-white hover:text-orange-200 transition"
               >
                 Contacto
               </Link>
@@ -79,7 +87,7 @@ function Encabezado() {
                 href="https://wa.me/51979501557"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden xl:flex bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition"
+                className="hidden xl:flex bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold shadow-md transition"
               >
                 WhatsApp
               </a>
@@ -88,7 +96,7 @@ function Encabezado() {
                 href="https://wa.me/51979501557?text=Hola,%20deseo%20una%20cotización"
                 target="_blank"
                 rel="noreferrer"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg transition"
+                className="bg-orange-500 hover:bg-orange-400 text-white px-5 py-3 rounded-xl font-bold shadow-lg transition hover:-translate-y-0.5"
               >
                 Cotizar Ahora
               </a>
