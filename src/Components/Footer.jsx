@@ -1,16 +1,15 @@
+import { Link } from "react-router-dom";
 import logoJ from "../assets/logoJ&G.png";
 
 function Footer() {
   return (
     <footer className="bg-gray-950 text-white">
       {/* Franja superior naranja */}
-
       <div className="h-2 bg-orange-500"></div>
 
       <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-4 gap-12">
           {/* Empresa */}
-
           <div>
             <img
               src={logoJ}
@@ -33,7 +32,6 @@ function Footer() {
           </div>
 
           {/* Navegación */}
-
           <div>
             <h3 className="text-xl font-bold mb-6 text-orange-500">
               Navegación
@@ -41,42 +39,41 @@ function Footer() {
 
             <ul className="space-y-4 text-gray-400">
               <li>
-                <a href="/" className="hover:text-orange-500 transition">
+                <Link to="/" className="hover:text-orange-500 transition">
                   Inicio
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
-                  href="/catalogo"
+                <Link
+                  to="/catalogo"
                   className="hover:text-orange-500 transition"
                 >
                   Catálogo
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
-                  href="/repuestos"
+                <Link
+                  to="/repuestos"
                   className="hover:text-orange-500 transition"
                 >
                   Repuestos
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
-                  href="/contacto"
+                <Link
+                  to="/contacto"
                   className="hover:text-orange-500 transition"
                 >
                   Contacto
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
 
           {/* Servicios */}
-
           <div>
             <h3 className="text-xl font-bold mb-6 text-orange-500">
               Servicios
@@ -92,17 +89,13 @@ function Footer() {
           </div>
 
           {/* Contacto */}
-
           <div>
             <h3 className="text-xl font-bold mb-6 text-orange-500">Contacto</h3>
 
             <div className="space-y-4 text-gray-400">
               <p>📞 +51 979 501 557</p>
-
               <p>📍 Perú</p>
-
               <p>🕒 Atención Personalizada</p>
-
               <p>🚚 Cobertura Nacional</p>
             </div>
 
@@ -118,16 +111,26 @@ function Footer() {
         </div>
 
         {/* Línea inferior */}
-
         <div className="border-t border-gray-800 mt-16 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 text-sm">
               © 2026 Grupo Comercial J&G. Todos los derechos reservados.
             </p>
 
-            <p className="text-gray-500 text-sm">
-              Maquinaria • Repuestos • Servicio Técnico
-            </p>
+            <div className="flex items-center gap-5 text-sm">
+              <span className="text-gray-500">
+                Maquinaria • Repuestos • Servicio Técnico
+              </span>
+
+              <span className="hidden md:block text-gray-700">|</span>
+
+              <Link
+                to="/login"
+                className="text-gray-600 hover:text-orange-500 transition"
+              >
+                Acceso administrativo
+              </Link>
+            </div>
           </div>
         </div>
       </div>

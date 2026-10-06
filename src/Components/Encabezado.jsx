@@ -92,13 +92,6 @@ function Encabezado() {
               >
                 Cotizar Ahora
               </a>
-
-              <Link
-                to="/login"
-                className="bg-gray-900 hover:bg-black text-white px-5 py-3 rounded-xl font-bold transition"
-              >
-                Intranet
-              </Link>
             </div>
           </div>
         </div>
