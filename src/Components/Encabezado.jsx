@@ -75,8 +75,8 @@ function Encabezado() {
 
           {/* REDES SOCIALES DERECHA */}
           <div className="flex items-center gap-3 sm:gap-4">
-            <span className="hidden md:inline font-medium text-white/90">
-              Síguenos en nuestras redes:
+            <span className="font-medium text-white whitespace-nowrap">
+              Síguenos en todas nuestras redes:
             </span>
 
             {/* FACEBOOK */}
