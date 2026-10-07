@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import MenuAdmin from "../Components/MenuAdmin";
 
 import {
@@ -27,10 +28,19 @@ function Categorias() {
     const confirmar = window.confirm("¿Deseas eliminar esta categoría?");
 
     if (confirmar) {
-      await eliminarCategoria(id);
-      cargarCategorias();
+      try {
+        await eliminarCategoria(id);
+        cargarCategorias();
+      } catch (error) {
+        console.error(error);
+        alert("No se pudo eliminar la categoría.");
+      }
     }
   };
+
+  const gruposRegistrados = new Set(
+    categorias.map((categoria) => categoria.grupo).filter(Boolean),
+  ).size;
 
   return (
     <div className="flex">
@@ -49,7 +59,7 @@ function Categorias() {
               <h1 className="text-5xl font-bold mt-2">Gestión de Categorías</h1>
 
               <p className="text-orange-100 mt-3 text-lg">
-                Administración de categorías para productos y maquinaria.
+                Organización de grupos y categorías del catálogo.
               </p>
             </div>
 
@@ -75,18 +85,18 @@ function Categorias() {
             </div>
 
             <div className="bg-white rounded-3xl shadow-xl p-8">
-              <p className="text-gray-500">Estado del Sistema</p>
+              <p className="text-gray-500">Grupos Registrados</p>
 
-              <h2 className="text-3xl font-black text-green-600 mt-3">
-                Activo
+              <h2 className="text-5xl font-black text-orange-600 mt-3">
+                {gruposRegistrados}
               </h2>
             </div>
 
             <div className="bg-white rounded-3xl shadow-xl p-8">
-              <p className="text-gray-500">Gestión</p>
+              <p className="text-gray-500">Estado del Sistema</p>
 
-              <h2 className="text-3xl font-black text-orange-500 mt-3">
-                Categorías
+              <h2 className="text-3xl font-black text-green-600 mt-3">
+                Activo
               </h2>
             </div>
           </div>
@@ -104,7 +114,9 @@ function Categorias() {
                   <tr>
                     <th className="p-5 text-left font-bold">ID</th>
 
-                    <th className="text-left font-bold">Nombre</th>
+                    <th className="text-left font-bold">Grupo</th>
+
+                    <th className="text-left font-bold">Categoría</th>
 
                     <th className="text-left font-bold">Descripción</th>
 
@@ -121,17 +133,29 @@ function Categorias() {
                       >
                         <td className="p-5 font-semibold">#{categoria.id}</td>
 
-                        <td>
+                        <td className="pr-5">
+                          {categoria.grupo ? (
+                            <span className="bg-gray-900 text-white px-4 py-2 rounded-full text-xs font-bold">
+                              {categoria.grupo}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">
+                              Sin grupo
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="pr-5">
                           <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full font-semibold">
                             {categoria.nombre}
                           </span>
                         </td>
 
-                        <td className="text-gray-600">
-                          {categoria.descripcion}
+                        <td className="text-gray-600 pr-5">
+                          {categoria.descripcion || "Sin descripción"}
                         </td>
 
-                        <td>
+                        <td className="p-5">
                           <div className="flex justify-center gap-3">
                             <Link
                               to={`/admin/categorias/editar/${categoria.id}`}
@@ -153,7 +177,7 @@ function Categorias() {
                   ) : (
                     <tr>
                       <td
-                        colSpan="4"
+                        colSpan="5"
                         className="text-center py-12 text-gray-500"
                       >
                         No existen categorías registradas.
@@ -168,15 +192,20 @@ function Categorias() {
           {/* RESUMEN */}
 
           <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
-            <h2 className="text-2xl font-bold mb-4">Información General</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Organización del Catálogo
+            </h2>
 
             <p className="text-gray-600">
               Actualmente existen{" "}
               <span className="font-bold text-orange-600">
                 {categorias.length}
               </span>{" "}
-              categorías registradas dentro del sistema administrativo de Grupo
-              Comercial J&G.
+              categorías distribuidas en{" "}
+              <span className="font-bold text-orange-600">
+                {gruposRegistrados}
+              </span>{" "}
+              grupos de productos.
             </p>
           </div>
         </div>
