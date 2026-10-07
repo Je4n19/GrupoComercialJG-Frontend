@@ -12,10 +12,9 @@ function Nosotros() {
           {/* =========================
               IMAGEN
           ========================== */}
-
-          <div className="relative">
+          <div className="relative lg:pr-10">
             {/* Marco naranja detrás */}
-            <div className="absolute -left-5 -top-5 w-full h-full bg-[#e84d05] rounded-[35px]"></div>
+            <div className="absolute -left-5 -top-5 right-10 h-full bg-[#e84d05] rounded-[35px]"></div>
 
             {/* Imagen */}
             <div className="relative rounded-[35px] overflow-hidden shadow-2xl">
@@ -46,18 +45,36 @@ function Nosotros() {
             </div>
 
             {/* Tarjeta flotante */}
-            <div className="absolute -right-4 md:-right-8 top-10 bg-white rounded-2xl shadow-2xl p-5 md:p-6 border border-gray-100">
+            <div
+              className="
+                absolute
+                top-8
+                right-4
+                md:top-10
+                lg:top-12
+                lg:-right-12
+                xl:-right-16
+                z-20
+                bg-white
+                rounded-2xl
+                shadow-2xl
+                px-5 py-4
+                md:px-6 md:py-5
+                border border-gray-100
+                max-w-[250px]
+              "
+            >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">
+                <div className="shrink-0 w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-2xl text-gray-950 font-black">
                   ✓
                 </div>
 
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-gray-400 font-bold">
+                  <p className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">
                     Nuestro compromiso
                   </p>
 
-                  <p className="font-black text-gray-900 mt-1">
+                  <p className="font-black text-gray-900 mt-1 whitespace-nowrap">
                     Calidad y confianza
                   </p>
                 </div>
@@ -68,15 +85,12 @@ function Nosotros() {
           {/* =========================
               CONTENIDO
           ========================== */}
-
           <div>
-            {/* Etiqueta */}
             <span className="inline-flex items-center gap-2 text-[#e84d05] font-black uppercase tracking-[0.18em] text-sm">
               <span className="w-10 h-[3px] bg-[#e84d05] rounded-full"></span>
               Quiénes Somos
             </span>
 
-            {/* Título */}
             <h2 className="text-4xl md:text-5xl xl:text-6xl font-black text-gray-950 mt-6 leading-[1.05]">
               Más que vender
               <span className="block text-[#e84d05] mt-2">maquinaria.</span>
@@ -86,7 +100,6 @@ function Nosotros() {
               Queremos ser parte de tu trabajo.
             </h3>
 
-            {/* Descripción */}
             <p className="text-lg text-gray-600 mt-7 leading-relaxed">
               En Grupo Comercial J&G nos especializamos en maquinaria, equipos y
               repuestos para los sectores agrícola, forestal e industrial.
@@ -98,12 +111,10 @@ function Nosotros() {
               y especializada.
             </p>
 
-            {/* Línea */}
             <div className="w-full h-px bg-gray-200 my-9"></div>
 
             {/* BENEFICIOS */}
             <div className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
-              {/* 1 */}
               <div className="flex gap-4 group">
                 <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
                   🚜
@@ -120,7 +131,6 @@ function Nosotros() {
                 </div>
               </div>
 
-              {/* 2 */}
               <div className="flex gap-4 group">
                 <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
                   ⚙️
@@ -137,7 +147,6 @@ function Nosotros() {
                 </div>
               </div>
 
-              {/* 3 */}
               <div className="flex gap-4 group">
                 <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
                   🛠️
@@ -154,7 +163,6 @@ function Nosotros() {
                 </div>
               </div>
 
-              {/* 4 */}
               <div className="flex gap-4 group">
                 <div className="shrink-0 w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-2xl group-hover:bg-[#e84d05] transition">
                   🚚
@@ -196,7 +204,6 @@ function Nosotros() {
         {/* =========================
             FRANJA INFERIOR
         ========================== */}
-
         <div className="mt-24 bg-gray-950 rounded-[35px] overflow-hidden shadow-2xl">
           <div className="grid md:grid-cols-3">
             <div className="p-8 lg:p-10 border-b md:border-b-0 md:border-r border-white/10">
