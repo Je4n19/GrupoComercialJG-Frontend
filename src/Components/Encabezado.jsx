@@ -57,16 +57,68 @@ function Encabezado() {
 
       <div className="bg-orange-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-3 flex justify-between items-center text-xs sm:text-sm">
-          <div className="flex gap-6">
-            <span>📞 +51 979 501 557</span>
+          {/* Información izquierda */}
+          <div className="flex items-center gap-3 sm:gap-6">
+            <a
+              href="tel:+51979501557"
+              className="hover:text-orange-100 transition"
+            >
+              📞 +51 979 501 557
+            </a>
 
             <span className="hidden sm:inline">
               🚚 Cobertura a nivel nacional
             </span>
           </div>
 
-          <div className="hidden md:block">
-            Maquinaria • Repuestos • Servicio Técnico
+          {/* Redes sociales derecha */}
+          <div className="flex items-center gap-4">
+            {/* Facebook */}
+            <a
+              href="https://www.facebook.com/p/Grupo-Comercial-JG-61572533279515/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook de Grupo Comercial J&G"
+              title="Facebook"
+              className="flex items-center gap-2 font-semibold hover:text-orange-100 transition group"
+            >
+              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center group-hover:bg-[#1877F2] transition">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-3.5 h-3.5 fill-white"
+                  aria-hidden="true"
+                >
+                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.099 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.974h-1.513c-1.491 0-1.956.931-1.956 1.887v2.26h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.099 24 12.073z" />
+                </svg>
+              </span>
+
+              <span className="hidden sm:inline">Facebook</span>
+            </a>
+
+            {/* Separador */}
+            <span className="text-white/40">|</span>
+
+            {/* Instagram */}
+            <a
+              href="https://www.instagram.com/grupocomercialjg/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram de Grupo Comercial J&G"
+              title="Instagram"
+              className="flex items-center gap-2 font-semibold hover:text-orange-100 transition group"
+            >
+              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center group-hover:bg-pink-600 transition">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-3.5 h-3.5 fill-white"
+                  aria-hidden="true"
+                >
+                  <path d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5zm8.75 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+                </svg>
+              </span>
+
+              <span className="hidden sm:inline">Instagram</span>
+            </a>
           </div>
         </div>
       </div>
