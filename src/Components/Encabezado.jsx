@@ -1,17 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import logo from "../assets/logoJ&G.png";
+import { obtenerCategorias } from "../Services/categoriaService";
 
 function Encabezado() {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [categoriasAbiertas, setCategoriasAbiertas] = useState(false);
+  const [categorias, setCategorias] = useState([]);
+
+  useEffect(() => {
+    const cargarCategorias = async () => {
+      try {
+        const data = await obtenerCategorias();
+        setCategorias(data || []);
+      } catch (error) {
+        console.error("Error cargando categorías:", error);
+      }
+    };
+
+    cargarCategorias();
+  }, []);
 
   const cerrarMenu = () => {
     setMenuAbierto(false);
+    setCategoriasAbiertas(false);
   };
+
+  // Agrupar categorías por el campo "grupo"
+  const categoriasAgrupadas = categorias.reduce((grupos, categoria) => {
+    if (!categoria.grupo || !categoria.nombre) {
+      return grupos;
+    }
+
+    const nombreGrupo = categoria.grupo.trim();
+
+    if (!grupos[nombreGrupo]) {
+      grupos[nombreGrupo] = [];
+    }
+
+    grupos[nombreGrupo].push(categoria);
+
+    return grupos;
+  }, {});
+
+  // Ordenar alfabéticamente los grupos
+  const gruposOrdenados = Object.entries(categoriasAgrupadas).sort(
+    ([grupoA], [grupoB]) => grupoA.localeCompare(grupoB),
+  );
 
   return (
     <>
-      {/* Barra superior */}
+      {/* =========================
+          BARRA SUPERIOR
+      ========================== */}
 
       <div className="bg-orange-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-3 flex justify-between items-center text-xs sm:text-sm">
@@ -29,14 +71,14 @@ function Encabezado() {
         </div>
       </div>
 
-      {/* Header principal */}
+      {/* =========================
+          HEADER PRINCIPAL
+      ========================== */}
 
       <header className="bg-[#c94e14] shadow-xl sticky top-0 z-50 border-b border-[#c94104]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          {/* HEADER */}
-
           <div className="flex justify-between items-center h-20 sm:h-24">
-            {/* Logo y empresa */}
+            {/* LOGO */}
 
             <Link
               to="/"
@@ -62,9 +104,11 @@ function Encabezado() {
               </div>
             </Link>
 
-            {/* Menú escritorio */}
+            {/* =========================
+                MENÚ ESCRITORIO
+            ========================== */}
 
-            <nav className="hidden lg:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-7 h-full">
               <Link
                 to="/"
                 className="font-bold text-white hover:text-orange-200 transition"
@@ -72,12 +116,156 @@ function Encabezado() {
                 Inicio
               </Link>
 
-              <Link
-                to="/catalogo"
-                className="font-bold text-white hover:text-orange-200 transition"
-              >
-                Productos
-              </Link>
+              {/* CATEGORÍAS PRODUCTOS */}
+
+              <div className="relative group h-full flex items-center">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 font-bold text-white hover:text-orange-200 transition h-full"
+                >
+                  Categorías de Productos
+                  <svg
+                    className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* MEGA MENÚ */}
+
+                <div
+                  className="
+                    invisible
+                    opacity-0
+                    translate-y-2
+                    group-hover:visible
+                    group-hover:opacity-100
+                    group-hover:translate-y-0
+                    absolute
+                    top-full
+                    left-1/2
+                    -translate-x-1/2
+                    w-[min(1200px,94vw)]
+                    bg-white
+                    text-gray-800
+                    shadow-2xl
+                    rounded-b-3xl
+                    border
+                    border-gray-100
+                    transition-all
+                    duration-200
+                    z-[100]
+                  "
+                >
+                  {/* CABECERA MEGA MENÚ */}
+
+                  <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+                    <div>
+                      <p className="text-xs font-black tracking-[0.2em] text-[#c94e14] uppercase">
+                        Grupo Comercial J&G
+                      </p>
+
+                      <h2 className="text-2xl font-black text-gray-900 mt-1">
+                        Categorías de Productos
+                      </h2>
+                    </div>
+
+                    <Link
+                      to="/catalogo"
+                      className="text-sm font-bold text-[#c94e14] hover:underline"
+                    >
+                      Ver todo el catálogo →
+                    </Link>
+                  </div>
+
+                  {/* GRUPOS */}
+
+                  <div className="p-8 max-h-[65vh] overflow-y-auto">
+                    {gruposOrdenados.length > 0 ? (
+                      <div className="grid grid-cols-3 xl:grid-cols-4 gap-x-10 gap-y-9">
+                        {gruposOrdenados.map(([grupo, categoriasGrupo]) => (
+                          <div key={grupo}>
+                            {/* NOMBRE DEL GRUPO */}
+
+                            <div className="flex items-center gap-2 mb-4">
+                              <span className="w-2 h-2 bg-[#c94e14] rounded-full"></span>
+
+                              <h3 className="font-black text-sm text-gray-900 uppercase tracking-wide">
+                                {grupo}
+                              </h3>
+                            </div>
+
+                            {/* SUBCATEGORÍAS */}
+
+                            <div className="space-y-2.5">
+                              {categoriasGrupo
+                                .sort((a, b) =>
+                                  a.nombre.localeCompare(b.nombre),
+                                )
+                                .map((categoria) => (
+                                  <Link
+                                    key={categoria.id}
+                                    to={`/catalogo?categoria=${encodeURIComponent(
+                                      categoria.nombre,
+                                    )}`}
+                                    className="group/item flex items-center gap-2 text-sm text-gray-600 hover:text-[#c94e14] transition"
+                                  >
+                                    <span className="text-gray-300 group-hover/item:text-[#c94e14] transition">
+                                      ›
+                                    </span>
+
+                                    <span className="font-medium">
+                                      {categoria.nombre}
+                                    </span>
+                                  </Link>
+                                ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-10 text-center">
+                        <p className="text-gray-500">
+                          Las categorías estarán disponibles próximamente.
+                        </p>
+
+                        <Link
+                          to="/catalogo"
+                          className="inline-block mt-4 font-bold text-[#c94e14]"
+                        >
+                          Ver catálogo
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PARTE INFERIOR */}
+
+                  <div className="bg-gray-50 px-8 py-4 rounded-b-3xl flex items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                      Encuentra maquinaria y equipos según el trabajo que
+                      necesitas.
+                    </p>
+
+                    <a
+                      href="https://wa.me/51979501557?text=Hola,%20necesito%20ayuda%20para%20elegir%20un%20producto"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-bold text-sm text-green-600 hover:text-green-700"
+                    >
+                      ¿Necesitas ayuda? WhatsApp →
+                    </a>
+                  </div>
+                </div>
+              </div>
 
               <Link
                 to="/repuestos"
@@ -94,7 +282,9 @@ function Encabezado() {
               </Link>
             </nav>
 
-            {/* Botones escritorio */}
+            {/* =========================
+                BOTONES ESCRITORIO
+            ========================== */}
 
             <div className="hidden lg:flex items-center gap-3">
               <a
@@ -116,7 +306,9 @@ function Encabezado() {
               </a>
             </div>
 
-            {/* Botón hamburguesa móvil */}
+            {/* =========================
+                HAMBURGUESA
+            ========================== */}
 
             <button
               type="button"
@@ -152,14 +344,14 @@ function Encabezado() {
           <div
             className={`lg:hidden overflow-hidden transition-all duration-300 ${
               menuAbierto
-                ? "max-h-[600px] opacity-100 pb-5"
+                ? "max-h-[80vh] opacity-100 pb-5"
                 : "max-h-0 opacity-0"
             }`}
           >
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              {/* Navegación */}
-
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
               <nav className="flex flex-col p-3">
+                {/* INICIO */}
+
                 <Link
                   to="/"
                   onClick={cerrarMenu}
@@ -169,14 +361,89 @@ function Encabezado() {
                   <span className="text-gray-300">›</span>
                 </Link>
 
-                <Link
-                  to="/catalogo"
-                  onClick={cerrarMenu}
-                  className="flex items-center justify-between px-5 py-4 rounded-xl font-bold text-gray-800 hover:bg-orange-50 hover:text-[#c94e14] transition"
+                {/* CATEGORÍAS PRODUCTOS */}
+
+                <button
+                  type="button"
+                  onClick={() => setCategoriasAbiertas(!categoriasAbiertas)}
+                  className="w-full flex items-center justify-between px-5 py-4 rounded-xl font-bold text-gray-800 hover:bg-orange-50 hover:text-[#c94e14] transition"
                 >
-                  <span>Productos</span>
-                  <span className="text-gray-300">›</span>
-                </Link>
+                  <span>Categorías de Productos</span>
+
+                  <svg
+                    className={`w-5 h-5 transition-transform duration-300 ${
+                      categoriasAbiertas ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* SUBMENÚ MÓVIL */}
+
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    categoriasAbiertas
+                      ? "max-h-[3000px] opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="mx-3 mb-3 bg-gray-50 rounded-2xl p-4">
+                    <Link
+                      to="/catalogo"
+                      onClick={cerrarMenu}
+                      className="block bg-[#c94e14] text-white text-center py-3 px-4 rounded-xl font-bold mb-5"
+                    >
+                      Ver todos los productos
+                    </Link>
+
+                    {gruposOrdenados.length > 0 ? (
+                      <div className="space-y-6">
+                        {gruposOrdenados.map(([grupo, categoriasGrupo]) => (
+                          <div key={grupo}>
+                            <h3 className="text-xs font-black text-[#c94e14] uppercase tracking-wider mb-3">
+                              {grupo}
+                            </h3>
+
+                            <div className="space-y-1">
+                              {categoriasGrupo
+                                .sort((a, b) =>
+                                  a.nombre.localeCompare(b.nombre),
+                                )
+                                .map((categoria) => (
+                                  <Link
+                                    key={categoria.id}
+                                    to={`/catalogo?categoria=${encodeURIComponent(
+                                      categoria.nombre,
+                                    )}`}
+                                    onClick={cerrarMenu}
+                                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-white hover:text-[#c94e14] font-medium transition"
+                                  >
+                                    <span className="text-gray-300">›</span>
+                                    {categoria.nombre}
+                                  </Link>
+                                ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-3">
+                        No hay categorías disponibles.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* REPUESTOS */}
 
                 <Link
                   to="/repuestos"
@@ -186,6 +453,8 @@ function Encabezado() {
                   <span>Repuestos</span>
                   <span className="text-gray-300">›</span>
                 </Link>
+
+                {/* CONTACTO */}
 
                 <Link
                   to="/contacto"
@@ -197,11 +466,11 @@ function Encabezado() {
                 </Link>
               </nav>
 
-              {/* Separador */}
+              {/* SEPARADOR */}
 
               <div className="h-px bg-gray-100 mx-5"></div>
 
-              {/* Acciones */}
+              {/* ACCIONES */}
 
               <div className="p-4 grid sm:grid-cols-2 gap-3">
                 <a
@@ -225,7 +494,7 @@ function Encabezado() {
                 </a>
               </div>
 
-              {/* Información */}
+              {/* INFORMACIÓN */}
 
               <div className="bg-gray-50 px-5 py-4 text-center">
                 <p className="text-xs text-gray-500">
