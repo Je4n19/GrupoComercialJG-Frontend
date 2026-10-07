@@ -52,80 +52,127 @@ function Encabezado() {
   return (
     <>
       {/* =========================
-          BARRA SUPERIOR
-      ========================== */}
+    BARRA SUPERIOR
+========================== */}
 
       <div className="bg-orange-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-3 flex justify-between items-center text-xs sm:text-sm">
-          {/* Información izquierda */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex justify-between items-center text-xs sm:text-sm">
+          {/* INFORMACIÓN IZQUIERDA */}
           <div className="flex items-center gap-3 sm:gap-6">
             <a
               href="tel:+51979501557"
-              className="hover:text-orange-100 transition"
+              className="flex items-center gap-1.5 hover:text-orange-100 transition"
             >
-              📞 +51 979 501 557
+              <span>📞</span>
+              <span>+51 979 501 557</span>
             </a>
 
-            <span className="hidden sm:inline">
-              🚚 Cobertura a nivel nacional
+            <span className="hidden sm:flex items-center gap-1.5">
+              <span>🚚</span>
+              <span>Cobertura a nivel nacional</span>
             </span>
           </div>
 
-          {/* Redes sociales derecha */}
-          <div className="flex items-center gap-4">
-            {/* Facebook */}
+          {/* REDES SOCIALES DERECHA */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="hidden md:inline font-medium text-white/90">
+              Síguenos en nuestras redes:
+            </span>
+
+            {/* FACEBOOK */}
             <a
               href="https://www.facebook.com/p/Grupo-Comercial-JG-61572533279515/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook de Grupo Comercial J&G"
               title="Facebook"
-              className="flex items-center gap-2 font-semibold hover:text-orange-100 transition group"
+              className="
+          flex items-center justify-center
+          text-white
+          hover:text-orange-200
+          hover:-translate-y-0.5
+          transition-all duration-200
+        "
             >
-              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center group-hover:bg-[#1877F2] transition">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-3.5 h-3.5 fill-white"
-                  aria-hidden="true"
-                >
-                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.099 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.974h-1.513c-1.491 0-1.956.931-1.956 1.887v2.26h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.099 24 12.073z" />
-                </svg>
-              </span>
-
-              <span className="hidden sm:inline">Facebook</span>
+              <svg
+                viewBox="0 0 24 24"
+                className="w-[17px] h-[17px] fill-current"
+                aria-hidden="true"
+              >
+                <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.099 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.974h-1.513c-1.491 0-1.956.931-1.956 1.887v2.26h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.099 24 12.073z" />
+              </svg>
             </a>
 
-            {/* Separador */}
-            <span className="text-white/40">|</span>
-
-            {/* Instagram */}
+            {/* INSTAGRAM */}
             <a
               href="https://www.instagram.com/grupocomercialjg/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram de Grupo Comercial J&G"
               title="Instagram"
-              className="flex items-center gap-2 font-semibold hover:text-orange-100 transition group"
+              className="
+          flex items-center justify-center
+          text-white
+          hover:text-orange-200
+          hover:-translate-y-0.5
+          transition-all duration-200
+        "
             >
-              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center group-hover:bg-pink-600 transition">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-3.5 h-3.5 fill-white"
-                  aria-hidden="true"
-                >
-                  <path d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5zm8.75 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
-                </svg>
-              </span>
-
-              <span className="hidden sm:inline">Instagram</span>
+              <svg
+                viewBox="0 0 24 24"
+                className="w-[18px] h-[18px] fill-current"
+                aria-hidden="true"
+              >
+                <path d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5zm8.75 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+              </svg>
             </a>
+
+            {/* YOUTUBE */}
+            <span
+              aria-label="YouTube"
+              title="YouTube"
+              className="
+          hidden sm:flex
+          items-center justify-center
+          text-white/60
+          cursor-default
+        "
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-[20px] h-[20px] fill-current"
+                aria-hidden="true"
+              >
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
+            </span>
+
+            {/* LINKEDIN */}
+            <span
+              aria-label="LinkedIn"
+              title="LinkedIn"
+              className="
+          hidden sm:flex
+          items-center justify-center
+          text-white/60
+          cursor-default
+        "
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-[18px] h-[18px] fill-current"
+                aria-hidden="true"
+              >
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.047c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.119 20.452H3.555V9h3.564v11.452z" />
+              </svg>
+            </span>
           </div>
         </div>
       </div>
 
       {/* =========================
-          HEADER PRINCIPAL
-      ========================== */}
+    HEADER PRINCIPAL
+========================== */}
 
       <header className="bg-[#c94e14] shadow-xl sticky top-0 z-50 border-b border-[#c94104]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
