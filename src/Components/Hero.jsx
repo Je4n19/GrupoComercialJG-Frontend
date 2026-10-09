@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 import logoJ from "../assets/logoJ&G.png";
-import heroImg from "../assets/Hero/hero-maquinaria.jpg";
+import heroImg from "../assets/inicio.png";
 
 function Hero() {
   return (
@@ -27,15 +27,15 @@ function Hero() {
 
       <div
         className="
-        absolute
-        inset-0
-        bg-black/65
-        sm:bg-black/55
-        lg:bg-gradient-to-r
-        lg:from-black/90
-        lg:via-black/65
-        lg:to-black/10
-      "
+          absolute
+          inset-0
+          bg-black/65
+          sm:bg-black/55
+          lg:bg-gradient-to-r
+          lg:from-black/90
+          lg:via-black/65
+          lg:to-black/10
+        "
       ></div>
 
       {/* DEGRADADO INFERIOR */}
@@ -70,16 +70,16 @@ function Hero() {
 
           <h1
             className="
-            text-[38px]
-            sm:text-5xl
-            lg:text-6xl
-            xl:text-7xl
-            font-black
-            text-white
-            leading-[1.02]
-            tracking-tight
-            mt-6
-          "
+              text-[38px]
+              sm:text-5xl
+              lg:text-6xl
+              xl:text-7xl
+              font-black
+              text-white
+              leading-[1.02]
+              tracking-tight
+              mt-6
+            "
           >
             Potencia y Rendimiento
             <span className="block text-[#e84d05] mt-2">
@@ -91,13 +91,13 @@ function Hero() {
 
           <p
             className="
-            text-base
-            sm:text-lg
-            text-gray-200
-            mt-6
-            leading-relaxed
-            max-w-xl
-          "
+              text-base
+              sm:text-lg
+              text-gray-200
+              mt-6
+              leading-relaxed
+              max-w-xl
+            "
           >
             Maquinaria agrícola, forestal e industrial, repuestos y atención
             especializada para diferentes necesidades de trabajo.
@@ -132,7 +132,7 @@ function Hero() {
             <a
               href="https://wa.me/51979501557?text=Hola,%20deseo%20realizar%20una%20cotización"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="
                 inline-flex
                 items-center
@@ -161,18 +161,18 @@ function Hero() {
 
           <div
             className="
-            grid
-            grid-cols-1
-            sm:grid-cols-3
-            gap-0
-            sm:gap-5
-            mt-9
-            sm:mt-12
-            pt-6
-            sm:pt-8
-            border-t
-            border-white/15
-          "
+              grid
+              grid-cols-1
+              sm:grid-cols-3
+              gap-0
+              sm:gap-5
+              mt-9
+              sm:mt-12
+              pt-6
+              sm:pt-8
+              border-t
+              border-white/15
+            "
           >
             {/* TELÉFONO */}
 
