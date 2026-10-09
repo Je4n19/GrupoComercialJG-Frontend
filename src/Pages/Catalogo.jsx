@@ -75,20 +75,17 @@ function Catalogo() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full py-20">
           <div className="max-w-2xl">
             {/* Etiqueta */}
-
             <span className="inline-flex items-center bg-orange-500/20 border border-orange-400/40 text-orange-300 px-5 py-2 rounded-full font-bold text-sm backdrop-blur-sm">
               Grupo Comercial J&G
             </span>
 
             {/* Título */}
-
             <h1 className="text-5xl md:text-7xl font-black mt-7 leading-[0.95]">
               Catálogo de
               <span className="block text-orange-500 mt-2">Productos</span>
             </h1>
 
             {/* Descripción */}
-
             <p className="text-lg md:text-xl text-gray-200 mt-7 max-w-xl leading-relaxed">
               Maquinaria agrícola, forestal e industrial para trabajos
               exigentes, con variedad de equipos, garantía y atención
@@ -96,7 +93,6 @@ function Catalogo() {
             </p>
 
             {/* Botones */}
-
             <div className="flex flex-wrap gap-4 mt-8">
               <a
                 href="#productos-disponibles"
@@ -123,38 +119,30 @@ function Catalogo() {
       <section className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Productos */}
-
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
             <h3 className="text-4xl font-black text-orange-500">
               {productos.length}
             </h3>
-
             <p className="text-gray-500 mt-2">Productos</p>
           </div>
 
           {/* Categorías */}
-
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
             <h3 className="text-4xl font-black text-orange-500">
               {categorias.length}
             </h3>
-
             <p className="text-gray-500 mt-2">Categorías</p>
           </div>
 
           {/* Garantía */}
-
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
             <h3 className="text-4xl font-black text-orange-500">100%</h3>
-
             <p className="text-gray-500 mt-2">Garantía</p>
           </div>
 
           {/* Cobertura */}
-
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
             <h3 className="text-4xl font-black text-orange-500">Perú</h3>
-
             <p className="text-gray-500 mt-2">Cobertura Nacional</p>
           </div>
         </div>
@@ -168,7 +156,8 @@ function Catalogo() {
             Buscar Productos
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-5 mb-8">
+          {/* Buscador y selector de categorías */}
+          <div className="grid md:grid-cols-2 gap-5">
             <Buscador valor={busqueda} onChange={setBusqueda} />
 
             <select
@@ -186,36 +175,9 @@ function Catalogo() {
             </select>
           </div>
 
-          {/* BOTONES DE CATEGORÍAS */}
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setCategoria("")}
-              className={`px-5 py-3 rounded-full font-semibold transition ${
-                categoria === ""
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-600"
-              }`}
-            >
-              Todas
-            </button>
-
-            {categorias.map((cat) => (
-              <button
-                type="button"
-                key={cat.id}
-                onClick={() => setCategoria(cat.nombre)}
-                className={`px-5 py-3 rounded-full font-semibold transition ${
-                  categoria === cat.nombre
-                    ? "bg-orange-500 text-white shadow-md"
-                    : "bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white"
-                }`}
-              >
-                {cat.nombre}
-              </button>
-            ))}
-          </div>
+          {/* Se eliminaron los botones de categorías.
+              El filtro continúa funcionando mediante el selector
+              y los enlaces del menú superior. */}
         </div>
       </section>
 
@@ -261,8 +223,7 @@ function Catalogo() {
             </button>
           </div>
         ) : (
-          /* GRID */
-
+          /* GRID DE PRODUCTOS */
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {productosFiltrados.map((producto) => (
               <TarjetaProducto key={producto.id} producto={producto} />
