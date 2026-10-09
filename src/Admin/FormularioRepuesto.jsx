@@ -11,11 +11,14 @@ import {
 
 import { obtenerCategoriasRepuesto } from "../Services/categoriaRepuestoService";
 
+const LIMITE_DESCRIPCION = 5000;
+
 function FormularioRepuesto() {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const [categorias, setCategorias] = useState([]);
+  const [guardando, setGuardando] = useState(false);
 
   const [repuesto, setRepuesto] = useState({
     nombre: "",
@@ -30,9 +33,9 @@ function FormularioRepuesto() {
     const cargarCategorias = async () => {
       try {
         const data = await obtenerCategoriasRepuesto();
-        setCategorias(data || []);
+        setCategorias(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error(error);
+        console.error("Error cargando categorías:", error);
       }
     };
 
@@ -40,9 +43,19 @@ function FormularioRepuesto() {
       if (id) {
         try {
           const data = await obtenerRepuestoPorId(id);
-          setRepuesto(data);
+
+          setRepuesto({
+            nombre: "",
+            categoria: "",
+            precio: "",
+            stock: "",
+            descripcion: "",
+            imagen: "",
+            ...data,
+            descripcion: data.descripcion || "",
+          });
         } catch (error) {
-          console.error(error);
+          console.error("Error cargando repuesto:", error);
         }
       }
     };
@@ -52,14 +65,23 @@ function FormularioRepuesto() {
   }, [id]);
 
   const handleChange = (e) => {
-    setRepuesto({
-      ...repuesto,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setRepuesto((anterior) => ({
+      ...anterior,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if ((repuesto.descripcion || "").length > LIMITE_DESCRIPCION) {
+      alert("La descripción supera los 5000 caracteres.");
+      return;
+    }
+
+    setGuardando(true);
 
     try {
       if (id) {
@@ -72,37 +94,44 @@ function FormularioRepuesto() {
 
       navigate("/admin/repuestos");
     } catch (error) {
-      console.error(error);
-      alert("Error al guardar repuesto");
+      console.error("Error al guardar repuesto:", error);
+      alert(
+        "Error al guardar repuesto. Verifica que el backend y la base de datos permitan descripciones largas.",
+      );
+    } finally {
+      setGuardando(false);
     }
   };
+
+  const caracteres = (repuesto.descripcion || "").length;
+
+  const inputClass =
+    "w-full border-2 border-gray-200 rounded-2xl p-4 focus:outline-none focus:border-orange-500 transition";
 
   return (
     <div className="flex">
       <MenuAdmin />
 
-      <div className="flex-1 min-h-screen bg-orange-50">
+      <div className="flex-1 min-w-0 min-h-screen bg-orange-50">
         {/* HEADER */}
-
         <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white shadow-2xl">
-          <div className="px-10 py-10">
+          <div className="px-6 md:px-10 py-10">
             <p className="uppercase tracking-widest text-orange-100 text-sm">
               Grupo Comercial J&G
             </p>
 
-            <h1 className="text-5xl font-black mt-2">
+            <h1 className="text-3xl md:text-5xl font-black mt-2">
               {id ? "Editar Repuesto" : "Registrar Repuesto"}
             </h1>
 
-            <p className="text-orange-100 mt-3 text-lg">
+            <p className="text-orange-100 mt-3 text-base md:text-lg">
               Gestión profesional de repuestos e inventario.
             </p>
           </div>
         </div>
 
         {/* FORMULARIO */}
-
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           <div className="max-w-5xl mx-auto bg-white rounded-[30px] shadow-2xl overflow-hidden">
             <div className="bg-orange-500 text-white p-6">
               <h2 className="text-2xl font-bold">Información del Repuesto</h2>
@@ -112,8 +141,9 @@ function FormularioRepuesto() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8">
+            <form onSubmit={handleSubmit} className="p-5 md:p-8">
               <div className="grid md:grid-cols-2 gap-6">
+                {/* NOMBRE */}
                 <div>
                   <label className="block font-bold text-gray-700 mb-3">
                     Nombre
@@ -122,22 +152,15 @@ function FormularioRepuesto() {
                   <input
                     type="text"
                     name="nombre"
-                    value={repuesto.nombre}
+                    value={repuesto.nombre || ""}
                     onChange={handleChange}
                     placeholder="Ej. Pistón STIHL MS 250"
                     required
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
+                    className={inputClass}
                   />
                 </div>
 
+                {/* CATEGORÍA */}
                 <div>
                   <label className="block font-bold text-gray-700 mb-3">
                     Categoría
@@ -145,18 +168,10 @@ function FormularioRepuesto() {
 
                   <select
                     name="categoria"
-                    value={repuesto.categoria}
+                    value={repuesto.categoria || ""}
                     onChange={handleChange}
                     required
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
+                    className={inputClass}
                   >
                     <option value="">Seleccione una categoría</option>
 
@@ -168,30 +183,26 @@ function FormularioRepuesto() {
                   </select>
                 </div>
 
+                {/* PRECIO */}
                 <div>
                   <label className="block font-bold text-gray-700 mb-3">
-                    Precio (S/.)
+                    Precio (S/)
                   </label>
 
                   <input
                     type="number"
                     name="precio"
-                    value={repuesto.precio}
+                    value={repuesto.precio ?? ""}
                     onChange={handleChange}
                     placeholder="0.00"
+                    min="0"
+                    step="0.01"
                     required
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
+                    className={inputClass}
                   />
                 </div>
 
+                {/* STOCK */}
                 <div>
                   <label className="block font-bold text-gray-700 mb-3">
                     Stock
@@ -200,22 +211,17 @@ function FormularioRepuesto() {
                   <input
                     type="number"
                     name="stock"
-                    value={repuesto.stock}
+                    value={repuesto.stock ?? ""}
                     onChange={handleChange}
                     placeholder="0"
+                    min="0"
+                    step="1"
                     required
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
+                    className={inputClass}
                   />
                 </div>
 
+                {/* IMAGEN */}
                 <div className="md:col-span-2">
                   <label className="block font-bold text-gray-700 mb-3">
                     URL de Imagen
@@ -224,77 +230,164 @@ function FormularioRepuesto() {
                   <input
                     type="text"
                     name="imagen"
-                    value={repuesto.imagen}
+                    value={repuesto.imagen || ""}
                     onChange={handleChange}
                     placeholder="https://..."
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
+                    className={inputClass}
                   />
                 </div>
 
+                {/* =========================
+                    DESCRIPCIÓN AMPLIADA
+                ========================== */}
                 <div className="md:col-span-2">
-                  <label className="block font-bold text-gray-700 mb-3">
-                    Descripción
-                  </label>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <label
+                      htmlFor="descripcion-repuesto"
+                      className="block font-bold text-gray-800 text-lg"
+                    >
+                      Descripción del Repuesto
+                    </label>
+
+                    <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full">
+                      Hasta 5,000 caracteres
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-500 mb-4">
+                    Agrega información sobre compatibilidad, materiales,
+                    características técnicas, instalación y recomendaciones.
+                  </p>
 
                   <textarea
-                    rows="6"
+                    id="descripcion-repuesto"
                     name="descripcion"
-                    value={repuesto.descripcion}
+                    value={repuesto.descripcion || ""}
                     onChange={handleChange}
-                    placeholder="Describe las características del repuesto..."
+                    maxLength={LIMITE_DESCRIPCION}
+                    rows={12}
+                    placeholder={`Escribe aquí la descripción completa...
+
+Características del repuesto:
+- 
+- 
+
+Modelos compatibles:
+- 
+- 
+
+Especificaciones técnicas:
+- 
+- 
+
+Recomendaciones:
+- `}
                     className="
                       w-full
-                      border-2
-                      border-gray-200
+                      min-h-[300px]
+                      border-2 border-gray-200
                       rounded-2xl
-                      p-4
-                      resize-none
+                      p-5
+                      text-gray-800
+                      leading-relaxed
+                      resize-y
                       focus:outline-none
                       focus:border-orange-500
+                      focus:ring-2
+                      focus:ring-orange-100
+                      transition
                     "
                   />
+
+                  <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
+                    <p className="text-xs text-gray-500">
+                      Puedes escribir párrafos, listas y especificaciones en
+                      diferentes líneas.
+                    </p>
+
+                    <span
+                      className={`text-sm font-bold ${
+                        caracteres >= 4500 ? "text-orange-600" : "text-gray-500"
+                      }`}
+                    >
+                      {caracteres.toLocaleString("es-PE")} / 5,000 caracteres
+                    </span>
+                  </div>
+
+                  <div className="w-full h-2 bg-gray-100 rounded-full mt-3 overflow-hidden">
+                    <div
+                      className="h-full bg-orange-500 rounded-full transition-all duration-200"
+                      style={{
+                        width: `${Math.min(
+                          (caracteres / LIMITE_DESCRIPCION) * 100,
+                          100,
+                        )}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* BOTONES */}
+              {/* =========================
+                  VISTA PREVIA
+              ========================== */}
+              <div className="mt-8 bg-orange-50 border border-orange-200 rounded-3xl p-6">
+                <h3 className="font-bold text-xl text-orange-600 mb-4">
+                  Vista Previa
+                </h3>
 
+                <div className="grid md:grid-cols-2 gap-6 text-sm">
+                  <div className="space-y-2">
+                    <p>
+                      <strong>Repuesto:</strong> {repuesto.nombre || "-"}
+                    </p>
+
+                    <p>
+                      <strong>Categoría:</strong> {repuesto.categoria || "-"}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p>
+                      <strong>Precio:</strong> S/ {repuesto.precio || "0"}
+                    </p>
+
+                    <p>
+                      <strong>Stock:</strong> {repuesto.stock || "0"}
+                    </p>
+                  </div>
+                </div>
+
+                {repuesto.descripcion && (
+                  <div className="mt-5 pt-5 border-t border-orange-200">
+                    <h4 className="font-bold text-gray-800 mb-2">
+                      Descripción:
+                    </h4>
+
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                      {repuesto.descripcion}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* BOTONES */}
               <div className="flex flex-wrap gap-4 mt-10">
                 <button
                   type="submit"
-                  className="
-                    bg-orange-500
-                    hover:bg-orange-600
-                    text-white
-                    px-8
-                    py-4
-                    rounded-2xl
-                    font-bold
-                    shadow-lg
-                    transition
-                  "
+                  disabled={guardando}
+                  className="bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-4 rounded-2xl font-bold shadow-lg transition"
                 >
-                  {id ? "Actualizar Repuesto" : "Guardar Repuesto"}
+                  {guardando
+                    ? "Guardando..."
+                    : id
+                      ? "Actualizar Repuesto"
+                      : "Guardar Repuesto"}
                 </button>
 
                 <Link
                   to="/admin/repuestos"
-                  className="
-                    bg-gray-200
-                    hover:bg-gray-300
-                    px-8
-                    py-4
-                    rounded-2xl
-                    font-bold
-                    transition
-                  "
+                  className="bg-gray-200 hover:bg-gray-300 px-8 py-4 rounded-2xl font-bold transition"
                 >
                   Cancelar
                 </Link>
@@ -302,8 +395,7 @@ function FormularioRepuesto() {
             </form>
           </div>
 
-          {/* INFORMACIÓN */}
-
+          {/* CONSEJO DE GESTIÓN */}
           <div className="max-w-5xl mx-auto mt-8">
             <div className="bg-white rounded-[30px] shadow-xl p-8">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
