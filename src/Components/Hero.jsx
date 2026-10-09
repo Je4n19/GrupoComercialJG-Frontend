@@ -29,12 +29,12 @@ function Hero() {
         className="
           absolute
           inset-0
-          bg-black/65
-          sm:bg-black/55
+          bg-black/35
+          sm:bg-black/25
           lg:bg-gradient-to-r
-          lg:from-black/90
-          lg:via-black/65
-          lg:to-black/10
+          lg:from-black/75
+          lg:via-black/35
+          lg:to-transparent
         "
       ></div>
 
