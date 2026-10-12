@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import logoJ from "../assets/logoJ&G.png";
+import metodosPago from "../assets/metodos.png";
 
 function Footer() {
   return (
@@ -26,7 +27,7 @@ function Footer() {
               sectores agrícola, forestal e industrial.
             </p>
 
-            {/* REDES SOCIALES DEBAJO DE LA DESCRIPCIÓN */}
+            {/* REDES SOCIALES */}
             <div className="mt-8">
               <h4 className="text-white font-bold text-sm mb-4">
                 Síguenos en nuestras redes
@@ -158,18 +159,56 @@ function Footer() {
           </div>
 
           {/* =========================
-              CONTACTO
+              CONTÁCTANOS
           ========================== */}
           <div>
-            <h3 className="text-xl font-bold mb-6 text-orange-500">Contacto</h3>
+            <h3 className="text-xl font-bold mb-6 text-orange-500">
+              Contáctanos
+            </h3>
 
-            <div className="space-y-4 text-gray-400">
-              <p>📞 +51 979 501 557</p>
-              <p>📍 Perú</p>
-              <p>🕒 Atención Personalizada</p>
-              <p>🚚 Cobertura Nacional</p>
+            <div className="space-y-5 text-gray-400">
+              {/* TELÉFONO */}
+              <a
+                href="tel:+51979501557"
+                className="flex items-start gap-3 hover:text-white transition"
+              >
+                <span className="text-xl">📞</span>
+                <span>979 501 557</span>
+              </a>
+
+              {/* CORREO */}
+              <a
+                href="mailto:grupo.comercial@yahoo.es"
+                className="flex items-start gap-3 hover:text-white transition"
+              >
+                <span className="text-xl">📧</span>
+                <span className="break-all">grupo.comercial@yahoo.es</span>
+              </a>
+
+              {/* DIRECCIÓN */}
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Av.+Luis+Gonzales+1599A+Chiclayo+Lambayeque+Peru"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 hover:text-white transition"
+              >
+                <span className="text-xl">📍</span>
+
+                <span className="leading-relaxed">
+                  Av. Luis Gonzales 1599A
+                  <br />
+                  Chiclayo - Lambayeque - Perú
+                </span>
+              </a>
+
+              {/* COBERTURA NACIONAL */}
+              <div className="flex items-start gap-3">
+                <span className="text-xl">🚚</span>
+                <span>Cobertura Nacional</span>
+              </div>
             </div>
 
+            {/* WHATSAPP */}
             <a
               href="https://wa.me/51979501557"
               target="_blank"
@@ -191,16 +230,52 @@ function Footer() {
         </div>
 
         {/* =========================
+            MÉTODOS DE PAGO
+        ========================== */}
+        <div className="border-t border-gray-800 mt-14 pt-10">
+          <div className="flex flex-col items-center text-center">
+            <h3 className="text-xl sm:text-2xl font-bold text-orange-500 mb-6">
+              Nuestros métodos de pago
+            </h3>
+
+            <div
+              className="
+                w-full
+                max-w-3xl
+                bg-white
+                rounded-2xl
+                p-2 sm:p-3
+                shadow-xl
+                hover:shadow-orange-500/10
+                transition-all duration-300
+              "
+            >
+              <img
+                src={metodosPago}
+                alt="Aceptamos Plin, BCP, BBVA y Yape"
+                className="w-full h-auto object-contain rounded-xl"
+                loading="lazy"
+              />
+            </div>
+
+            <p className="text-gray-400 text-sm mt-5">
+              Aceptamos pagos mediante Plin, BCP, BBVA y Yape. Consulta nuestros
+              medios de pago disponibles.
+            </p>
+          </div>
+        </div>
+
+        {/* =========================
             FRANJA INFERIOR
         ========================== */}
         <div className="border-t border-gray-800 mt-14 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-5">
-            {/* Copyright */}
+            {/* COPYRIGHT */}
             <p className="text-gray-500 text-sm text-center md:text-left">
               © 2026 Grupo Comercial J&G. Todos los derechos reservados.
             </p>
 
-            {/* Acceso administrativo */}
+            {/* ACCESO ADMINISTRATIVO */}
             <Link
               to="/login"
               className="text-gray-500 hover:text-orange-500 text-sm transition"
