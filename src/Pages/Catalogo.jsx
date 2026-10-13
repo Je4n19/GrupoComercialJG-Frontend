@@ -8,8 +8,7 @@ import TarjetaProducto from "../Components/TarjetaProducto";
 import Footer from "../Components/Footer";
 import imagenProductos from "../assets/productos.png";
 
-// Normaliza los textos para permitir búsquedas flexibles.
-// Ejemplo: MS661, MS 661 y MS-661.
+// Normaliza nombres para búsquedas flexibles
 const normalizar = (valor) =>
   String(valor ?? "")
     .normalize("NFD")
@@ -33,25 +32,17 @@ const obtenerNombreCategoria = (categoria) => {
 function Catalogo() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Parámetros recibidos desde el buscador del encabezado
+  // Búsqueda recibida desde el encabezado
   const busquedaURL = searchParams.get("buscar") || "";
   const categoriaURL = searchParams.get("categoria") || "";
   const productoDestacado = searchParams.get("destacado");
 
-  // Datos del backend
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-
-  // Filtros
-  const [marca, setMarca] = useState("");
-  const [orden, setOrden] = useState("nombre");
-  const [soloStock, setSoloStock] = useState(false);
-
-  // Estados de carga
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
-  // Cargar productos y categorías desde Render
+  // Obtener productos y categorías desde Render
   useEffect(() => {
     let activo = true;
 
@@ -90,46 +81,14 @@ function Catalogo() {
     };
   }, []);
 
-  // Cambiar categoría sin perder el texto de búsqueda
-  const cambiarCategoria = (valor) => {
-    const parametros = new URLSearchParams(searchParams);
-
-    if (valor) {
-      parametros.set("categoria", valor);
-    } else {
-      parametros.delete("categoria");
-    }
-
-    parametros.delete("destacado");
-    setSearchParams(parametros);
-  };
-
-  // Limpiar todos los filtros
-  const limpiarFiltros = () => {
-    setSearchParams({});
-    setMarca("");
-    setOrden("nombre");
-    setSoloStock(false);
-  };
-
-  // Marcas disponibles obtenidas de los productos reales
-  const marcasDisponibles = useMemo(() => {
-    return [
-      ...new Set(
-        productos
-          .map((producto) => String(producto.marca ?? "").trim())
-          .filter(Boolean),
-      ),
-    ].sort((a, b) => a.localeCompare(b, "es"));
-  }, [productos]);
-
-  // Palabras introducidas en el buscador global
+  // Palabras del buscador global
   const palabras = useMemo(() => {
     return normalizar(busquedaURL).split(/\s+/).filter(Boolean);
   }, [busquedaURL]);
 
-  // Filtrado dinámico
-  const productosFiltrados = useMemo(() => {
+  // Mostrar todos los productos normalmente.
+  // Solo aplicar búsqueda si viene desde el encabezado.
+  const productosVisibles = useMemo(() => {
     return productos
       .filter((producto) => {
         const nombreCategoria = obtenerNombreCategoria(producto.categoria);
@@ -148,30 +107,21 @@ function Catalogo() {
         const texto = normalizar(textoProducto);
         const compacto = compactar(textoProducto);
 
-        // Busca en nombre, marca, modelo, categoría,
-        // descripción y código.
-        const coincideTexto = palabras.every((palabra) => {
+        const coincideBusqueda = palabras.every((palabra) => {
           const token = compactar(palabra);
 
           return texto.includes(palabra) || compacto.includes(token);
         });
 
+        // Conserva la navegación por categorías
+        // desde otras secciones de la web.
         const coincideCategoria =
           !categoriaURL ||
           normalizar(nombreCategoria) === normalizar(categoriaURL);
 
-        const coincideMarca =
-          !marca || normalizar(producto.marca) === normalizar(marca);
-
-        const coincideStock = !soloStock || Number(producto.stock) > 0;
-
-        return (
-          coincideTexto && coincideCategoria && coincideMarca && coincideStock
-        );
+        return coincideBusqueda && coincideCategoria;
       })
       .sort((a, b) => {
-        // Producto seleccionado desde las sugerencias:
-        // aparece primero en el catálogo.
         if (productoDestacado) {
           if (String(a.id) === productoDestacado) {
             return -1;
@@ -182,48 +132,32 @@ function Catalogo() {
           }
         }
 
-        switch (orden) {
-          case "precio-menor":
-            return Number(a.precio ?? 0) - Number(b.precio ?? 0);
-
-          case "precio-mayor":
-            return Number(b.precio ?? 0) - Number(a.precio ?? 0);
-
-          case "stock":
-            return Number(b.stock ?? 0) - Number(a.stock ?? 0);
-
-          default:
-            return String(a.nombre ?? "").localeCompare(
-              String(b.nombre ?? ""),
-              "es",
-            );
-        }
+        return String(a.nombre ?? "").localeCompare(
+          String(b.nombre ?? ""),
+          "es",
+        );
       });
-  }, [
-    productos,
-    palabras,
-    categoriaURL,
-    marca,
-    soloStock,
-    orden,
-    productoDestacado,
-  ]);
+  }, [productos, palabras, categoriaURL, productoDestacado]);
 
-  const hayFiltros =
-    Boolean(busquedaURL) ||
-    Boolean(categoriaURL) ||
-    Boolean(marca) ||
-    soloStock ||
-    orden !== "nombre";
+  // Limpiar la búsqueda global
+  const quitarBusqueda = () => {
+    const parametros = new URLSearchParams(searchParams);
 
-  // Desplazarse automáticamente a los resultados
-  // cuando se realiza una búsqueda desde el encabezado.
+    parametros.delete("buscar");
+    parametros.delete("destacado");
+
+    setSearchParams(parametros);
+  };
+
+  const verTodos = () => {
+    setSearchParams({});
+  };
+
+  // Ir automáticamente a los productos después de buscar
   useEffect(() => {
     if (cargando || !busquedaURL) return;
 
-    const elemento = document.getElementById("productos-disponibles");
-
-    elemento?.scrollIntoView({
+    document.getElementById("productos-disponibles")?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
@@ -300,164 +234,10 @@ function Catalogo() {
         </div>
       </section>
 
-      {/* FILTROS SIN BUSCADOR INTERNO */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <div className="bg-white rounded-[32px] shadow-xl p-6 sm:p-8 border border-gray-100">
-          <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
-                Filtrar Productos
-              </h2>
-
-              <p className="text-sm text-gray-500 mt-2">
-                Personaliza los resultados por categoría, marca, precio y
-                disponibilidad.
-              </p>
-            </div>
-
-            <span className="bg-orange-50 text-orange-600 px-4 py-2 rounded-xl text-sm font-bold">
-              Filtros de productos
-            </span>
-          </div>
-
-          {/* BÚSQUEDA ACTIVA DEL ENCABEZADO */}
-          {busquedaURL && (
-            <div className="mb-6 flex flex-wrap items-center gap-3 bg-orange-50 border border-orange-100 rounded-xl px-5 py-4">
-              <span className="text-sm text-gray-600">Resultados para:</span>
-
-              <span className="font-black text-orange-700">
-                "{busquedaURL}"
-              </span>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const parametros = new URLSearchParams(searchParams);
-
-                  parametros.delete("buscar");
-                  parametros.delete("destacado");
-
-                  setSearchParams(parametros);
-                }}
-                className="ml-auto text-sm font-bold text-orange-600 hover:underline"
-              >
-                Quitar búsqueda ✕
-              </button>
-            </div>
-          )}
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {/* CATEGORÍA */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Categoría
-              </label>
-
-              <select
-                value={categoriaURL}
-                onChange={(e) => cambiarCategoria(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500"
-              >
-                <option value="">Todas las categorías</option>
-
-                {categorias.map((cat) => (
-                  <option key={cat.id} value={cat.nombre}>
-                    {cat.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* MARCA */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Marca
-              </label>
-
-              <select
-                value={marca}
-                onChange={(e) => setMarca(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500"
-              >
-                <option value="">Todas las marcas</option>
-
-                {marcasDisponibles.map((nombreMarca) => (
-                  <option key={nombreMarca} value={nombreMarca}>
-                    {nombreMarca}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* ORDENAMIENTO */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Ordenar productos
-              </label>
-
-              <select
-                value={orden}
-                onChange={(e) => setOrden(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500"
-              >
-                <option value="nombre">Nombre A - Z</option>
-
-                <option value="precio-menor">Precio: menor a mayor</option>
-
-                <option value="precio-mayor">Precio: mayor a menor</option>
-
-                <option value="stock">Mayor disponibilidad</option>
-              </select>
-            </div>
-
-            {/* STOCK */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Disponibilidad
-              </label>
-
-              <label className="flex items-center gap-3 border-2 border-gray-200 rounded-2xl px-4 py-4 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={soloStock}
-                  onChange={(e) => setSoloStock(e.target.checked)}
-                  className="w-5 h-5 accent-orange-500"
-                />
-
-                <span className="text-sm text-gray-700 font-semibold">
-                  Solo con stock
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* RESUMEN DE FILTROS */}
-          {hayFiltros && (
-            <div className="flex flex-wrap justify-between items-center gap-4 mt-7 pt-6 border-t">
-              <p className="text-sm text-gray-500">
-                Se encontraron{" "}
-                <strong className="text-orange-600">
-                  {productosFiltrados.length}
-                </strong>{" "}
-                productos.
-              </p>
-
-              <button
-                type="button"
-                onClick={limpiarFiltros}
-                className="bg-gray-100 hover:bg-orange-100 text-gray-700 px-5 py-3 rounded-xl font-bold transition"
-              >
-                ✕ Limpiar filtros
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* RESULTADOS DEL CATÁLOGO */}
+      {/* PRODUCTOS: SIN PANEL DE FILTROS */}
       <section
         id="productos-disponibles"
-        className="max-w-7xl mx-auto px-6 pb-20 scroll-mt-32"
+        className="max-w-7xl mx-auto px-6 pt-20 pb-20 scroll-mt-32"
       >
         <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
           <div>
@@ -466,19 +246,36 @@ function Catalogo() {
             </h2>
 
             {busquedaURL && (
-              <p className="text-gray-500 mt-2">
-                Buscando:{" "}
-                <strong className="text-orange-600">{busquedaURL}</strong>
+              <div className="flex flex-wrap items-center gap-3 mt-3">
+                <p className="text-gray-500">
+                  Buscando:{" "}
+                  <strong className="text-orange-600">{busquedaURL}</strong>
+                </p>
+
+                <button
+                  type="button"
+                  onClick={quitarBusqueda}
+                  className="text-sm font-bold text-orange-600 hover:underline"
+                >
+                  Quitar búsqueda ✕
+                </button>
+              </div>
+            )}
+
+            {!busquedaURL && categoriaURL && (
+              <p className="text-gray-500 mt-3">
+                Categoría:{" "}
+                <strong className="text-orange-600">{categoriaURL}</strong>
               </p>
             )}
           </div>
 
           <span className="bg-orange-100 text-orange-600 px-6 py-3 rounded-full font-bold">
-            {productosFiltrados.length} productos
+            {productosVisibles.length} productos
           </span>
         </div>
 
-        {/* CARGANDO */}
+        {/* ESTADO DE CARGA */}
         {cargando ? (
           <div className="text-center py-16">
             <div className="inline-block w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
@@ -489,8 +286,7 @@ function Catalogo() {
           <div className="bg-red-50 rounded-2xl p-8 text-center text-red-700">
             {error}
           </div>
-        ) : productosFiltrados.length === 0 ? (
-          /* SIN RESULTADOS */
+        ) : productosVisibles.length === 0 ? (
           <div className="bg-white rounded-[32px] shadow-xl p-10 sm:p-16 text-center border border-gray-100">
             <div className="text-6xl mb-5">🔎</div>
 
@@ -499,22 +295,21 @@ function Catalogo() {
             </h3>
 
             <p className="text-gray-500 mt-4">
-              No hay productos registrados que coincidan con tu búsqueda y los
-              filtros seleccionados.
+              No hay productos registrados que coincidan con la búsqueda
+              realizada.
             </p>
 
             <button
               type="button"
-              onClick={limpiarFiltros}
-              className="mt-6 bg-orange-500 hover:bg-orange-600 text-white px-7 py-3 rounded-xl font-bold"
+              onClick={verTodos}
+              className="mt-6 bg-orange-500 hover:bg-orange-600 text-white px-7 py-3 rounded-xl font-bold transition"
             >
               Ver todos los productos
             </button>
           </div>
         ) : (
-          /* TARJETAS DE PRODUCTOS */
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {productosFiltrados.map((producto) => {
+            {productosVisibles.map((producto) => {
               const destacado = productoDestacado === String(producto.id);
 
               return (
