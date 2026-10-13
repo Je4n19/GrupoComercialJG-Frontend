@@ -5,17 +5,28 @@ import heroImg from "../assets/inicio.png";
 
 function Hero() {
   return (
-    <section className="relative min-h-[620px] sm:min-h-[680px] lg:min-h-[780px] flex items-center overflow-hidden bg-gray-950">
-      {/* IMAGEN DE FONDO */}
+    <section
+      className="
+        relative
+        min-h-[620px]
+        sm:min-h-[680px]
+        lg:min-h-[780px]
+        flex
+        items-center
+        overflow-hidden
+        bg-[#1A1A1A]
+      "
+    >
+      {/* ================================= */}
+      {/* IMAGEN PRINCIPAL */}
+      {/* ================================= */}
 
       <img
         src={heroImg}
         alt="Maquinaria agrícola, forestal e industrial"
         className="
-          absolute
-          inset-0
-          w-full
-          h-full
+          absolute inset-0
+          w-full h-full
           object-cover
           object-[65%_center]
           sm:object-center
@@ -23,50 +34,105 @@ function Hero() {
         "
       />
 
-      {/* OVERLAY PRINCIPAL */}
+      {/* OVERLAY OSCURO */}
+      <div
+        className="
+          absolute inset-0
+          bg-black/55
+          sm:bg-black/45
+          lg:bg-gradient-to-r
+          lg:from-[#081B10]/95
+          lg:via-[#10291A]/70
+          lg:to-black/15
+        "
+      />
 
+      {/* DEGRADADO INFERIOR */}
+      <div
+        className="
+          absolute inset-0
+          bg-gradient-to-t
+          from-black/75
+          via-transparent
+          to-black/10
+        "
+      />
+
+      {/* EFECTO VERDE DECORATIVO */}
       <div
         className="
           absolute
-          inset-0
-          bg-black/35
-          sm:bg-black/25
-          lg:bg-gradient-to-r
-          lg:from-black/75
-          lg:via-black/35
-          lg:to-transparent
+          -left-32
+          bottom-0
+          w-[450px]
+          h-[450px]
+          bg-[#009E49]/15
+          blur-3xl
+          rounded-full
+          pointer-events-none
         "
-      ></div>
+      />
 
-      {/* DEGRADADO INFERIOR */}
+      {/* ================================= */}
+      {/* CONTENIDO PRINCIPAL */}
+      {/* ================================= */}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10"></div>
-
-      {/* EFECTO NARANJA */}
-
-      <div className="absolute -left-32 bottom-0 w-[450px] h-[450px] bg-[#e84d05]/10 blur-3xl rounded-full"></div>
-
-      {/* CONTENIDO */}
-
-      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 w-full py-14 sm:py-16 lg:py-20">
+      <div
+        className="
+          relative z-10
+          max-w-7xl
+          mx-auto
+          px-5 sm:px-6
+          w-full
+          py-14 sm:py-16 lg:py-20
+        "
+      >
         <div className="max-w-2xl">
-          {/* BADGE */}
-
-          <div className="inline-flex items-center gap-3 bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 rounded-full">
+          {/* IDENTIDAD DE EMPRESA */}
+          <div
+            className="
+              inline-flex
+              items-center
+              gap-3
+              bg-white/10
+              backdrop-blur-md
+              border border-white/20
+              px-4 py-2
+              rounded-full
+              shadow-lg
+            "
+          >
             <div className="bg-white rounded-lg p-1">
               <img
                 src={logoJ}
                 alt="Grupo Comercial J&G"
-                className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
+                className="
+                  w-6 h-6
+                  sm:w-7 sm:h-7
+                  object-contain
+                "
               />
             </div>
 
-            <span className="text-[10px] sm:text-xs uppercase tracking-widest font-extrabold text-white">
+            <span
+              className="
+                text-[10px]
+                sm:text-xs
+                uppercase
+                tracking-widest
+                font-extrabold
+                text-white
+              "
+            >
               Grupo Comercial J&G
             </span>
+
+            <span className="w-2 h-2 bg-[#009E49] rounded-full" />
           </div>
 
-          {/* TÍTULO */}
+          {/* ================================= */}
+          {/* TÍTULO PRINCIPAL */}
+          {/* ================================= */}
 
           <h1
             className="
@@ -76,25 +142,32 @@ function Hero() {
               xl:text-7xl
               font-black
               text-white
-              leading-[1.02]
+              leading-[1.04]
               tracking-tight
-              mt-6
+              mt-7
             "
           >
-            Potencia y Rendimiento
-            <span className="block text-[#e84d05] mt-2">
+            Potencia y
+            <br />
+            Rendimiento
+            <span
+              className="
+                block
+                text-[#FF6600]
+                mt-3
+              "
+            >
               para el Campo e Industria
             </span>
           </h1>
 
           {/* DESCRIPCIÓN */}
-
           <p
             className="
               text-base
               sm:text-lg
-              text-gray-200
-              mt-6
+              text-gray-100
+              mt-7
               leading-relaxed
               max-w-xl
             "
@@ -103,32 +176,59 @@ function Hero() {
             especializada para diferentes necesidades de trabajo.
           </p>
 
-          {/* BOTONES */}
+          {/* ================================= */}
+          {/* BOTONES DE ACCIÓN */}
+          {/* ================================= */}
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8">
+          <div
+            className="
+              flex
+              flex-col
+              sm:flex-row
+              gap-3 sm:gap-4
+              mt-9
+            "
+          >
+            {/* CATÁLOGO */}
             <Link
               to="/catalogo"
               className="
                 inline-flex
                 items-center
                 justify-center
-                bg-[#e84d05]
-                hover:bg-[#c94104]
+                gap-2
+                bg-[#FF6600]
+                hover:bg-[#E65C00]
                 text-white
-                px-7
-                sm:px-8
+                px-7 sm:px-8
                 py-4
                 rounded-xl
                 font-black
                 text-sm
                 transition-all
+                duration-300
                 shadow-lg
                 hover:-translate-y-1
+                hover:shadow-orange-600/30
               "
             >
               Explorar Catálogo
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-4 h-4"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
             </Link>
 
+            {/* WHATSAPP */}
             <a
               href="https://wa.me/51979501557?text=Hola,%20deseo%20realizar%20una%20cotización"
               target="_blank"
@@ -137,19 +237,20 @@ function Hero() {
                 inline-flex
                 items-center
                 justify-center
+                gap-2
                 bg-white/10
-                hover:bg-white/20
+                hover:bg-[#009E49]
                 text-white
-                border
-                border-white/30
+                border border-white/30
+                hover:border-[#009E49]
                 backdrop-blur-sm
-                px-7
-                sm:px-8
+                px-7 sm:px-8
                 py-4
                 rounded-xl
                 font-black
                 text-sm
                 transition-all
+                duration-300
                 hover:-translate-y-1
               "
             >
@@ -157,7 +258,9 @@ function Hero() {
             </a>
           </div>
 
+          {/* ================================= */}
           {/* INFORMACIÓN DE CONFIANZA */}
+          {/* ================================= */}
 
           <div
             className="
@@ -171,41 +274,98 @@ function Hero() {
               pt-6
               sm:pt-8
               border-t
-              border-white/15
+              border-white/20
             "
           >
-            {/* TELÉFONO */}
-
-            <div className="py-3 sm:py-0 border-b sm:border-b-0 border-white/10">
-              <span className="block text-[10px] sm:text-xs uppercase tracking-wider text-orange-400 font-bold">
+            {/* ATENCIÓN */}
+            <div
+              className="
+                py-3 sm:py-0
+                border-b sm:border-b-0
+                border-white/10
+              "
+            >
+              <span
+                className="
+                  block
+                  text-[10px] sm:text-xs
+                  uppercase
+                  tracking-wider
+                  text-[#73E2A4]
+                  font-extrabold
+                "
+              >
                 Atención
               </span>
 
-              <p className="text-white text-sm sm:text-base font-black mt-1">
+              <p
+                className="
+                  text-white
+                  text-sm sm:text-base
+                  font-black
+                  mt-1
+                "
+              >
                 +51 979 501 557
               </p>
             </div>
 
             {/* COBERTURA */}
-
-            <div className="py-3 sm:py-0 border-b sm:border-b-0 border-white/10">
-              <span className="block text-[10px] sm:text-xs uppercase tracking-wider text-orange-400 font-bold">
+            <div
+              className="
+                py-3 sm:py-0
+                border-b sm:border-b-0
+                border-white/10
+              "
+            >
+              <span
+                className="
+                  block
+                  text-[10px] sm:text-xs
+                  uppercase
+                  tracking-wider
+                  text-[#73E2A4]
+                  font-extrabold
+                "
+              >
                 Cobertura
               </span>
 
-              <p className="text-white text-sm sm:text-base font-black mt-1">
+              <p
+                className="
+                  text-white
+                  text-sm sm:text-base
+                  font-black
+                  mt-1
+                "
+              >
                 Todo el Perú
               </p>
             </div>
 
-            {/* ASESORÍA */}
-
+            {/* SERVICIO */}
             <div className="py-3 sm:py-0">
-              <span className="block text-[10px] sm:text-xs uppercase tracking-wider text-orange-400 font-bold">
+              <span
+                className="
+                  block
+                  text-[10px] sm:text-xs
+                  uppercase
+                  tracking-wider
+                  text-[#73E2A4]
+                  font-extrabold
+                "
+              >
                 Servicio
               </span>
 
-              <p className="text-white text-sm sm:text-base font-black mt-1">
+              <p
+                className="
+                  text-white
+                  text-sm sm:text-base
+                  font-black
+                  mt-1
+                "
+              >
                 Atención Especializada
               </p>
             </div>
@@ -213,9 +373,15 @@ function Hero() {
         </div>
       </div>
 
-      {/* LÍNEA INFERIOR */}
-
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#e84d05]"></div>
+      {/* LÍNEA INFERIOR VERDE */}
+      <div
+        className="
+          absolute
+          bottom-0 left-0 right-0
+          h-1
+          bg-[#009E49]
+        "
+      />
     </section>
   );
 }

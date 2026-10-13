@@ -34,35 +34,129 @@ function Marcas() {
   ];
 
   return (
-    <section className="relative bg-gray-50 py-24 lg:py-28 overflow-hidden">
-      {/* Decoración de fondo */}
+    <section
+      id="marcas"
+      className="
+        relative
+        bg-white
+        py-20
+        sm:py-24
+        lg:py-28
+        overflow-hidden
+      "
+    >
+      {/* ================================= */}
+      {/* DECORACIÓN DE FONDO */}
+      {/* ================================= */}
 
-      <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-[#e84d05]/5 rounded-full blur-3xl"></div>
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -top-32
+          -left-32
+          w-[400px]
+          h-[400px]
+          bg-[#009E49]/5
+          rounded-full
+          blur-3xl
+        "
+      />
 
-      <div className="absolute -bottom-40 -right-32 w-[450px] h-[450px] bg-orange-100/60 rounded-full blur-3xl"></div>
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -bottom-40
+          -right-32
+          w-[450px]
+          h-[450px]
+          bg-[#009E49]/5
+          rounded-full
+          blur-3xl
+        "
+      />
 
-      <div className="relative max-w-7xl mx-auto px-6">
-        {/* =========================
-            ENCABEZADO
-        ========================== */}
+      {/* ================================= */}
+      {/* CONTENIDO */}
+      {/* ================================= */}
 
-        <div className="grid lg:grid-cols-2 gap-10 items-end mb-14">
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        {/* ENCABEZADO */}
+        <div
+          className="
+            grid
+            lg:grid-cols-2
+            gap-8
+            lg:gap-12
+            items-end
+            mb-12
+            lg:mb-14
+          "
+        >
           <div>
-            <span className="inline-flex items-center gap-3 text-[#e84d05] font-black uppercase tracking-[0.18em] text-sm">
-              <span className="w-10 h-[3px] bg-[#e84d05] rounded-full"></span>
+            <span
+              className="
+                inline-flex
+                items-center
+                gap-3
+                text-[#009E49]
+                font-black
+                uppercase
+                tracking-[0.18em]
+                text-xs
+                sm:text-sm
+              "
+            >
+              <span
+                className="
+                  w-10
+                  h-[3px]
+                  bg-[#FF6600]
+                  rounded-full
+                "
+              />
               Nuestras Marcas
             </span>
 
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-950 mt-6 leading-[1.05]">
+            <h2
+              className="
+                text-3xl
+                sm:text-4xl
+                lg:text-5xl
+                xl:text-6xl
+                font-black
+                text-[#1A1A1A]
+                mt-6
+                leading-[1.08]
+                tracking-tight
+              "
+            >
               Marcas reconocidas,
-              <span className="block text-[#e84d05] mt-2">
+              <span
+                className="
+                  block
+                  text-[#009E49]
+                  mt-2
+                "
+              >
                 equipos para cada trabajo.
               </span>
             </h2>
           </div>
 
+          {/* DESCRIPCIÓN */}
           <div className="lg:pb-2">
-            <p className="text-gray-600 text-lg leading-relaxed max-w-xl lg:ml-auto">
+            <p
+              className="
+                text-gray-600
+                text-base
+                sm:text-lg
+                leading-relaxed
+                max-w-xl
+                lg:ml-auto
+              "
+            >
               Trabajamos con diferentes marcas de maquinaria, herramientas y
               equipos para ofrecer alternativas según las necesidades de cada
               cliente.
@@ -70,82 +164,202 @@ function Marcas() {
           </div>
         </div>
 
-        {/* =========================
-            CONTENEDOR DE MARCAS
-        ========================== */}
+        {/* ================================= */}
+        {/* TARJETAS DE MARCAS */}
+        {/* ================================= */}
 
-        <div className="bg-white rounded-[35px] shadow-xl border border-gray-100 p-6 md:p-10 lg:p-12">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-            {marcas.map((marca, index) => (
+        <div
+          className="
+            grid
+            grid-cols-2
+            sm:grid-cols-3
+            lg:grid-cols-6
+            gap-4
+            sm:gap-5
+          "
+        >
+          {marcas.map((marca) => (
+            <div
+              key={marca.nombre}
+              className="
+                group
+                relative
+                min-h-[175px]
+                sm:min-h-[190px]
+                bg-white
+                rounded-2xl
+                border
+                border-gray-200
+                shadow-sm
+                hover:shadow-xl
+                hover:border-[#009E49]/40
+                hover:-translate-y-2
+                transition-all
+                duration-300
+                overflow-hidden
+              "
+            >
+              {/* LÍNEA SUPERIOR */}
               <div
-                key={index}
                 className="
-                  group
-                  relative
-                  min-h-[180px]
-                  flex
-                  items-center
-                  justify-center
-                  p-6
-                  border-b
-                  border-gray-100
-                  last:border-b-0
-
-                  md:border-r
-                  lg:border-b-0
-
-                  hover:bg-orange-50/70
+                  absolute
+                  top-0
+                  left-1/2
+                  -translate-x-1/2
+                  w-0
+                  h-1
+                  bg-[#FF6600]
+                  rounded-full
+                  group-hover:w-16
                   transition-all
                   duration-300
                 "
+              />
+
+              {/* LOGO Y NOMBRE */}
+              <div
+                className="
+                  h-full
+                  flex
+                  flex-col
+                  items-center
+                  justify-center
+                  gap-5
+                  px-4
+                  py-7
+                "
               >
-                {/* Línea superior al hacer hover */}
-
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-[4px] bg-[#e84d05] rounded-full group-hover:w-16 transition-all duration-300"></div>
-
-                {/* Logo */}
-
-                <div className="flex flex-col items-center justify-center">
+                <div
+                  className="
+                    w-full
+                    h-20
+                    flex
+                    items-center
+                    justify-center
+                  "
+                >
                   <img
                     src={marca.logo}
-                    alt={marca.nombre}
+                    alt={`Logo de ${marca.nombre}`}
+                    loading="lazy"
                     className="
                       max-h-20
-                      max-w-[140px]
+                      max-w-full
                       w-auto
                       object-contain
-                      transition-all
+                      transition-transform
                       duration-300
                       group-hover:scale-110
                     "
                   />
-
-                  <span className="text-gray-400 text-sm font-bold mt-5 group-hover:text-[#e84d05] transition">
-                    {marca.nombre}
-                  </span>
                 </div>
+
+                <span
+                  className="
+                    text-gray-500
+                    text-sm
+                    font-bold
+                    text-center
+                    group-hover:text-[#009E49]
+                    transition-colors
+                    duration-300
+                  "
+                >
+                  {marca.nombre}
+                </span>
               </div>
-            ))}
-          </div>
+
+              {/* BORDE INFERIOR AL PASAR CURSOR */}
+              <div
+                className="
+                  absolute
+                  bottom-0
+                  left-0
+                  right-0
+                  h-1
+                  bg-[#009E49]
+                  scale-x-0
+                  group-hover:scale-x-100
+                  transition-transform
+                  duration-300
+                  origin-center
+                "
+              />
+            </div>
+          ))}
         </div>
 
-        {/* =========================
-            MENSAJE INFERIOR
-        ========================== */}
+        {/* ================================= */}
+        {/* MENSAJE INFERIOR */}
+        {/* ================================= */}
 
-        <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-3 text-center">
-          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#e84d05] font-black">
-            ✓
+        <div
+          className="
+            mt-12
+            flex
+            flex-col
+            sm:flex-row
+            items-center
+            justify-center
+            gap-4
+            text-center
+          "
+        >
+          {/* ICONO */}
+          <div
+            className="
+              w-12
+              h-12
+              shrink-0
+              rounded-full
+              bg-[#E6F6EC]
+              flex
+              items-center
+              justify-center
+              text-[#009E49]
+            "
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6"
+              aria-hidden="true"
+            >
+              <path d="m5 12 4 4L19 6" />
+            </svg>
           </div>
 
-          <p className="text-gray-600">
-            Diferentes marcas y alternativas para
-            <span className="font-black text-gray-900">
-              {" "}
+          {/* TEXTO */}
+          <p
+            className="
+              text-gray-600
+              text-sm
+              sm:text-base
+              leading-relaxed
+            "
+          >
+            Diferentes marcas y alternativas para{" "}
+            <span className="font-black text-[#1A1A1A]">
               agricultura, trabajo forestal e industria.
             </span>
           </p>
         </div>
+
+        {/* ACENTO DECORATIVO */}
+        <div
+          className="
+            w-20
+            h-1
+            bg-[#FF6600]
+            rounded-full
+            mx-auto
+            mt-10
+          "
+        />
       </div>
     </section>
   );

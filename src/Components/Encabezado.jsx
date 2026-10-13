@@ -5,6 +5,7 @@ import logo from "../assets/logoJ&G.png";
 import { obtenerCategorias } from "../Services/categoriaService";
 import Buscador from "./Buscador";
 
+// DATOS DE CONTACTO
 const TELEFONO = "979501557";
 const CORREO = "grupo.comercial@yahoo.es";
 
@@ -97,8 +98,8 @@ function InstagramIcon() {
 // REDES SOCIALES
 function RedesSociales({ oscuro = false }) {
   const estilo = oscuro
-    ? "text-gray-700 hover:text-orange-600"
-    : "text-white hover:text-orange-200";
+    ? "text-[#1A1A1A] hover:text-[#009E49]"
+    : "text-white hover:text-green-100";
 
   return (
     <div className="flex items-center gap-4">
@@ -196,7 +197,7 @@ function Encabezado() {
     navigate(`${destino}?${parametros.toString()}`);
   };
 
-  // ORGANIZAR CATEGORÍAS POR GRUPOS
+  // ORGANIZAR CATEGORÍAS DINÁMICAMENTE
   const gruposOrdenados = useMemo(() => {
     const grupos = categorias.reduce((resultado, categoria) => {
       if (!categoria?.grupo || !categoria?.nombre) {
@@ -225,13 +226,22 @@ function Encabezado() {
   const enlaceCategoria = (nombre) =>
     `/catalogo?categoria=${encodeURIComponent(nombre)}`;
 
+  // ESTILO DE ENLACES DE NAVEGACIÓN
+  const estiloEnlace = (ruta) => {
+    const activo = location.pathname === ruta;
+
+    return `relative font-bold text-sm whitespace-nowrap transition-colors duration-200 ${
+      activo ? "text-[#009E49]" : "text-[#1A1A1A] hover:text-[#009E49]"
+    }`;
+  };
+
   return (
     <>
       {/* ===================================== */}
-      {/* BARRA SUPERIOR - DISEÑO HORIZONTAL */}
+      {/* BARRA SUPERIOR VERDE */}
       {/* ===================================== */}
 
-      <div className="bg-[#f45100] text-white">
+      <div className="bg-[#009E49] text-white">
         <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10">
           {/* ESCRITORIO */}
           <div className="hidden xl:flex items-center justify-between gap-5 py-3">
@@ -239,9 +249,9 @@ function Encabezado() {
               {/* TELÉFONO */}
               <a
                 href={`tel:+51${TELEFONO}`}
-                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-orange-100 transition"
+                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-green-100 transition"
               >
-                <Icono tipo="telefono" className="w-6 h-6 shrink-0" />
+                <Icono tipo="telefono" className="w-5 h-5 shrink-0" />
 
                 <span className="font-bold">¡Llámanos!</span>
 
@@ -249,14 +259,14 @@ function Encabezado() {
               </a>
 
               {/* SEPARADOR */}
-              <div className="w-px h-9 bg-white/50 shrink-0" />
+              <div className="w-px h-8 bg-white/40 shrink-0" />
 
               {/* CORREO */}
               <a
                 href={`mailto:${CORREO}`}
-                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-orange-100 transition"
+                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-green-100 transition"
               >
-                <Icono tipo="correo" className="w-6 h-6 shrink-0" />
+                <Icono tipo="correo" className="w-5 h-5 shrink-0" />
 
                 <span className="font-bold">¡Escríbenos!</span>
 
@@ -264,11 +274,11 @@ function Encabezado() {
               </a>
 
               {/* SEPARADOR */}
-              <div className="w-px h-9 bg-white/50 shrink-0" />
+              <div className="w-px h-8 bg-white/40 shrink-0" />
 
               {/* HORARIO */}
               <div className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm font-semibold">
-                <Icono tipo="reloj" className="w-6 h-6 shrink-0" />
+                <Icono tipo="reloj" className="w-5 h-5 shrink-0" />
 
                 <span>Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00</span>
               </div>
@@ -290,7 +300,7 @@ function Encabezado() {
               {/* TELÉFONO */}
               <a
                 href={`tel:+51${TELEFONO}`}
-                className="flex items-center gap-2 text-xs sm:text-sm hover:text-orange-100 transition"
+                className="flex items-center gap-2 text-xs sm:text-sm hover:text-green-100 transition"
               >
                 <Icono tipo="telefono" className="w-4 h-4 shrink-0" />
 
@@ -302,7 +312,7 @@ function Encabezado() {
               {/* CORREO */}
               <a
                 href={`mailto:${CORREO}`}
-                className="flex items-center gap-2 text-xs sm:text-sm hover:text-orange-100 transition"
+                className="flex items-center gap-2 text-xs sm:text-sm hover:text-green-100 transition"
               >
                 <Icono tipo="correo" className="w-4 h-4 shrink-0" />
 
@@ -332,10 +342,10 @@ function Encabezado() {
       </div>
 
       {/* ===================================== */}
-      {/* ENCABEZADO PRINCIPAL */}
+      {/* ENCABEZADO PRINCIPAL BLANCO */}
       {/* ===================================== */}
 
-      <header className="bg-[#c94e14] shadow-xl sticky top-0 z-50 border-b border-orange-700">
+      <header className="bg-white shadow-md sticky top-0 z-50 border-b border-gray-200">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 xl:gap-5 min-h-20 py-3">
             {/* LOGO Y NOMBRE */}
@@ -344,7 +354,7 @@ function Encabezado() {
               onClick={cerrarMenu}
               className="flex items-center gap-3 shrink-0 group"
             >
-              <div className="bg-white rounded-xl p-1.5 shadow-md group-hover:scale-105 transition">
+              <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100 group-hover:shadow-md group-hover:scale-105 transition">
                 <img
                   src={logo}
                   alt="Grupo Comercial J&G"
@@ -353,11 +363,11 @@ function Encabezado() {
               </div>
 
               <div className="hidden sm:block">
-                <h1 className="text-white font-black text-base xl:text-lg whitespace-nowrap">
+                <h1 className="text-[#1A1A1A] font-black text-base xl:text-lg whitespace-nowrap">
                   Grupo Comercial J&G
                 </h1>
 
-                <p className="text-orange-100 text-[11px] font-semibold">
+                <p className="text-[#009E49] text-[11px] font-semibold">
                   Agricultura • Forestal • Industria
                 </p>
               </div>
@@ -375,10 +385,7 @@ function Encabezado() {
 
             {/* NAVEGACIÓN ESCRITORIO */}
             <nav className="hidden xl:flex items-center justify-end gap-4 2xl:gap-6 h-16 shrink-0">
-              <Link
-                to="/"
-                className="font-bold text-white hover:text-orange-200 transition whitespace-nowrap text-sm"
-              >
+              <Link to="/" className={estiloEnlace("/")}>
                 Inicio
               </Link>
 
@@ -386,7 +393,7 @@ function Encabezado() {
               <div className="relative group h-full flex items-center">
                 <button
                   type="button"
-                  className="flex items-center gap-1 font-bold text-white hover:text-orange-200 transition whitespace-nowrap text-sm h-full"
+                  className="flex items-center gap-1 font-bold text-[#1A1A1A] hover:text-[#009E49] transition whitespace-nowrap text-sm h-full"
                 >
                   Categorías de Productos
                   <Icono
@@ -397,20 +404,20 @@ function Encabezado() {
 
                 {/* MEGA MENÚ */}
                 <div className="invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 absolute top-full right-0 w-[min(1050px,92vw)] bg-white text-gray-800 shadow-2xl rounded-b-3xl border border-gray-100 transition-all duration-200 z-[100]">
-                  <div className="flex justify-between items-center gap-4 px-7 py-5 border-b">
+                  <div className="flex justify-between items-center gap-4 px-7 py-5 border-b border-gray-100">
                     <div>
-                      <p className="text-xs font-black text-orange-600 uppercase">
+                      <p className="text-xs font-black text-[#009E49] uppercase">
                         Grupo Comercial J&G
                       </p>
 
-                      <h2 className="text-xl font-black mt-1">
+                      <h2 className="text-xl font-black mt-1 text-[#1A1A1A]">
                         Categorías de Productos
                       </h2>
                     </div>
 
                     <Link
                       to="/catalogo"
-                      className="text-sm font-bold text-orange-600 hover:underline"
+                      className="text-sm font-bold text-[#FF6600] hover:underline"
                     >
                       Ver todo el catálogo →
                     </Link>
@@ -421,7 +428,7 @@ function Encabezado() {
                       <div className="grid grid-cols-3 gap-7">
                         {gruposOrdenados.map(([grupo, items]) => (
                           <div key={grupo}>
-                            <h3 className="font-black text-sm text-orange-600 uppercase mb-3">
+                            <h3 className="font-black text-sm text-[#009E49] uppercase mb-3">
                               {grupo}
                             </h3>
 
@@ -430,7 +437,7 @@ function Encabezado() {
                                 <Link
                                   key={categoria.id}
                                   to={enlaceCategoria(categoria.nombre)}
-                                  className="block text-sm text-gray-600 hover:text-orange-600 transition"
+                                  className="block text-sm text-gray-600 hover:text-[#009E49] transition"
                                 >
                                   › {categoria.nombre}
                                 </Link>
@@ -446,7 +453,7 @@ function Encabezado() {
                     )}
                   </div>
 
-                  <div className="bg-gray-50 px-7 py-4 rounded-b-3xl flex justify-between gap-4">
+                  <div className="bg-[#F4FAF6] px-7 py-4 rounded-b-3xl flex justify-between gap-4">
                     <span className="text-sm text-gray-500">
                       Encuentra maquinaria para cada trabajo.
                     </span>
@@ -455,7 +462,7 @@ function Encabezado() {
                       href="https://wa.me/51979501557"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-bold text-green-600"
+                      className="text-sm font-bold text-[#009E49]"
                     >
                       ¿Necesitas ayuda? WhatsApp →
                     </a>
@@ -463,17 +470,11 @@ function Encabezado() {
                 </div>
               </div>
 
-              <Link
-                to="/repuestos"
-                className="font-bold text-white hover:text-orange-200 transition whitespace-nowrap text-sm"
-              >
+              <Link to="/repuestos" className={estiloEnlace("/repuestos")}>
                 Repuestos
               </Link>
 
-              <Link
-                to="/contacto"
-                className="font-bold text-white hover:text-orange-200 transition whitespace-nowrap text-sm"
-              >
+              <Link to="/contacto" className={estiloEnlace("/contacto")}>
                 Contacto
               </Link>
             </nav>
@@ -482,7 +483,7 @@ function Encabezado() {
             <button
               type="button"
               onClick={() => setMenuAbierto(!menuAbierto)}
-              className="xl:hidden shrink-0 w-11 h-11 flex items-center justify-center bg-white/10 border border-white/20 rounded-xl text-white ml-auto"
+              className="xl:hidden shrink-0 w-11 h-11 flex items-center justify-center bg-[#009E49] hover:bg-[#00843D] rounded-xl text-white ml-auto transition"
               aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
               aria-expanded={menuAbierto}
             >
@@ -506,12 +507,12 @@ function Encabezado() {
           {/* MENÚ RESPONSIVE */}
           {menuAbierto && (
             <div className="xl:hidden pb-5">
-              <div className="bg-white rounded-2xl shadow-2xl max-h-[75vh] overflow-y-auto p-3">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-h-[75vh] overflow-y-auto p-3">
                 <nav className="flex flex-col">
                   <Link
                     to="/"
                     onClick={cerrarMenu}
-                    className="px-5 py-4 font-bold text-gray-800 hover:bg-orange-50 rounded-xl"
+                    className="px-5 py-4 font-bold text-[#1A1A1A] hover:bg-[#F0F9F3] hover:text-[#009E49] rounded-xl transition"
                   >
                     Inicio
                   </Link>
@@ -519,7 +520,7 @@ function Encabezado() {
                   <button
                     type="button"
                     onClick={() => setCategoriasAbiertas(!categoriasAbiertas)}
-                    className="flex justify-between items-center px-5 py-4 font-bold text-gray-800 hover:bg-orange-50 rounded-xl"
+                    className="flex justify-between items-center px-5 py-4 font-bold text-[#1A1A1A] hover:bg-[#F0F9F3] hover:text-[#009E49] rounded-xl transition"
                   >
                     Categorías de Productos
                     <Icono
@@ -531,18 +532,18 @@ function Encabezado() {
                   </button>
 
                   {categoriasAbiertas && (
-                    <div className="bg-gray-50 rounded-xl p-4 mx-2">
+                    <div className="bg-[#F4FAF6] rounded-xl p-4 mx-2">
                       <Link
                         to="/catalogo"
                         onClick={cerrarMenu}
-                        className="block bg-orange-600 text-white text-center py-3 rounded-xl font-bold mb-4"
+                        className="block bg-[#009E49] hover:bg-[#00843D] text-white text-center py-3 rounded-xl font-bold mb-4 transition"
                       >
                         Ver todos los productos
                       </Link>
 
                       {gruposOrdenados.map(([grupo, items]) => (
                         <div key={grupo} className="mb-5">
-                          <h3 className="text-sm font-black text-orange-600 uppercase mb-2">
+                          <h3 className="text-sm font-black text-[#009E49] uppercase mb-2">
                             {grupo}
                           </h3>
 
@@ -551,7 +552,7 @@ function Encabezado() {
                               key={categoria.id}
                               to={enlaceCategoria(categoria.nombre)}
                               onClick={cerrarMenu}
-                              className="block px-3 py-2 text-sm text-gray-700 hover:text-orange-600"
+                              className="block px-3 py-2 text-sm text-gray-700 hover:text-[#009E49] transition"
                             >
                               › {categoria.nombre}
                             </Link>
@@ -564,7 +565,7 @@ function Encabezado() {
                   <Link
                     to="/repuestos"
                     onClick={cerrarMenu}
-                    className="px-5 py-4 font-bold text-gray-800 hover:bg-orange-50 rounded-xl"
+                    className="px-5 py-4 font-bold text-[#1A1A1A] hover:bg-[#F0F9F3] hover:text-[#009E49] rounded-xl transition"
                   >
                     Repuestos
                   </Link>
@@ -572,13 +573,13 @@ function Encabezado() {
                   <Link
                     to="/contacto"
                     onClick={cerrarMenu}
-                    className="px-5 py-4 font-bold text-gray-800 hover:bg-orange-50 rounded-xl"
+                    className="px-5 py-4 font-bold text-[#1A1A1A] hover:bg-[#F0F9F3] hover:text-[#009E49] rounded-xl transition"
                   >
                     Contacto
                   </Link>
                 </nav>
 
-                <div className="border-t mt-3 pt-4 px-4 flex justify-between items-center">
+                <div className="border-t border-gray-100 mt-3 pt-4 px-4 flex justify-between items-center">
                   <span className="text-sm text-gray-500">Síguenos:</span>
 
                   <RedesSociales oscuro />
