@@ -1,146 +1,237 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { obtenerProductos } from "../Services/productoService";
 import { obtenerCategorias } from "../Services/categoriaService";
 
-import Buscador from "../Components/Buscador";
 import TarjetaProducto from "../Components/TarjetaProducto";
 import Footer from "../Components/Footer";
-
 import imagenProductos from "../assets/productos.png";
+
+// Normaliza los textos para permitir búsquedas flexibles.
+// Ejemplo: MS661, MS 661 y MS-661.
+const normalizar = (valor) =>
+  String(valor ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/([a-z])(\d)/g, "$1 $2")
+    .replace(/(\d)([a-z])/g, "$1 $2")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const compactar = (valor) => normalizar(valor).replace(/\s+/g, "");
+
+const obtenerNombreCategoria = (categoria) => {
+  if (typeof categoria === "string") {
+    return categoria;
+  }
+
+  return categoria?.nombre || "";
+};
 
 function Catalogo() {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Parámetros recibidos desde el buscador del encabezado
+  const busquedaURL = searchParams.get("buscar") || "";
   const categoriaURL = searchParams.get("categoria") || "";
+  const productoDestacado = searchParams.get("destacado");
 
+  // Datos del backend
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
 
-  const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] = useState(categoriaURL);
+  // Filtros
   const [marca, setMarca] = useState("");
   const [orden, setOrden] = useState("nombre");
   const [soloStock, setSoloStock] = useState(false);
-  const [cargando, setCargando] = useState(true);
 
+  // Estados de carga
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+
+  // Cargar productos y categorías desde Render
   useEffect(() => {
+    let activo = true;
+
     const cargarDatos = async () => {
+      setCargando(true);
+      setError("");
+
       try {
         const [productosData, categoriasData] = await Promise.all([
           obtenerProductos(),
           obtenerCategorias(),
         ]);
 
+        if (!activo) return;
+
         setProductos(Array.isArray(productosData) ? productosData : []);
+
         setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
-      } catch (error) {
-        console.error("Error cargando catálogo:", error);
+      } catch (err) {
+        console.error("Error cargando catálogo:", err);
+
+        if (activo) {
+          setError("No se pudieron cargar los productos. Intenta nuevamente.");
+        }
       } finally {
-        setCargando(false);
+        if (activo) {
+          setCargando(false);
+        }
       }
     };
 
     cargarDatos();
+
+    return () => {
+      activo = false;
+    };
   }, []);
 
-  useEffect(() => {
-    setCategoria(categoriaURL);
-  }, [categoriaURL]);
+  // Cambiar categoría sin perder el texto de búsqueda
+  const cambiarCategoria = (valor) => {
+    const parametros = new URLSearchParams(searchParams);
 
-  // Actualiza el filtro y la URL para mantener
-  // la navegación por categorías funcionando.
-  const cambiarCategoria = (nuevaCategoria) => {
-    setCategoria(nuevaCategoria);
-
-    const nuevosParametros = new URLSearchParams(searchParams);
-
-    if (nuevaCategoria) {
-      nuevosParametros.set("categoria", nuevaCategoria);
+    if (valor) {
+      parametros.set("categoria", valor);
     } else {
-      nuevosParametros.delete("categoria");
+      parametros.delete("categoria");
     }
 
-    setSearchParams(nuevosParametros);
+    parametros.delete("destacado");
+    setSearchParams(parametros);
   };
 
+  // Limpiar todos los filtros
   const limpiarFiltros = () => {
-    setBusqueda("");
+    setSearchParams({});
     setMarca("");
     setOrden("nombre");
     setSoloStock(false);
-    cambiarCategoria("");
   };
 
-  // Obtener marcas únicas directamente de los productos.
-  const marcasDisponibles = [
-    ...new Set(
-      productos.map((producto) => producto.marca?.trim()).filter(Boolean),
-    ),
-  ].sort((a, b) => a.localeCompare(b, "es"));
+  // Marcas disponibles obtenidas de los productos reales
+  const marcasDisponibles = useMemo(() => {
+    return [
+      ...new Set(
+        productos
+          .map((producto) => String(producto.marca ?? "").trim())
+          .filter(Boolean),
+      ),
+    ].sort((a, b) => a.localeCompare(b, "es"));
+  }, [productos]);
 
-  // Normalizar texto para búsquedas más flexibles.
-  const normalizar = (valor) =>
-    String(valor ?? "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim();
+  // Palabras introducidas en el buscador global
+  const palabras = useMemo(() => {
+    return normalizar(busquedaURL).split(/\s+/).filter(Boolean);
+  }, [busquedaURL]);
 
-  // Aplicar filtros.
-  const productosFiltrados = productos
-    .filter((producto) => {
-      const textoBuscado = normalizar(busqueda);
+  // Filtrado dinámico
+  const productosFiltrados = useMemo(() => {
+    return productos
+      .filter((producto) => {
+        const nombreCategoria = obtenerNombreCategoria(producto.categoria);
 
-      const coincideTexto =
-        normalizar(producto.nombre).includes(textoBuscado) ||
-        normalizar(producto.marca).includes(textoBuscado) ||
-        normalizar(producto.modelo).includes(textoBuscado);
+        const textoProducto = [
+          producto.nombre,
+          producto.marca,
+          producto.modelo,
+          nombreCategoria,
+          producto.descripcion,
+          producto.codigo,
+        ]
+          .filter(Boolean)
+          .join(" ");
 
-      const coincideCategoria =
-        !categoria || normalizar(producto.categoria) === normalizar(categoria);
+        const texto = normalizar(textoProducto);
+        const compacto = compactar(textoProducto);
 
-      const coincideMarca =
-        !marca || normalizar(producto.marca) === normalizar(marca);
+        // Busca en nombre, marca, modelo, categoría,
+        // descripción y código.
+        const coincideTexto = palabras.every((palabra) => {
+          const token = compactar(palabra);
 
-      const coincideStock = !soloStock || Number(producto.stock) > 0;
+          return texto.includes(palabra) || compacto.includes(token);
+        });
 
-      return (
-        coincideTexto && coincideCategoria && coincideMarca && coincideStock
-      );
-    })
-    .sort((a, b) => {
-      switch (orden) {
-        case "precio-menor":
-          return Number(a.precio ?? 0) - Number(b.precio ?? 0);
+        const coincideCategoria =
+          !categoriaURL ||
+          normalizar(nombreCategoria) === normalizar(categoriaURL);
 
-        case "precio-mayor":
-          return Number(b.precio ?? 0) - Number(a.precio ?? 0);
+        const coincideMarca =
+          !marca || normalizar(producto.marca) === normalizar(marca);
 
-        case "stock":
-          return Number(b.stock ?? 0) - Number(a.stock ?? 0);
+        const coincideStock = !soloStock || Number(producto.stock) > 0;
 
-        case "nombre":
-        default:
-          return String(a.nombre ?? "").localeCompare(
-            String(b.nombre ?? ""),
-            "es",
-          );
-      }
-    });
+        return (
+          coincideTexto && coincideCategoria && coincideMarca && coincideStock
+        );
+      })
+      .sort((a, b) => {
+        // Producto seleccionado desde las sugerencias:
+        // aparece primero en el catálogo.
+        if (productoDestacado) {
+          if (String(a.id) === productoDestacado) {
+            return -1;
+          }
 
-  const hayFiltrosActivos =
-    busqueda !== "" ||
-    categoria !== "" ||
-    marca !== "" ||
+          if (String(b.id) === productoDestacado) {
+            return 1;
+          }
+        }
+
+        switch (orden) {
+          case "precio-menor":
+            return Number(a.precio ?? 0) - Number(b.precio ?? 0);
+
+          case "precio-mayor":
+            return Number(b.precio ?? 0) - Number(a.precio ?? 0);
+
+          case "stock":
+            return Number(b.stock ?? 0) - Number(a.stock ?? 0);
+
+          default:
+            return String(a.nombre ?? "").localeCompare(
+              String(b.nombre ?? ""),
+              "es",
+            );
+        }
+      });
+  }, [
+    productos,
+    palabras,
+    categoriaURL,
+    marca,
+    soloStock,
+    orden,
+    productoDestacado,
+  ]);
+
+  const hayFiltros =
+    Boolean(busquedaURL) ||
+    Boolean(categoriaURL) ||
+    Boolean(marca) ||
     soloStock ||
     orden !== "nombre";
 
+  // Desplazarse automáticamente a los resultados
+  // cuando se realiza una búsqueda desde el encabezado.
+  useEffect(() => {
+    if (cargando || !busquedaURL) return;
+
+    const elemento = document.getElementById("productos-disponibles");
+
+    elemento?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [busquedaURL, productoDestacado, cargando]);
+
   return (
     <>
-      {/* HERO */}
-
+      {/* HERO PRINCIPAL */}
       <section className="relative min-h-[520px] flex items-center text-white overflow-hidden">
         <img
           src={imagenProductos}
@@ -150,20 +241,18 @@ function Catalogo() {
 
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/10" />
 
-        <div className="absolute left-0 bottom-0 w-96 h-96 bg-orange-600/10 blur-3xl rounded-full" />
-
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full py-20">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center bg-orange-500/20 border border-orange-400/40 text-orange-300 px-5 py-2 rounded-full font-bold text-sm backdrop-blur-sm">
+            <span className="inline-flex items-center bg-orange-500/20 border border-orange-400/40 text-orange-300 px-5 py-2 rounded-full font-bold text-sm">
               Grupo Comercial J&G
             </span>
 
-            <h1 className="text-5xl md:text-7xl font-black mt-7 leading-[0.95]">
+            <h1 className="text-5xl md:text-7xl font-black mt-7 leading-tight">
               Catálogo de
-              <span className="block text-orange-500 mt-2">Productos</span>
+              <span className="block text-orange-500">Productos</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-200 mt-7 max-w-xl leading-relaxed">
+            <p className="text-lg md:text-xl text-gray-200 mt-7 max-w-xl">
               Maquinaria agrícola, forestal e industrial para trabajos
               exigentes, con variedad de equipos, garantía y atención
               especializada.
@@ -172,7 +261,7 @@ function Catalogo() {
             <div className="flex flex-wrap gap-4 mt-8">
               <a
                 href="#productos-disponibles"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-7 py-4 rounded-xl font-black transition shadow-lg"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-7 py-4 rounded-xl font-black transition"
               >
                 Ver Productos
               </a>
@@ -180,8 +269,8 @@ function Catalogo() {
               <a
                 href="https://wa.me/51979501557?text=Hola,%20deseo%20consultar%20por%20una%20máquina%20o%20equipo"
                 target="_blank"
-                rel="noreferrer"
-                className="bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-sm text-white px-7 py-4 rounded-xl font-black transition"
+                rel="noopener noreferrer"
+                className="bg-white/10 hover:bg-white/20 border border-white/30 text-white px-7 py-4 rounded-xl font-black transition"
               >
                 Consultar por WhatsApp
               </a>
@@ -191,74 +280,83 @@ function Catalogo() {
       </section>
 
       {/* ESTADÍSTICAS */}
-
       <section className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
-            <h3 className="text-4xl font-black text-orange-500">
-              {productos.length}
-            </h3>
-            <p className="text-gray-500 mt-2">Productos</p>
-          </div>
+          {[
+            [productos.length, "Productos"],
+            [categorias.length, "Categorías"],
+            ["100%", "Garantía"],
+            ["Perú", "Cobertura Nacional"],
+          ].map(([valor, titulo]) => (
+            <div
+              key={titulo}
+              className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100"
+            >
+              <h3 className="text-4xl font-black text-orange-500">{valor}</h3>
 
-          <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
-            <h3 className="text-4xl font-black text-orange-500">
-              {categorias.length}
-            </h3>
-            <p className="text-gray-500 mt-2">Categorías</p>
-          </div>
-
-          <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
-            <h3 className="text-4xl font-black text-orange-500">100%</h3>
-            <p className="text-gray-500 mt-2">Garantía</p>
-          </div>
-
-          <div className="bg-white rounded-3xl shadow-xl p-6 text-center border border-gray-100">
-            <h3 className="text-4xl font-black text-orange-500">Perú</h3>
-            <p className="text-gray-500 mt-2">Cobertura Nacional</p>
-          </div>
+              <p className="text-gray-500 mt-2">{titulo}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* FILTROS AVANZADOS */}
-
+      {/* FILTROS SIN BUSCADOR INTERNO */}
       <section className="max-w-7xl mx-auto px-6 py-16">
         <div className="bg-white rounded-[32px] shadow-xl p-6 sm:p-8 border border-gray-100">
           <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
             <div>
               <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
-                Buscar Productos
+                Filtrar Productos
               </h2>
+
               <p className="text-sm text-gray-500 mt-2">
-                Encuentra fácilmente el equipo que necesitas.
+                Personaliza los resultados por categoría, marca, precio y
+                disponibilidad.
               </p>
             </div>
 
             <span className="bg-orange-50 text-orange-600 px-4 py-2 rounded-xl text-sm font-bold">
-              Filtros de búsqueda
+              Filtros de productos
             </span>
           </div>
 
-          {/* BÚSQUEDA PRINCIPAL */}
+          {/* BÚSQUEDA ACTIVA DEL ENCABEZADO */}
+          {busquedaURL && (
+            <div className="mb-6 flex flex-wrap items-center gap-3 bg-orange-50 border border-orange-100 rounded-xl px-5 py-4">
+              <span className="text-sm text-gray-600">Resultados para:</span>
 
-          <div className="grid md:grid-cols-2 gap-5 mb-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Buscar por nombre, marca o modelo
-              </label>
+              <span className="font-black text-orange-700">
+                "{busquedaURL}"
+              </span>
 
-              <Buscador valor={busqueda} onChange={setBusqueda} />
+              <button
+                type="button"
+                onClick={() => {
+                  const parametros = new URLSearchParams(searchParams);
+
+                  parametros.delete("buscar");
+                  parametros.delete("destacado");
+
+                  setSearchParams(parametros);
+                }}
+                className="ml-auto text-sm font-bold text-orange-600 hover:underline"
+              >
+                Quitar búsqueda ✕
+              </button>
             </div>
+          )}
 
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {/* CATEGORÍA */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Categoría
               </label>
 
               <select
-                value={categoria}
+                value={categoriaURL}
                 onChange={(e) => cambiarCategoria(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500"
               >
                 <option value="">Todas las categorías</option>
 
@@ -269,11 +367,8 @@ function Catalogo() {
                 ))}
               </select>
             </div>
-          </div>
 
-          {/* FILTROS SECUNDARIOS */}
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* MARCA */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Marca
@@ -282,7 +377,7 @@ function Catalogo() {
               <select
                 value={marca}
                 onChange={(e) => setMarca(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500"
               >
                 <option value="">Todas las marcas</option>
 
@@ -294,6 +389,7 @@ function Catalogo() {
               </select>
             </div>
 
+            {/* ORDENAMIENTO */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Ordenar productos
@@ -302,21 +398,25 @@ function Catalogo() {
               <select
                 value={orden}
                 onChange={(e) => setOrden(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-4 bg-white text-gray-700 focus:outline-none focus:border-orange-500"
               >
                 <option value="nombre">Nombre A - Z</option>
+
                 <option value="precio-menor">Precio: menor a mayor</option>
+
                 <option value="precio-mayor">Precio: mayor a menor</option>
+
                 <option value="stock">Mayor disponibilidad</option>
               </select>
             </div>
 
+            {/* STOCK */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Disponibilidad
               </label>
 
-              <label className="flex items-center gap-3 border-2 border-gray-200 rounded-2xl px-5 py-4 cursor-pointer hover:border-orange-300 transition">
+              <label className="flex items-center gap-3 border-2 border-gray-200 rounded-2xl px-4 py-4 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={soloStock}
@@ -324,29 +424,28 @@ function Catalogo() {
                   className="w-5 h-5 accent-orange-500"
                 />
 
-                <span className="text-gray-700 font-semibold">
-                  Solo productos con stock
+                <span className="text-sm text-gray-700 font-semibold">
+                  Solo con stock
                 </span>
               </label>
             </div>
           </div>
 
-          {/* LIMPIAR FILTROS */}
-
-          {hayFiltrosActivos && (
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-7 pt-6 border-t border-gray-100">
+          {/* RESUMEN DE FILTROS */}
+          {hayFiltros && (
+            <div className="flex flex-wrap justify-between items-center gap-4 mt-7 pt-6 border-t">
               <p className="text-sm text-gray-500">
                 Se encontraron{" "}
-                <span className="font-black text-orange-600">
+                <strong className="text-orange-600">
                   {productosFiltrados.length}
-                </span>{" "}
-                productos con los filtros seleccionados.
+                </strong>{" "}
+                productos.
               </p>
 
               <button
                 type="button"
                 onClick={limpiarFiltros}
-                className="inline-flex items-center gap-2 bg-gray-100 hover:bg-orange-100 text-gray-700 hover:text-orange-600 px-5 py-3 rounded-xl font-bold transition"
+                className="bg-gray-100 hover:bg-orange-100 text-gray-700 px-5 py-3 rounded-xl font-bold transition"
               >
                 ✕ Limpiar filtros
               </button>
@@ -355,28 +454,43 @@ function Catalogo() {
         </div>
       </section>
 
-      {/* PRODUCTOS */}
-
+      {/* RESULTADOS DEL CATÁLOGO */}
       <section
         id="productos-disponibles"
         className="max-w-7xl mx-auto px-6 pb-20 scroll-mt-32"
       >
         <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
-          <h2 className="text-3xl sm:text-4xl font-black text-gray-900">
-            Productos Disponibles
-          </h2>
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900">
+              {busquedaURL ? "Resultados de búsqueda" : "Productos Disponibles"}
+            </h2>
+
+            {busquedaURL && (
+              <p className="text-gray-500 mt-2">
+                Buscando:{" "}
+                <strong className="text-orange-600">{busquedaURL}</strong>
+              </p>
+            )}
+          </div>
 
           <span className="bg-orange-100 text-orange-600 px-6 py-3 rounded-full font-bold">
             {productosFiltrados.length} productos
           </span>
         </div>
 
+        {/* CARGANDO */}
         {cargando ? (
           <div className="text-center py-16">
             <div className="inline-block w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+
             <p className="text-gray-500 mt-4">Cargando productos...</p>
           </div>
+        ) : error ? (
+          <div className="bg-red-50 rounded-2xl p-8 text-center text-red-700">
+            {error}
+          </div>
         ) : productosFiltrados.length === 0 ? (
+          /* SIN RESULTADOS */
           <div className="bg-white rounded-[32px] shadow-xl p-10 sm:p-16 text-center border border-gray-100">
             <div className="text-6xl mb-5">🔎</div>
 
@@ -385,28 +499,43 @@ function Catalogo() {
             </h3>
 
             <p className="text-gray-500 mt-4">
-              Prueba utilizando otro nombre, marca o categoría.
+              No hay productos registrados que coincidan con tu búsqueda y los
+              filtros seleccionados.
             </p>
 
             <button
               type="button"
               onClick={limpiarFiltros}
-              className="mt-6 bg-orange-500 hover:bg-orange-600 text-white px-7 py-3 rounded-xl font-bold transition"
+              className="mt-6 bg-orange-500 hover:bg-orange-600 text-white px-7 py-3 rounded-xl font-bold"
             >
-              Limpiar filtros
+              Ver todos los productos
             </button>
           </div>
         ) : (
+          /* TARJETAS DE PRODUCTOS */
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {productosFiltrados.map((producto) => (
-              <TarjetaProducto key={producto.id} producto={producto} />
-            ))}
+            {productosFiltrados.map((producto) => {
+              const destacado = productoDestacado === String(producto.id);
+
+              return (
+                <div
+                  key={producto.id}
+                  id={`producto-${producto.id}`}
+                  className={
+                    destacado
+                      ? "rounded-3xl ring-4 ring-orange-500 ring-offset-4 transition-all"
+                      : ""
+                  }
+                >
+                  <TarjetaProducto producto={producto} />
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
 
-      {/* CTA */}
-
+      {/* ASESORÍA */}
       <section className="bg-gradient-to-r from-orange-600 to-orange-500 text-white py-24">
         <div className="max-w-5xl mx-auto text-center px-6">
           <h2 className="text-4xl md:text-5xl font-black">
@@ -421,15 +550,13 @@ function Catalogo() {
           <a
             href="https://wa.me/51979501557?text=Hola,%20necesito%20asesoría%20para%20elegir%20una%20máquina"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-block mt-10 bg-white text-orange-600 px-10 py-5 rounded-2xl font-black hover:scale-105 transition"
           >
             Solicitar Asesoría
           </a>
         </div>
       </section>
-
-      {/* FOOTER */}
 
       <Footer />
     </>

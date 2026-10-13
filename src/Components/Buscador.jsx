@@ -1,165 +1,269 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const RECOMENDACIONES = [
-  "Motosierras STIHL",
-  "Motosierra MS 250",
-  "Motosierra MS 212",
-  "Motosierra MS 172",
-  "Motosierra MS 310",
-  "Motosierra MS 261",
-  "Motosierra MS 361",
-  "Motosierra MS 382",
-  "Motosierra MS 651",
-  "Motosierra MS 661",
-  "Repuestos para motosierras",
-  "Desbrozadoras STIHL",
-  "Desbrozadora FS 230",
-  "Desbrozadora FS 235",
-  "Desbrozadora FS 250",
-  "Desbrozadora FS 460",
-  "Motobombas STIHL",
-  "Motobomba 2 pulgadas",
-  "Motobomba 3 pulgadas",
-  "Fumigadoras STIHL",
-  "Fumigadora SR 420",
-  "Fumigadora SR 450",
-  "Espadas para motosierra",
-  "Cadenas para motosierra",
-  "Aceite para motor",
-];
+import { obtenerProductos } from "../Services/productoService";
+import { obtenerRepuestos } from "../Services/repuestoService";
 
-const normalizar = (texto) =>
-  String(texto || "")
+const normalizar = (valor) =>
+  String(valor ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
+    .replace(/([a-z])(\d)/g, "$1 $2")
+    .replace(/(\d)([a-z])/g, "$1 $2")
+    .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-function Buscador({
-  valor = "",
-  onChange = () => {},
-  onBuscar,
-  categorias = [],
-  compacto = false,
-}) {
-  const [enfocado, setEnfocado] = useState(false);
-  const [seleccion, setSeleccion] = useState(-1);
+const textoCompacto = (valor) => normalizar(valor).replace(/\s+/g, "");
 
-  const sugerencias = useMemo(() => {
-    const consulta = normalizar(valor);
+const coincideBusqueda = (articulo, busqueda) => {
+  const consulta = normalizar(busqueda);
+  if (!consulta) return false;
 
-    if (consulta.length < 2) return [];
+  const texto = [
+    articulo.nombre,
+    articulo.modelo,
+    articulo.marca,
+    articulo.categoria,
+    articulo.descripcion,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-    const opciones = [
-      ...categorias.map((c) => c.nombre).filter(Boolean),
-      ...RECOMENDACIONES,
+  const normalizado = normalizar(texto);
+  const compacto = textoCompacto(texto);
+
+  const palabras = consulta.split(/\s+/).filter(Boolean);
+
+  return palabras.every((palabra) => {
+    return normalizado.includes(palabra) || compacto.includes(palabra);
+  });
+};
+
+function Buscador({ valor, onChange, onBuscar, compacto = false }) {
+  const navigate = useNavigate();
+  const contenedorRef = useRef(null);
+
+  const [textoLocal, setTextoLocal] = useState("");
+  const [productos, setProductos] = useState([]);
+  const [repuestos, setRepuestos] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [abierto, setAbierto] = useState(false);
+  const [seleccionado, setSeleccionado] = useState(-1);
+  const [error, setError] = useState("");
+
+  const controlado = valor !== undefined;
+  const texto = controlado ? valor : textoLocal;
+
+  const cambiarTexto = (nuevoTexto) => {
+    if (controlado) {
+      onChange?.(nuevoTexto);
+    } else {
+      setTextoLocal(nuevoTexto);
+    }
+
+    setAbierto(true);
+    setSeleccionado(-1);
+  };
+
+  useEffect(() => {
+    let activo = true;
+
+    const cargarInventario = async () => {
+      setCargando(true);
+      setError("");
+
+      // Cada consulta es independiente: si falla una,
+      // todavía podemos mostrar resultados de la otra.
+      const resultados = await Promise.allSettled([
+        obtenerProductos(),
+        obtenerRepuestos(),
+      ]);
+
+      if (!activo) return;
+
+      const productosData =
+        resultados[0].status === "fulfilled" ? resultados[0].value : [];
+
+      const repuestosData =
+        resultados[1].status === "fulfilled" ? resultados[1].value : [];
+
+      setProductos(Array.isArray(productosData) ? productosData : []);
+
+      setRepuestos(Array.isArray(repuestosData) ? repuestosData : []);
+
+      if (
+        resultados[0].status === "rejected" &&
+        resultados[1].status === "rejected"
+      ) {
+        setError("No se pudo consultar el inventario.");
+      }
+
+      setCargando(false);
+    };
+
+    cargarInventario();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const cerrarAlHacerClickFuera = (evento) => {
+      if (
+        contenedorRef.current &&
+        !contenedorRef.current.contains(evento.target)
+      ) {
+        setAbierto(false);
+      }
+    };
+
+    document.addEventListener("mousedown", cerrarAlHacerClickFuera);
+
+    return () => {
+      document.removeEventListener("mousedown", cerrarAlHacerClickFuera);
+    };
+  }, []);
+
+  const resultados = useMemo(() => {
+    if (normalizar(texto).length < 2) return [];
+
+    const articulos = [
+      ...productos.map((producto) => ({
+        ...producto,
+        tipoBusqueda: "producto",
+      })),
+      ...repuestos.map((repuesto) => ({
+        ...repuesto,
+        tipoBusqueda: "repuesto",
+      })),
     ];
 
-    const palabras = consulta.split(/\s+/).filter(Boolean);
-
-    return [...new Set(opciones)]
-      .filter((opcion) => palabras.every((p) => normalizar(opcion).includes(p)))
+    return articulos
+      .filter((articulo) => coincideBusqueda(articulo, texto))
       .sort((a, b) => {
-        const aInicio = normalizar(a).startsWith(consulta) ? 0 : 1;
-        const bInicio = normalizar(b).startsWith(consulta) ? 0 : 1;
+        const consulta = textoCompacto(texto);
+        const nombreA = textoCompacto(a.nombre);
+        const nombreB = textoCompacto(b.nombre);
 
-        return aInicio - bInicio || a.localeCompare(b);
+        const puntaje = (nombre) => {
+          if (nombre === consulta) return 0;
+          if (nombre.startsWith(consulta)) return 1;
+          if (nombre.includes(consulta)) return 2;
+          return 3;
+        };
+
+        return puntaje(nombreA) - puntaje(nombreB);
       })
-      .slice(0, 7);
-  }, [valor, categorias]);
+      .slice(0, 8);
+  }, [productos, repuestos, texto]);
 
-  const elegir = (texto) => {
-    onChange(texto);
-    setEnfocado(false);
-    setSeleccion(-1);
-    onBuscar?.(texto);
+  const seleccionarArticulo = (articulo) => {
+    setAbierto(false);
+    setSeleccionado(-1);
+
+    const ruta =
+      articulo.tipoBusqueda === "repuesto" ? "/repuestos" : "/catalogo";
+
+    const parametros = new URLSearchParams();
+
+    if (articulo.id !== undefined && articulo.id !== null) {
+      parametros.set("destacado", String(articulo.id));
+    }
+
+    // Incluimos el nombre como búsqueda para que
+    // el artículo aparezca entre los resultados.
+    parametros.set("buscar", articulo.nombre || "");
+
+    navigate(`${ruta}?${parametros.toString()}`);
+
+    if (controlado) {
+      onChange?.(articulo.nombre || "");
+    } else {
+      setTextoLocal(articulo.nombre || "");
+    }
   };
 
-  const enviar = (evento) => {
+  const enviarBusqueda = (evento) => {
     evento.preventDefault();
 
-    elegir(seleccion >= 0 ? sugerencias[seleccion] : valor.trim());
-  };
+    if (seleccionado >= 0 && resultados[seleccionado]) {
+      seleccionarArticulo(resultados[seleccionado]);
+      return;
+    }
 
-  const manejarTeclas = (evento) => {
-    if (evento.key === "ArrowDown" && sugerencias.length) {
-      evento.preventDefault();
+    const consulta = String(texto || "").trim();
 
-      setSeleccion((anterior) => (anterior + 1) % sugerencias.length);
-    } else if (evento.key === "ArrowUp" && sugerencias.length) {
-      evento.preventDefault();
+    if (!consulta) return;
 
-      setSeleccion((anterior) =>
-        anterior <= 0 ? sugerencias.length - 1 : anterior - 1,
-      );
-    } else if (evento.key === "Escape") {
-      setEnfocado(false);
-      setSeleccion(-1);
+    setAbierto(false);
+    setSeleccionado(-1);
+
+    if (onBuscar) {
+      onBuscar(consulta);
+    } else {
+      const parametros = new URLSearchParams({
+        buscar: consulta,
+      });
+
+      navigate(`/catalogo?${parametros.toString()}`);
     }
   };
 
   return (
-    <div className="relative w-full z-[110]">
-      <form onSubmit={enviar} role="search" className="w-full">
+    <div ref={contenedorRef} className="relative w-full">
+      <form onSubmit={enviarBusqueda} role="search">
         <div
-          className={`
-            flex items-center bg-white
-            border border-gray-200 shadow-sm
-            focus-within:ring-2
-            focus-within:ring-orange-200
-            overflow-hidden
-            ${compacto ? "h-12 rounded-full" : "h-14 rounded-2xl"}
-          `}
+          className={`flex items-center bg-white border border-gray-200 shadow-md focus-within:ring-2 focus-within:ring-orange-200 ${
+            compacto ? "h-12 rounded-full" : "h-14 rounded-2xl"
+          }`}
         >
           <input
             type="search"
-            aria-label="Buscar productos"
-            aria-autocomplete="list"
-            autoComplete="off"
-            placeholder={
-              compacto
-                ? "Buscar productos..."
-                : "Buscar maquinaria, repuestos o marcas..."
-            }
-            value={valor}
-            onChange={(e) => {
-              onChange(e.target.value);
-              setSeleccion(-1);
+            value={texto}
+            onChange={(evento) => cambiarTexto(evento.target.value)}
+            onFocus={() => setAbierto(true)}
+            onKeyDown={(evento) => {
+              if (evento.key === "ArrowDown" && resultados.length > 0) {
+                evento.preventDefault();
+
+                setSeleccionado((actual) =>
+                  actual >= resultados.length - 1 ? 0 : actual + 1,
+                );
+              }
+
+              if (evento.key === "ArrowUp" && resultados.length > 0) {
+                evento.preventDefault();
+
+                setSeleccionado((actual) =>
+                  actual <= 0 ? resultados.length - 1 : actual - 1,
+                );
+              }
+
+              if (evento.key === "Escape") {
+                setAbierto(false);
+                setSeleccionado(-1);
+              }
             }}
-            onFocus={() => setEnfocado(true)}
-            onBlur={() => setEnfocado(false)}
-            onKeyDown={manejarTeclas}
-            className="
-              min-w-0 flex-1
-              bg-transparent text-gray-800
-              outline-none
-              placeholder:text-gray-500
-              px-4 text-sm sm:text-base
-            "
+            placeholder="Buscar productos y repuestos..."
+            autoComplete="off"
+            aria-label="Buscar productos y repuestos"
+            className="flex-1 min-w-0 bg-transparent text-gray-800 px-4 outline-none text-sm sm:text-base"
           />
 
           <button
             type="submit"
             aria-label="Buscar"
-            title="Buscar"
-            className="
-              h-full w-12 sm:w-14
-              shrink-0
-              flex items-center justify-center
-              bg-amber-500
-              hover:bg-amber-600
-              text-white transition
-            "
+            className="h-full w-12 sm:w-14 shrink-0 rounded-r-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center transition"
           >
             <svg
               viewBox="0 0 24 24"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-5 h-5"
-              aria-hidden="true"
             >
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-4-4" />
@@ -168,49 +272,83 @@ function Buscador({
         </div>
       </form>
 
-      {enfocado && sugerencias.length > 0 && (
-        <div
-          className="
-            absolute left-0 right-0 top-full
-            mt-2 bg-white
-            border border-gray-200
-            shadow-2xl rounded-2xl
-            overflow-hidden text-gray-800
-            max-h-80 overflow-y-auto
-          "
-        >
-          <p
-            className="
-              px-4 pt-3 pb-2
-              text-xs font-bold uppercase
-              tracking-wide text-gray-500
-            "
-          >
-            Búsquedas relacionadas
-          </p>
+      {abierto && normalizar(texto).length >= 2 && (
+        <div className="absolute top-full left-0 right-0 mt-2 z-[200] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden max-h-[420px] overflow-y-auto">
+          {cargando ? (
+            <p className="px-4 py-5 text-sm text-gray-500">
+              Consultando productos y repuestos...
+            </p>
+          ) : error ? (
+            <p className="px-4 py-5 text-sm text-red-600">{error}</p>
+          ) : resultados.length === 0 ? (
+            <p className="px-4 py-5 text-sm text-gray-500">
+              No encontramos coincidencias con "{texto}". Puedes presionar Enter
+              para buscar igualmente.
+            </p>
+          ) : (
+            <>
+              <div className="px-4 py-3 bg-gray-50 border-b">
+                <p className="text-xs font-black text-gray-500 uppercase">
+                  Coincidencias en el inventario
+                </p>
+              </div>
 
-          {sugerencias.map((texto, indice) => (
-            <button
-              key={`${texto}-${indice}`}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => elegir(texto)}
-              className={`
-                w-full flex items-center
-                gap-3 px-4 py-3
-                text-left text-sm transition
-                ${
-                  indice === seleccion
-                    ? "bg-orange-100 text-orange-700"
-                    : "hover:bg-orange-50"
-                }
-              `}
-            >
-              <span className="text-orange-500">⌕</span>
+              {resultados.map((articulo, indice) => (
+                <button
+                  key={`${articulo.tipoBusqueda}-${articulo.id}`}
+                  type="button"
+                  onClick={() => seleccionarArticulo(articulo)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-gray-100 transition ${
+                    seleccionado === indice
+                      ? "bg-orange-100"
+                      : "hover:bg-orange-50"
+                  }`}
+                >
+                  <div className="w-14 h-14 shrink-0 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+                    {articulo.imagen ? (
+                      <img
+                        src={articulo.imagen}
+                        alt={articulo.nombre}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl">📦</span>
+                    )}
+                  </div>
 
-              <span className="truncate">{texto}</span>
-            </button>
-          ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-gray-900 line-clamp-2">
+                      {articulo.nombre}
+                    </p>
+
+                    <p className="text-xs text-gray-500 mt-1">
+                      {articulo.tipoBusqueda === "repuesto"
+                        ? "Repuesto"
+                        : "Producto"}
+                      {articulo.marca ? ` · ${articulo.marca}` : ""}
+                    </p>
+                  </div>
+
+                  {articulo.precio != null && (
+                    <span className="text-sm font-black text-green-700 whitespace-nowrap">
+                      S/ {articulo.precio}
+                    </span>
+                  )}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAbierto(false);
+                  onBuscar?.(texto);
+                }}
+                className="w-full px-4 py-4 text-sm text-center font-black text-orange-600 hover:bg-orange-50"
+              >
+                Ver todos los resultados →
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
