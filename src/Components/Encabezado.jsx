@@ -13,7 +13,7 @@ const FACEBOOK_URL =
 
 const INSTAGRAM_URL = "https://www.instagram.com/grupocomercialjg/";
 
-// Iconos utilizados en el encabezado
+// ICONOS
 function Icono({ tipo, className = "w-5 h-5" }) {
   const iconos = {
     telefono: (
@@ -68,6 +68,7 @@ function Icono({ tipo, className = "w-5 h-5" }) {
   );
 }
 
+// FACEBOOK
 function FacebookIcon() {
   return (
     <svg
@@ -80,6 +81,7 @@ function FacebookIcon() {
   );
 }
 
+// INSTAGRAM
 function InstagramIcon() {
   return (
     <svg
@@ -92,6 +94,7 @@ function InstagramIcon() {
   );
 }
 
+// REDES SOCIALES
 function RedesSociales({ oscuro = false }) {
   const estilo = oscuro
     ? "text-gray-700 hover:text-orange-600"
@@ -126,17 +129,13 @@ function Encabezado() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Estados del menú
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [categoriasAbiertas, setCategoriasAbiertas] = useState(false);
 
-  // Categorías del backend
   const [categorias, setCategorias] = useState([]);
-
-  // Texto del buscador global
   const [busqueda, setBusqueda] = useState("");
 
-  // Cargar categorías desde Render
+  // CARGAR CATEGORÍAS DESDE EL BACKEND
   useEffect(() => {
     let activo = true;
 
@@ -159,12 +158,11 @@ function Encabezado() {
     };
   }, []);
 
-  // Sincronizar el texto con la URL
+  // SINCRONIZAR BÚSQUEDA CON LA URL
   useEffect(() => {
     const parametros = new URLSearchParams(location.search);
 
     setBusqueda(parametros.get("buscar") || "");
-
     setMenuAbierto(false);
     setCategoriasAbiertas(false);
   }, [location.pathname, location.search]);
@@ -174,9 +172,7 @@ function Encabezado() {
     setCategoriasAbiertas(false);
   };
 
-  // Búsqueda general al presionar lupa o Enter.
-  // Las sugerencias específicas se gestionan
-  // dentro del componente Buscador.jsx.
+  // BUSCADOR GLOBAL
   const buscar = (texto) => {
     const consulta = String(texto || "").trim();
 
@@ -185,11 +181,6 @@ function Encabezado() {
     cerrarMenu();
     setBusqueda(consulta);
 
-    // Cuando estamos en repuestos, mantenemos
-    // la búsqueda en esa sección.
-    //
-    // Desde las otras páginas, usamos el catálogo
-    // por defecto, excepto términos de repuestos.
     const esRepuesto =
       location.pathname === "/repuestos" ||
       /\b(repuesto|repuestos|cadena|cadenas|espada|espadas|carburador|carburadores|filtro|filtros)\b/i.test(
@@ -205,7 +196,7 @@ function Encabezado() {
     navigate(`${destino}?${parametros.toString()}`);
   };
 
-  // Organizar las categorías por grupos
+  // ORGANIZAR CATEGORÍAS POR GRUPOS
   const gruposOrdenados = useMemo(() => {
     const grupos = categorias.reduce((resultado, categoria) => {
       if (!categoria?.grupo || !categoria?.nombre) {
@@ -236,62 +227,114 @@ function Encabezado() {
 
   return (
     <>
-      {/* BARRA SUPERIOR DE INFORMACIÓN */}
-      <div className="bg-orange-600 text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-4 lg:gap-6">
+      {/* ===================================== */}
+      {/* BARRA SUPERIOR - DISEÑO HORIZONTAL */}
+      {/* ===================================== */}
+
+      <div className="bg-[#f45100] text-white">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10">
+          {/* ESCRITORIO */}
+          <div className="hidden xl:flex items-center justify-between gap-5 py-3">
+            <div className="flex items-center gap-5 2xl:gap-8 min-w-0">
+              {/* TELÉFONO */}
               <a
                 href={`tel:+51${TELEFONO}`}
-                className="flex items-center gap-2 hover:text-orange-100 transition"
+                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-orange-100 transition"
               >
-                <Icono tipo="telefono" className="w-6 h-6" />
+                <Icono tipo="telefono" className="w-6 h-6 shrink-0" />
 
-                <div className="flex flex-col leading-tight">
-                  <span className="text-sm font-bold">¡Llámanos!</span>
+                <span className="font-bold">¡Llámanos!</span>
 
-                  <span className="text-sm font-semibold">{TELEFONO}</span>
-                </div>
+                <span className="font-semibold">{TELEFONO}</span>
               </a>
 
-              <div className="hidden sm:block w-px h-10 bg-white/50" />
+              {/* SEPARADOR */}
+              <div className="w-px h-9 bg-white/50 shrink-0" />
 
+              {/* CORREO */}
               <a
                 href={`mailto:${CORREO}`}
-                className="flex items-center gap-2 hover:text-orange-100 transition"
+                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-orange-100 transition"
               >
-                <Icono tipo="correo" className="w-6 h-6" />
+                <Icono tipo="correo" className="w-6 h-6 shrink-0" />
 
-                <div className="flex flex-col leading-tight">
-                  <span className="text-sm font-bold">¡Escríbenos!</span>
+                <span className="font-bold">¡Escríbenos!</span>
 
-                  <span className="text-sm font-semibold">{CORREO}</span>
-                </div>
+                <span className="font-semibold">{CORREO}</span>
               </a>
 
-              <div className="hidden lg:block w-px h-10 bg-white/50" />
+              {/* SEPARADOR */}
+              <div className="w-px h-9 bg-white/50 shrink-0" />
 
-              <div className="flex items-center gap-2">
-                <Icono tipo="reloj" className="w-6 h-6" />
+              {/* HORARIO */}
+              <div className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm font-semibold">
+                <Icono tipo="reloj" className="w-6 h-6 shrink-0" />
 
-                <span className="text-sm font-semibold">
-                  Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00
-                </span>
+                <span>Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 shrink-0">
-              <span className="text-sm font-semibold">
+            {/* REDES SOCIALES A LA DERECHA */}
+            <div className="flex items-center gap-4 shrink-0 ml-auto">
+              <span className="text-[13px] 2xl:text-sm font-semibold whitespace-nowrap">
                 Síguenos en nuestras redes:
               </span>
 
               <RedesSociales />
             </div>
           </div>
+
+          {/* TABLETS Y CELULARES */}
+          <div className="xl:hidden py-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
+              {/* TELÉFONO */}
+              <a
+                href={`tel:+51${TELEFONO}`}
+                className="flex items-center gap-2 text-xs sm:text-sm hover:text-orange-100 transition"
+              >
+                <Icono tipo="telefono" className="w-4 h-4 shrink-0" />
+
+                <span className="font-bold">¡Llámanos!</span>
+
+                <span className="font-semibold">{TELEFONO}</span>
+              </a>
+
+              {/* CORREO */}
+              <a
+                href={`mailto:${CORREO}`}
+                className="flex items-center gap-2 text-xs sm:text-sm hover:text-orange-100 transition"
+              >
+                <Icono tipo="correo" className="w-4 h-4 shrink-0" />
+
+                <span className="font-bold">¡Escríbenos!</span>
+
+                <span className="font-semibold break-all">{CORREO}</span>
+              </a>
+
+              {/* HORARIO */}
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
+                <Icono tipo="reloj" className="w-4 h-4 shrink-0" />
+
+                <span>Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00</span>
+              </div>
+
+              {/* REDES SOCIALES */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs sm:text-sm font-semibold">
+                  Síguenos:
+                </span>
+
+                <RedesSociales />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* ===================================== */}
       {/* ENCABEZADO PRINCIPAL */}
+      {/* ===================================== */}
+
       <header className="bg-[#c94e14] shadow-xl sticky top-0 z-50 border-b border-orange-700">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 xl:gap-5 min-h-20 py-3">
