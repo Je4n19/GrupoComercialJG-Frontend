@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { obtenerCsrfToken } from "../Services/authService";
 import logoJ from "../assets/logoJ&G.png";
 
-// URL DEL BACKEND SPRING BOOT
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://grupocomercialjg-backend.onrender.com";
 
-// ========================================
-// ICONOS
-// ========================================
+const API_URL = BASE_URL.replace(/\/$/, "");
 
 function IconoLogin({ tipo, className = "w-5 h-5" }) {
   const iconos = {
@@ -79,10 +79,6 @@ function IconoLogin({ tipo, className = "w-5 h-5" }) {
   );
 }
 
-// ========================================
-// COMPONENTE LOGIN
-// ========================================
-
 function Login() {
   const navigate = useNavigate();
 
@@ -99,12 +95,11 @@ function Login() {
     "Administración de Categorías",
   ];
 
-  // ========================================
-  // INICIAR SESIÓN CON SPRING BOOT
-  // ========================================
-
   const ingresar = async (e) => {
     e.preventDefault();
+
+    if (cargando) return;
+
     setError("");
 
     if (!usuario.trim() || !password) {
@@ -116,24 +111,11 @@ function Login() {
 
     try {
       // PASO 1: OBTENER TOKEN CSRF
-      const respuestaCsrf = await fetch(`${API_URL}/api/auth/csrf`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const csrf = await obtenerCsrfToken();
 
-      if (!respuestaCsrf.ok) {
-        throw new Error("No se pudo obtener la protección de seguridad.");
-      }
-
-      const csrf = await respuestaCsrf.json();
-
-      if (!csrf.token || !csrf.headerName) {
-        throw new Error(
-          "El servidor no devolvió un token de seguridad válido.",
-        );
-      }
-
-      // PASO 2: ENVIAR CREDENCIALES AL BACKEND
+      // PASO 2: INICIAR SESIÓN
+      // Conservamos "username" porque así funciona
+      // el login original de tu backend.
       const respuestaLogin = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         credentials: "include",
@@ -143,67 +125,89 @@ function Login() {
         },
         body: JSON.stringify({
           username: usuario.trim(),
-          password: password,
+          password,
         }),
       });
 
       if (!respuestaLogin.ok) {
-        if (respuestaLogin.status === 401) {
-          setError("Usuario o contraseña incorrectos.");
-        } else if (respuestaLogin.status === 403) {
-          setError(
-            "No se pudo validar la sesión de seguridad. Revisa la configuración de cookies y CSRF.",
-          );
-        } else {
-          setError("No se pudo iniciar sesión. Inténtalo nuevamente.");
-        }
-        return;
+        const fallo = new Error(
+          respuestaLogin.status === 401
+            ? "Usuario o contraseña incorrectos."
+            : respuestaLogin.status === 403
+              ? "No se pudo validar la sesión de seguridad. Revisa las cookies y el token CSRF."
+              : "No se pudo iniciar sesión. Inténtalo nuevamente.",
+        );
+
+        fallo.status = respuestaLogin.status;
+        throw fallo;
       }
 
-      // PASO 3: COMPROBAR RESPUESTA
+      // PASO 3: VERIFICAR EL ROL
       const datos = await respuestaLogin.json();
 
-      if (datos.rol !== "ADMIN") {
-        setError("Tu cuenta no tiene permisos de administrador.");
-        return;
+      if (datos?.rol !== "ADMIN") {
+        throw new Error("Tu cuenta no tiene permisos de administrador.");
       }
 
-      // NO GUARDAMOS CONTRASEÑAS NI AUTH EN LOCALSTORAGE
+      // PASO 4: COMPROBAR LA SESIÓN ACTIVA
+      const respuestaSesion = await fetch(`${API_URL}/api/auth/me`, {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (!respuestaSesion.ok) {
+        throw new Error(
+          "El inicio de sesión fue aceptado, pero no se pudo confirmar la sesión. Verifica que el navegador permita las cookies del backend.",
+        );
+      }
+
+      const sesion = await respuestaSesion.json();
+
+      // Si el endpoint informa el rol, también lo validamos.
+      if (sesion?.rol !== undefined && sesion.rol !== "ADMIN") {
+        throw new Error("La sesión activa no tiene permisos de administrador.");
+      }
+
+      // No guardar contraseñas ni tokens de sesión
+      // en localStorage.
       setPassword("");
 
-      // PASO 4: REDIRIGIR AL PANEL
       navigate("/admin", { replace: true });
     } catch (err) {
       console.error("Error de autenticación:", err);
 
-      setError(
-        "No se pudo conectar con el servidor. Comprueba que Spring Boot esté encendido.",
-      );
+      if (err?.status === 401) {
+        setError("Usuario o contraseña incorrectos.");
+      } else if (err?.status === 403) {
+        setError(
+          "Acceso denegado (403). Revisa la configuración de sesión y CSRF.",
+        );
+      } else if (err instanceof TypeError) {
+        setError(
+          "No se pudo conectar con el servidor. Comprueba tu conexión y la configuración CORS.",
+        );
+      } else {
+        setError(
+          err?.message || "No se pudo iniciar sesión. Inténtalo nuevamente.",
+        );
+      }
     } finally {
       setCargando(false);
     }
   };
 
-  // ========================================
-  // DISEÑO DEL LOGIN
-  // ========================================
-
   return (
     <main className="relative min-h-screen bg-[#F1F6F3] flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 overflow-hidden">
       {/* DECORACIONES DE FONDO */}
       <div className="pointer-events-none absolute -top-40 -left-40 w-[450px] h-[450px] bg-[#009E49]/10 rounded-full blur-3xl" />
-
       <div className="pointer-events-none absolute -bottom-40 -right-40 w-[450px] h-[450px] bg-[#FF6600]/10 rounded-full blur-3xl" />
 
       {/* CONTENEDOR PRINCIPAL */}
       <div className="relative z-10 max-w-6xl w-full bg-white rounded-[24px] sm:rounded-[32px] lg:rounded-[36px] overflow-hidden shadow-2xl border border-gray-100 grid lg:grid-cols-2">
-        {/* ========================================
-            LADO IZQUIERDO
-        ======================================== */}
-
-        <section className="relative bg-[#073D27] text-white p-7 sm:p-10 lg:p-12 xl:p-14 flex flex-col justify-center overflow-hidden">
+        {/* LADO IZQUIERDO */}
+        <section className="relative bg-[#063D2A] text-white p-7 sm:p-10 lg:p-12 xl:p-14 flex flex-col justify-center overflow-hidden">
           <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 bg-[#009E49]/25 rounded-full blur-3xl" />
-
           <div className="pointer-events-none absolute -bottom-32 -left-32 w-80 h-80 bg-[#FF6600]/10 rounded-full blur-3xl" />
 
           <div className="relative z-10">
@@ -278,10 +282,7 @@ function Login() {
           </div>
         </section>
 
-        {/* ========================================
-            LADO DERECHO - FORMULARIO
-        ======================================== */}
-
+        {/* LADO DERECHO - FORMULARIO */}
         <section className="p-7 sm:p-10 lg:p-12 xl:p-14 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto">
             {/* VOLVER AL INICIO */}
@@ -313,10 +314,7 @@ function Login() {
               </p>
             </div>
 
-            {/* ========================================
-                FORMULARIO
-            ======================================== */}
-
+            {/* FORMULARIO */}
             <form onSubmit={ingresar} className="mt-9 space-y-6">
               {/* USUARIO */}
               <div>
@@ -378,7 +376,7 @@ function Login() {
                     required
                   />
 
-                  {/* MOSTRAR / OCULTAR */}
+                  {/* MOSTRAR / OCULTAR CONTRASEÑA */}
                   <button
                     type="button"
                     onClick={() => setMostrarPassword(!mostrarPassword)}
@@ -432,7 +430,7 @@ function Login() {
               </div>
 
               <div>
-                <p className="font-black text-[#073D27] text-sm">
+                <p className="font-black text-[#063D2A] text-sm">
                   Área Administrativa
                 </p>
 

@@ -1,254 +1,517 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import MenuAdmin from "../Components/MenuAdmin";
 
 import { obtenerProductos } from "../Services/productoService";
 import { obtenerRepuestos } from "../Services/repuestoService";
 import { obtenerCategorias } from "../Services/categoriaService";
 
+const obtenerStock = (item) => {
+  const stock = Number(item?.stock);
+
+  return Number.isFinite(stock) && stock >= 0 ? stock : null;
+};
+
+const obtenerPrecio = (item) => {
+  const precio = Number(item?.precio);
+
+  return Number.isFinite(precio) && precio >= 0 ? precio : null;
+};
+
+const formatoSoles = (valor) =>
+  new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: "PEN",
+    minimumFractionDigits: 2,
+  }).format(valor);
+
 function PanelControl() {
   const [productos, setProductos] = useState([]);
   const [repuestos, setRepuestos] = useState([]);
   const [categorias, setCategorias] = useState([]);
 
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+
+  const cargarDatos = async () => {
+    try {
+      setCargando(true);
+      setError("");
+
+      const [productosData, repuestosData, categoriasData] = await Promise.all([
+        obtenerProductos(),
+        obtenerRepuestos(),
+        obtenerCategorias(),
+      ]);
+
+      if (
+        !Array.isArray(productosData) ||
+        !Array.isArray(repuestosData) ||
+        !Array.isArray(categoriasData)
+      ) {
+        throw new Error("El servidor devolvió datos con un formato inválido.");
+      }
+
+      setProductos(productosData);
+      setRepuestos(repuestosData);
+      setCategorias(categoriasData);
+    } catch (err) {
+      console.error("Error al cargar el panel administrativo:", err);
+
+      setProductos([]);
+      setRepuestos([]);
+      setCategorias([]);
+
+      setError(
+        "No se pudo cargar la información del panel. Verifica la conexión con el servidor.",
+      );
+    } finally {
+      setCargando(false);
+    }
+  };
+
   useEffect(() => {
     cargarDatos();
   }, []);
 
-  const cargarDatos = async () => {
-    try {
-      const productosData = await obtenerProductos();
-      const repuestosData = await obtenerRepuestos();
-      const categoriasData = await obtenerCategorias();
+  const inventario = [
+    ...productos.map((item) => ({
+      ...item,
+      tipo: "Producto",
+    })),
+    ...repuestos.map((item) => ({
+      ...item,
+      tipo: "Repuesto",
+    })),
+  ];
 
-      setProductos(productosData || []);
-      setRepuestos(repuestosData || []);
-      setCategorias(categoriasData || []);
-    } catch (error) {
-      console.error(error);
+  const stockBajo = inventario.filter((item) => {
+    const stock = obtenerStock(item);
+
+    return stock !== null && stock <= 5;
+  }).length;
+
+  const sinStock = inventario.filter((item) => obtenerStock(item) === 0).length;
+
+  const stockTotal = inventario.reduce((total, item) => {
+    const stock = obtenerStock(item);
+
+    return total + (stock ?? 0);
+  }, 0);
+
+  const valorInventario = inventario.reduce((total, item) => {
+    const stock = obtenerStock(item);
+    const precio = obtenerPrecio(item);
+
+    if (stock === null || precio === null) {
+      return total;
     }
-  };
 
-  const stockBajo = [...productos, ...repuestos].filter(
-    (item) => Number(item.stock || 0) <= 5,
-  ).length;
+    return total + precio * stock;
+  }, 0);
 
-  const stockTotal = [...productos, ...repuestos].reduce(
-    (total, item) => total + Number(item.stock || 0),
-    0,
-  );
+  const marcas = [
+    ...new Set(productos.map((producto) => producto.marca).filter(Boolean)),
+  ];
 
-  const valorInventario = [...productos, ...repuestos].reduce(
-    (total, item) => total + Number(item.precio || 0) * Number(item.stock || 0),
-    0,
-  );
+  const alertasStock = inventario
+    .filter((item) => {
+      const stock = obtenerStock(item);
 
-  const marcas = [...new Set(productos.map((p) => p.marca).filter((m) => m))];
-
-  const alertasStock = [...productos, ...repuestos]
-    .filter((item) => Number(item.stock || 0) <= 5)
+      return stock !== null && stock <= 5;
+    })
+    .sort((a, b) => obtenerStock(a) - obtenerStock(b))
     .slice(0, 5);
+
+  const registrosSinDatos = inventario.filter(
+    (item) => obtenerStock(item) === null || obtenerPrecio(item) === null,
+  ).length;
 
   const estadisticas = [
     {
       titulo: "Productos",
       valor: productos.length,
       icono: "📦",
-      color: "bg-orange-500",
+      color: "text-[#009E49]",
+      fondo: "bg-green-50",
+      ruta: "/admin/productos",
     },
     {
       titulo: "Repuestos",
       valor: repuestos.length,
       icono: "🔧",
-      color: "bg-orange-600",
+      color: "text-[#FF6600]",
+      fondo: "bg-orange-50",
+      ruta: "/admin/repuestos",
     },
     {
       titulo: "Categorías",
       valor: categorias.length,
       icono: "📂",
-      color: "bg-orange-700",
+      color: "text-[#063D2A]",
+      fondo: "bg-green-50",
+      ruta: "/admin/categorias",
     },
     {
       titulo: "Stock Bajo",
       valor: stockBajo,
       icono: "⚠️",
-      color: "bg-red-500",
+      color: "text-red-600",
+      fondo: "bg-red-50",
+      ruta: "/admin/inventario",
+    },
+  ];
+
+  const accionesRapidas = [
+    {
+      titulo: "Productos",
+      icono: "📦",
+      ruta: "/admin/productos",
+      color: "bg-[#009E49] hover:bg-[#007A39]",
+    },
+    {
+      titulo: "Repuestos",
+      icono: "🔧",
+      ruta: "/admin/repuestos",
+      color: "bg-[#FF6600] hover:bg-[#E85C00]",
+    },
+    {
+      titulo: "Categorías",
+      icono: "📂",
+      ruta: "/admin/categorias",
+      color: "bg-[#063D2A] hover:bg-[#075238]",
+    },
+    {
+      titulo: "Inventario",
+      icono: "📊",
+      ruta: "/admin/inventario",
+      color: "bg-[#006B3C] hover:bg-[#00552F]",
     },
   ];
 
   return (
-    <div className="flex bg-gray-100 min-h-screen">
+    <div className="flex min-h-screen bg-[#F4F7F5]">
       <MenuAdmin />
 
-      <div className="flex-1">
-        {/* HEADER */}
+      <main className="flex-1 min-w-0 min-h-screen">
+        {/* ENCABEZADO */}
 
-        <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white shadow-xl">
-          <div className="p-10 flex flex-col lg:flex-row justify-between items-center">
+        <header className="bg-gradient-to-r from-[#063D2A] via-[#006B3C] to-[#009E49] text-white shadow-lg">
+          <div className="px-5 sm:px-8 lg:px-10 py-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-7">
             <div>
-              <span className="uppercase tracking-widest text-orange-100 text-sm">
+              <p className="uppercase tracking-[0.2em] text-green-100 text-xs font-bold">
                 Grupo Comercial J&G
-              </span>
+              </p>
 
-              <h1 className="text-5xl font-bold mt-2">Panel Administrativo</h1>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-3">
+                Panel Administrativo
+              </h1>
 
-              <p className="text-orange-100 mt-3">
+              <p className="text-green-100 mt-3 text-sm sm:text-lg">
                 Gestión integral de productos, repuestos e inventario.
               </p>
+
+              <div className="w-20 h-1 bg-[#FF6600] rounded-full mt-5" />
             </div>
 
-            <div className="mt-6 lg:mt-0 bg-white/10 backdrop-blur-md rounded-3xl p-6">
-              <p className="text-orange-100">Inventario Valorizado</p>
+            {/* INVENTARIO VALORIZADO */}
 
-              <h2 className="text-4xl font-bold">
-                S/. {valorInventario.toFixed(2)}
+            <div className="bg-white/10 border border-white/20 backdrop-blur-md rounded-2xl p-6 min-w-0 lg:min-w-[280px]">
+              <p className="text-green-100 font-semibold">
+                Inventario Valorizado
+              </p>
+
+              <h2 className="text-3xl sm:text-4xl font-black mt-3 break-words">
+                {cargando
+                  ? "Cargando..."
+                  : error
+                    ? "No disponible"
+                    : formatoSoles(valorInventario)}
               </h2>
+
+              <p className="text-green-100 text-xs mt-3">
+                Valor estimado según precio y stock
+              </p>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="p-8">
+        <div className="p-5 sm:p-8 lg:p-10">
+          {/* MENSAJE DE ERROR */}
+
+          {error && (
+            <div
+              role="alert"
+              className="mb-7 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl"
+            >
+              <p className="font-semibold">{error}</p>
+
+              <button
+                type="button"
+                onClick={cargarDatos}
+                className="mt-3 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-bold transition"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+
           {/* TARJETAS KPI */}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {estadisticas.map((item, index) => (
-              <div
-                key={index}
-                className={`${item.color} rounded-3xl p-8 text-white shadow-xl hover:scale-105 transition`}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+            {estadisticas.map((item) => (
+              <Link
+                key={item.titulo}
+                to={item.ruta}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 hover:shadow-lg hover:-translate-y-1 transition-all"
               >
-                <div className="flex justify-between items-center">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-lg">{item.titulo}</p>
+                    <p className="text-gray-600 font-semibold">{item.titulo}</p>
 
-                    <h2 className="text-5xl font-bold mt-2">{item.valor}</h2>
+                    <h2
+                      className={`text-4xl sm:text-5xl font-black mt-4 ${item.color}`}
+                    >
+                      {cargando || error ? "—" : item.valor}
+                    </h2>
                   </div>
 
-                  <span className="text-6xl">{item.icono}</span>
+                  <div
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl ${item.fondo}`}
+                  >
+                    {item.icono}
+                  </div>
                 </div>
-              </div>
+
+                <p className="text-xs text-gray-400 mt-5">Ver detalles →</p>
+              </Link>
             ))}
           </div>
 
-          {/* ACCIONES RAPIDAS */}
+          {/* ACCIONES RÁPIDAS */}
 
-          <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
-            <h2 className="text-2xl font-bold mb-6">Acciones Rápidas</h2>
+          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mt-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
 
-            <div className="grid md:grid-cols-4 gap-5">
-              <Link
-                to="/admin/productos"
-                className="bg-orange-500 text-white text-center py-5 rounded-2xl font-semibold hover:bg-orange-600"
-              >
-                📦 Productos
-              </Link>
-
-              <Link
-                to="/admin/repuestos"
-                className="bg-orange-600 text-white text-center py-5 rounded-2xl font-semibold hover:bg-orange-700"
-              >
-                🔧 Repuestos
-              </Link>
-
-              <Link
-                to="/admin/categorias"
-                className="bg-orange-700 text-white text-center py-5 rounded-2xl font-semibold hover:bg-orange-800"
-              >
-                📂 Categorías
-              </Link>
-
-              <Link
-                to="/admin/inventario"
-                className="bg-slate-800 text-white text-center py-5 rounded-2xl font-semibold hover:bg-slate-900"
-              >
-                📊 Inventario
-              </Link>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
+                Acciones Rápidas
+              </h2>
             </div>
-          </div>
 
-          {/* RESUMEN */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              {accionesRapidas.map((accion) => (
+                <Link
+                  key={accion.ruta}
+                  to={accion.ruta}
+                  className={`${accion.color} text-white text-center py-5 px-4 rounded-xl font-bold transition shadow-sm`}
+                >
+                  <span className="mr-2">{accion.icono}</span>
+                  {accion.titulo}
+                </Link>
+              ))}
+            </div>
+          </section>
 
-          <div className="grid lg:grid-cols-2 gap-8 mt-8">
-            <div className="bg-white rounded-3xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold mb-6">Resumen General</h2>
+          {/* RESUMEN GENERAL */}
 
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Total Productos</span>
-                  <span className="font-bold text-orange-600">
-                    {productos.length}
-                  </span>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-7">
+                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
 
-                <div className="flex justify-between">
-                  <span>Total Repuestos</span>
-                  <span className="font-bold text-orange-600">
-                    {repuestos.length}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Total Categorías</span>
-                  <span className="font-bold text-orange-600">
-                    {categorias.length}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Stock Bajo</span>
-                  <span className="font-bold text-red-600">{stockBajo}</span>
-                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
+                  Resumen General
+                </h2>
               </div>
-            </div>
 
-            <div className="bg-white rounded-3xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold mb-6">Indicadores</h2>
-
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Stock Total</span>
-                  <span className="font-bold">{stockTotal}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Marcas Registradas</span>
-                  <span className="font-bold">{marcas.length}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Inventario Valorizado</span>
-                  <span className="font-bold text-green-600">
-                    S/. {valorInventario.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ALERTAS */}
-
-          <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
-            <h2 className="text-2xl font-bold mb-6">Alertas de Inventario</h2>
-
-            {alertasStock.length > 0 ? (
-              <div className="space-y-4">
-                {alertasStock.map((item) => (
+              <div className="space-y-5">
+                {[
+                  {
+                    etiqueta: "Total Productos",
+                    valor: productos.length,
+                  },
+                  {
+                    etiqueta: "Total Repuestos",
+                    valor: repuestos.length,
+                  },
+                  {
+                    etiqueta: "Total Categorías",
+                    valor: categorias.length,
+                  },
+                  {
+                    etiqueta: "Stock Bajo",
+                    valor: stockBajo,
+                  },
+                  {
+                    etiqueta: "Sin Stock",
+                    valor: sinStock,
+                  },
+                ].map((dato) => (
                   <div
-                    key={item.id}
-                    className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl"
+                    key={dato.etiqueta}
+                    className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4 last:border-0"
                   >
-                    ⚠️ <strong>{item.nombre}</strong> tiene stock crítico (
-                    {item.stock} unidades)
+                    <span className="text-gray-600">{dato.etiqueta}</span>
+
+                    <span
+                      className={`font-black text-lg ${
+                        dato.etiqueta === "Stock Bajo" ||
+                        dato.etiqueta === "Sin Stock"
+                          ? "text-red-600"
+                          : "text-[#009E49]"
+                      }`}
+                    >
+                      {cargando || error ? "—" : dato.valor}
+                    </span>
                   </div>
                 ))}
               </div>
+            </section>
+
+            {/* INDICADORES */}
+
+            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-7">
+                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+
+                <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
+                  Indicadores
+                </h2>
+              </div>
+
+              <div className="space-y-5">
+                <div className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4">
+                  <span className="text-gray-600">Stock Total</span>
+
+                  <span className="font-black text-lg text-[#063D2A]">
+                    {cargando || error
+                      ? "—"
+                      : stockTotal.toLocaleString("es-PE")}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4">
+                  <span className="text-gray-600">Marcas Registradas</span>
+
+                  <span className="font-black text-lg text-[#063D2A]">
+                    {cargando || error ? "—" : marcas.length}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4">
+                  <span className="text-gray-600">Inventario Valorizado</span>
+
+                  <span className="font-black text-lg text-[#009E49] text-right">
+                    {cargando || error ? "—" : formatoSoles(valorInventario)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center gap-4">
+                  <span className="text-gray-600">
+                    Registros sin datos válidos
+                  </span>
+
+                  <span className="font-black text-lg text-[#FF6600]">
+                    {cargando || error ? "—" : registrosSinDatos}
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* ALERTAS DE INVENTARIO */}
+
+          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mt-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+
+                <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
+                  Alertas de Inventario
+                </h2>
+              </div>
+
+              <Link
+                to="/admin/inventario"
+                className="text-[#009E49] hover:text-[#007A39] font-bold text-sm"
+              >
+                Ver inventario completo →
+              </Link>
+            </div>
+
+            {cargando ? (
+              <p className="text-gray-500">Revisando niveles de stock...</p>
+            ) : error ? (
+              <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-xl text-red-700">
+                No se pudieron consultar las alertas de inventario.
+              </div>
+            ) : alertasStock.length > 0 ? (
+              <div className="space-y-4">
+                {alertasStock.map((item) => {
+                  const stock = obtenerStock(item);
+
+                  return (
+                    <div
+                      key={`${item.tipo}-${item.id}`}
+                      className={`border-l-4 p-5 rounded-xl ${
+                        stock === 0
+                          ? "bg-red-50 border-red-500"
+                          : "bg-orange-50 border-[#FF6600]"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                          <p className="font-bold text-gray-800">
+                            ⚠️ {item.nombre || "Sin nombre"}
+                          </p>
+
+                          <p className="text-sm text-gray-600 mt-2">
+                            {item.tipo} ·{" "}
+                            {stock === 0
+                              ? "Sin unidades disponibles"
+                              : `Stock crítico: ${stock} unidades`}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`inline-flex self-start px-3 py-1.5 rounded-full text-xs font-bold ${
+                            stock === 0
+                              ? "bg-red-100 text-red-700"
+                              : "bg-orange-100 text-[#D45500]"
+                          }`}
+                        >
+                          {stock === 0 ? "Agotado" : "Stock Bajo"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl">
-                ✅ No existen productos con stock crítico.
+              <div className="bg-green-50 border-l-4 border-[#009E49] p-5 rounded-xl text-[#007A3D]">
+                No existen productos ni repuestos con stock crítico.
               </div>
             )}
+          </section>
+
+          {/* PIE DEL PANEL */}
+
+          <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-500">
+            <p>Grupo Comercial J&G · Panel Administrativo</p>
+
+            <button
+              type="button"
+              onClick={cargarDatos}
+              disabled={cargando}
+              className="self-start sm:self-auto bg-[#063D2A] hover:bg-[#075238] disabled:opacity-60 text-white px-5 py-3 rounded-xl font-bold transition"
+            >
+              {cargando ? "Actualizando..." : "Actualizar Datos"}
+            </button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://grupocomercialjg-backend.onrender.com";
+
+const API_URL = BASE_URL.replace(/\/$/, "");
 
 function RutaProtegida({ children }) {
   const [estado, setEstado] = useState("verificando");
@@ -14,6 +18,7 @@ function RutaProtegida({ children }) {
         const respuesta = await fetch(`${API_URL}/api/auth/me`, {
           method: "GET",
           credentials: "include",
+          cache: "no-store",
           signal: controlador.signal,
         });
 
@@ -24,7 +29,7 @@ function RutaProtegida({ children }) {
 
         const datos = await respuesta.json();
 
-        if (datos.rol === "ADMIN") {
+        if (datos?.rol === "ADMIN") {
           setEstado("autenticado");
         } else {
           setEstado("no-autenticado");
@@ -32,6 +37,7 @@ function RutaProtegida({ children }) {
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Error verificando sesión:", error);
+
           setEstado("no-autenticado");
         }
       }
@@ -48,7 +54,7 @@ function RutaProtegida({ children }) {
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F1F6F3]">
         <div className="w-12 h-12 border-4 border-[#009E49] border-t-transparent rounded-full animate-spin" />
 
-        <p className="mt-5 text-[#073D27] font-bold">
+        <p className="mt-5 text-[#063D2A] font-bold">
           Verificando acceso administrativo...
         </p>
       </div>

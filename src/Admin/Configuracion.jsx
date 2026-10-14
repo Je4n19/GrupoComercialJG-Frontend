@@ -6,364 +6,432 @@ import {
   guardarConfiguracion,
 } from "../Services/configuracionService";
 
+const CONFIGURACION_INICIAL = {
+  nombreEmpresa: "Grupo Comercial J&G",
+  telefono: "+51 979 501 557",
+  correo: "ventas@grupocomercialjyg.com",
+  whatsapp: "51979501557",
+  direccion: "Perú",
+  horario:
+    "Lunes a Viernes: 08:00 AM - 06:00 PM | Sábados: 08:00 AM - 01:00 PM",
+  facebook: "",
+  instagram: "",
+};
+
+const campos = [
+  {
+    nombre: "nombreEmpresa",
+    etiqueta: "Nombre de la Empresa",
+    tipo: "text",
+  },
+  {
+    nombre: "telefono",
+    etiqueta: "Teléfono",
+    tipo: "tel",
+  },
+  {
+    nombre: "correo",
+    etiqueta: "Correo Electrónico",
+    tipo: "email",
+  },
+  {
+    nombre: "whatsapp",
+    etiqueta: "WhatsApp",
+    tipo: "text",
+  },
+  {
+    nombre: "facebook",
+    etiqueta: "Facebook",
+    tipo: "url",
+    placeholder: "https://facebook.com/...",
+  },
+  {
+    nombre: "instagram",
+    etiqueta: "Instagram",
+    tipo: "url",
+    placeholder: "https://instagram.com/...",
+  },
+];
+
+const estiloCampo =
+  "w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 " +
+  "bg-white text-gray-800 outline-none transition-all " +
+  "focus:border-[#009E49] focus:ring-4 focus:ring-green-100 " +
+  "disabled:bg-gray-100 disabled:cursor-not-allowed";
+
 function Configuracion() {
-  const [configuracion, setConfiguracion] = useState({
-    nombreEmpresa: "Grupo Comercial J&G",
-    telefono: "+51 979 501 557",
-    correo: "ventas@grupocomercialjyg.com",
-    whatsapp: "51979501557",
-    direccion: "Perú",
-    horario:
-      "Lunes a Viernes: 08:00 AM - 06:00 PM | Sábados: 08:00 AM - 01:00 PM",
-    facebook: "",
-    instagram: "",
-  });
+  const [configuracion, setConfiguracion] = useState(CONFIGURACION_INICIAL);
+
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
+
+  const cargarConfiguracion = async () => {
+    try {
+      setCargando(true);
+      setError("");
+      setMensaje("");
+
+      const data = await obtenerConfiguracion();
+
+      if (data && typeof data === "object") {
+        setConfiguracion({
+          ...CONFIGURACION_INICIAL,
+          ...data,
+        });
+      }
+    } catch (error) {
+      console.error("Error al cargar configuración:", error);
+
+      setError(
+        "No se pudo cargar la configuración. Verifica la conexión con el servidor.",
+      );
+    } finally {
+      setCargando(false);
+    }
+  };
 
   useEffect(() => {
     cargarConfiguracion();
   }, []);
 
-  const cargarConfiguracion = async () => {
-    try {
-      const data = await obtenerConfiguracion();
-
-      if (data) {
-        setConfiguracion(data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const handleChange = (e) => {
-    setConfiguracion({
-      ...configuracion,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setConfiguracion((anterior) => ({
+      ...anterior,
+      [name]: value,
+    }));
+
+    setMensaje("");
   };
 
-  const guardar = async () => {
+  const guardar = async (e) => {
+    e.preventDefault();
+
+    if (guardando || cargando) return;
+
+    if (!configuracion.nombreEmpresa.trim()) {
+      setError("Debes ingresar el nombre de la empresa.");
+      return;
+    }
+
     try {
+      setGuardando(true);
+      setError("");
+      setMensaje("");
+
       await guardarConfiguracion(configuracion);
 
-      alert("Configuración guardada correctamente");
+      setMensaje("Configuración guardada correctamente.");
     } catch (error) {
-      console.error(error);
+      console.error("Error al guardar configuración:", error);
 
-      alert("Error al guardar configuración");
+      const estado = error?.status ?? error?.response?.status;
+
+      if (estado === 401) {
+        setError("Tu sesión ha expirado. Inicia sesión nuevamente.");
+      } else if (estado === 403) {
+        setError(
+          "El servidor rechazó la solicitud por seguridad. Debemos revisar el envío de la sesión y el token CSRF.",
+        );
+      } else {
+        setError(
+          "No se pudo guardar la configuración. Verifica la conexión con el backend.",
+        );
+      }
+    } finally {
+      setGuardando(false);
     }
   };
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-[#F4F7F5]">
       <MenuAdmin />
 
-      <div className="flex-1 min-h-screen bg-orange-50">
-        {/* HEADER */}
+      <main className="flex-1 min-w-0 min-h-screen">
+        {/* ENCABEZADO */}
 
-        <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 text-white shadow-2xl">
-          <div className="px-10 py-10">
-            <p className="uppercase tracking-widest text-orange-100 text-sm">
+        <header className="bg-gradient-to-r from-[#063D2A] via-[#006B3C] to-[#009E49] text-white shadow-lg">
+          <div className="px-5 sm:px-8 lg:px-10 py-10">
+            <p className="uppercase tracking-[0.2em] text-green-100 text-xs font-bold">
               Grupo Comercial J&G
             </p>
 
-            <h1 className="text-5xl font-black mt-2">Configuración General</h1>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-3">
+              Configuración General
+            </h1>
 
-            <p className="text-orange-100 mt-3 text-lg">
+            <p className="text-green-100 mt-3 text-sm sm:text-lg">
               Personaliza la información principal de la empresa.
             </p>
+
+            <div className="w-20 h-1 bg-[#FF6600] rounded-full mt-5" />
           </div>
-        </div>
+        </header>
 
-        <div className="p-8">
-          {/* RESUMEN */}
+        <div className="p-5 sm:p-8 lg:p-10">
+          {/* INDICADORES */}
 
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-[30px] shadow-xl p-6">
-              <p className="text-gray-500">Empresa</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <p className="text-gray-500 text-sm font-semibold">Empresa</p>
 
-              <h2 className="text-2xl font-black text-orange-600 mt-2">J&G</h2>
-            </div>
+              <h2 className="text-3xl font-black text-[#009E49] mt-3">J&G</h2>
 
-            <div className="bg-white rounded-[30px] shadow-xl p-6">
-              <p className="text-gray-500">WhatsApp</p>
-
-              <h2 className="text-xl font-black text-green-600 mt-2">Activo</h2>
-            </div>
-
-            <div className="bg-white rounded-[30px] shadow-xl p-6">
-              <p className="text-gray-500">Redes</p>
-
-              <h2 className="text-xl font-black text-orange-500 mt-2">
-                Configurables
-              </h2>
-            </div>
-
-            <div className="bg-white rounded-[30px] shadow-xl p-6">
-              <p className="text-gray-500">Sistema</p>
-
-              <h2 className="text-xl font-black text-blue-600 mt-2">
-                Operativo
-              </h2>
-            </div>
-          </div>
-
-          {/* FORMULARIO */}
-
-          <div className="bg-white rounded-[30px] shadow-2xl overflow-hidden">
-            <div className="bg-orange-500 text-white p-6">
-              <h2 className="text-2xl font-bold">Información Corporativa</h2>
-
-              <p className="text-orange-100 mt-2">
-                Datos mostrados en la página web y sistema administrativo.
+              <p className="text-xs text-gray-400 mt-2">
+                Información corporativa
               </p>
             </div>
 
-            <div className="p-8">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block mb-3 font-bold text-gray-700">
-                    Nombre de la Empresa
-                  </label>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <p className="text-gray-500 text-sm font-semibold">WhatsApp</p>
 
-                  <input
-                    type="text"
-                    name="nombreEmpresa"
-                    value={configuracion.nombreEmpresa}
-                    onChange={handleChange}
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
-                  />
-                </div>
+              <h2 className="text-2xl font-black text-[#009E49] mt-3">
+                {configuracion.whatsapp ? "Configurado" : "Sin configurar"}
+              </h2>
 
-                <div>
-                  <label className="block mb-3 font-bold text-gray-700">
-                    Teléfono
-                  </label>
+              <p className="text-xs text-gray-400 mt-2">Canal de atención</p>
+            </div>
 
-                  <input
-                    type="text"
-                    name="telefono"
-                    value={configuracion.telefono}
-                    onChange={handleChange}
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
-                  />
-                </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <p className="text-gray-500 text-sm font-semibold">
+                Redes Sociales
+              </p>
 
-                <div>
-                  <label className="block mb-3 font-bold text-gray-700">
-                    Correo Electrónico
-                  </label>
+              <h2 className="text-2xl font-black text-[#FF6600] mt-3">
+                Configurables
+              </h2>
 
-                  <input
-                    type="email"
-                    name="correo"
-                    value={configuracion.correo}
-                    onChange={handleChange}
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
-                  />
-                </div>
+              <p className="text-xs text-gray-400 mt-2">Facebook e Instagram</p>
+            </div>
 
-                <div>
-                  <label className="block mb-3 font-bold text-gray-700">
-                    WhatsApp
-                  </label>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <p className="text-gray-500 text-sm font-semibold">
+                Estado de Configuración
+              </p>
 
-                  <input
-                    type="text"
-                    name="whatsapp"
-                    value={configuracion.whatsapp}
-                    onChange={handleChange}
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
-                  />
-                </div>
-              </div>
+              <h2
+                className={`text-2xl font-black mt-3 ${
+                  error ? "text-red-600" : "text-[#009E49]"
+                }`}
+              >
+                {cargando ? "Cargando..." : error ? "Revisar" : "Disponible"}
+              </h2>
 
-              <div className="mt-6">
-                <label className="block mb-3 font-bold text-gray-700">
-                  Dirección
-                </label>
-
-                <textarea
-                  rows="4"
-                  name="direccion"
-                  value={configuracion.direccion}
-                  onChange={handleChange}
-                  className="
-                    w-full
-                    border-2
-                    border-gray-200
-                    rounded-2xl
-                    p-4
-                    focus:outline-none
-                    focus:border-orange-500
-                  "
-                />
-              </div>
-
-              <div className="mt-6">
-                <label className="block mb-3 font-bold text-gray-700">
-                  Horario de Atención
-                </label>
-
-                <textarea
-                  rows="4"
-                  name="horario"
-                  value={configuracion.horario}
-                  onChange={handleChange}
-                  className="
-                    w-full
-                    border-2
-                    border-gray-200
-                    rounded-2xl
-                    p-4
-                    focus:outline-none
-                    focus:border-orange-500
-                  "
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <label className="block mb-3 font-bold text-gray-700">
-                    Facebook
-                  </label>
-
-                  <input
-                    type="text"
-                    name="facebook"
-                    value={configuracion.facebook}
-                    onChange={handleChange}
-                    placeholder="https://facebook.com/..."
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-3 font-bold text-gray-700">
-                    Instagram
-                  </label>
-
-                  <input
-                    type="text"
-                    name="instagram"
-                    value={configuracion.instagram}
-                    onChange={handleChange}
-                    placeholder="https://instagram.com/..."
-                    className="
-                      w-full
-                      border-2
-                      border-gray-200
-                      rounded-2xl
-                      p-4
-                      focus:outline-none
-                      focus:border-orange-500
-                    "
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-4 mt-10">
-                <button
-                  onClick={guardar}
-                  className="
-                    bg-orange-500
-                    hover:bg-orange-600
-                    text-white
-                    px-8
-                    py-4
-                    rounded-2xl
-                    font-bold
-                    shadow-lg
-                    transition
-                  "
-                >
-                  Guardar Configuración
-                </button>
-
-                <button
-                  onClick={cargarConfiguracion}
-                  className="
-                    bg-gray-200
-                    hover:bg-gray-300
-                    px-8
-                    py-4
-                    rounded-2xl
-                    font-bold
-                    transition
-                  "
-                >
-                  Recargar Datos
-                </button>
-              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Gestión administrativa
+              </p>
             </div>
           </div>
 
-          {/* INFORMACIÓN */}
+          {/* MENSAJES */}
 
-          <div className="bg-white rounded-[30px] shadow-xl p-8 mt-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              Información del Sistema
-            </h3>
+          {error && (
+            <div
+              role="alert"
+              className="mb-6 rounded-xl bg-red-50 border border-red-200 px-5 py-4 text-red-700"
+            >
+              <p className="font-semibold">{error}</p>
+            </div>
+          )}
 
-            <div className="grid md:grid-cols-3 gap-6">
+          {mensaje && (
+            <div
+              role="status"
+              className="mb-6 rounded-xl bg-green-50 border border-green-200 px-5 py-4 text-[#007A3D]"
+            >
+              <p className="font-semibold">✓ {mensaje}</p>
+            </div>
+          )}
+
+          {/* FORMULARIO */}
+
+          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-[#063D2A] text-white px-6 sm:px-8 py-6">
+              <h2 className="text-xl sm:text-2xl font-bold">
+                Información Corporativa
+              </h2>
+
+              <p className="text-green-100 mt-2 text-sm">
+                Datos de la empresa utilizados por el sistema.
+              </p>
+            </div>
+
+            <form onSubmit={guardar} className="p-5 sm:p-8">
+              {cargando ? (
+                <div className="py-16 text-center text-gray-500">
+                  Cargando información de la empresa...
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {campos.slice(0, 4).map((campo) => (
+                      <div key={campo.nombre}>
+                        <label
+                          htmlFor={campo.nombre}
+                          className="block mb-3 font-bold text-[#063D2A]"
+                        >
+                          {campo.etiqueta}
+                        </label>
+
+                        <input
+                          id={campo.nombre}
+                          type={campo.tipo}
+                          name={campo.nombre}
+                          value={configuracion[campo.nombre] ?? ""}
+                          onChange={handleChange}
+                          className={estiloCampo}
+                          disabled={guardando}
+                          required={campo.nombre === "nombreEmpresa"}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* DIRECCIÓN */}
+
+                  <div className="mt-6">
+                    <label
+                      htmlFor="direccion"
+                      className="block mb-3 font-bold text-[#063D2A]"
+                    >
+                      Dirección
+                    </label>
+
+                    <textarea
+                      id="direccion"
+                      name="direccion"
+                      rows={3}
+                      value={configuracion.direccion ?? ""}
+                      onChange={handleChange}
+                      disabled={guardando}
+                      className={`${estiloCampo} resize-y`}
+                    />
+                  </div>
+
+                  {/* HORARIO */}
+
+                  <div className="mt-6">
+                    <label
+                      htmlFor="horario"
+                      className="block mb-3 font-bold text-[#063D2A]"
+                    >
+                      Horario de Atención
+                    </label>
+
+                    <textarea
+                      id="horario"
+                      name="horario"
+                      rows={3}
+                      value={configuracion.horario ?? ""}
+                      onChange={handleChange}
+                      disabled={guardando}
+                      className={`${estiloCampo} resize-y`}
+                    />
+                  </div>
+
+                  {/* REDES SOCIALES */}
+
+                  <div className="mt-8 border-t border-gray-100 pt-7">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-2 h-8 bg-[#FF6600] rounded-full" />
+
+                      <h3 className="text-xl font-black text-[#063D2A]">
+                        Redes Sociales
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {campos.slice(4).map((campo) => (
+                        <div key={campo.nombre}>
+                          <label
+                            htmlFor={campo.nombre}
+                            className="block mb-3 font-bold text-[#063D2A]"
+                          >
+                            {campo.etiqueta}
+                          </label>
+
+                          <input
+                            id={campo.nombre}
+                            type={campo.tipo}
+                            name={campo.nombre}
+                            value={configuracion[campo.nombre] ?? ""}
+                            onChange={handleChange}
+                            placeholder={campo.placeholder}
+                            disabled={guardando}
+                            className={estiloCampo}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* BOTONES */}
+
+                  <div className="flex flex-col sm:flex-row gap-4 mt-10">
+                    <button
+                      type="submit"
+                      disabled={guardando}
+                      className="bg-[#009E49] hover:bg-[#007A39] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold shadow-md transition"
+                    >
+                      {guardando ? "Guardando..." : "Guardar Configuración"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={cargarConfiguracion}
+                      disabled={guardando}
+                      className="bg-[#FF6600] hover:bg-[#E85C00] disabled:opacity-60 text-white px-8 py-4 rounded-xl font-bold transition"
+                    >
+                      Recargar Datos
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          </section>
+
+          {/* INFORMACIÓN DEL SISTEMA */}
+
+          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mt-8">
+            <div className="flex items-center gap-3 mb-7">
+              <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+
+              <h3 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
+                Información del Sistema
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <p className="text-gray-500">Empresa</p>
-                <p className="font-bold text-lg">Grupo Comercial J&G</p>
+                <p className="text-gray-500 text-sm">Empresa</p>
+
+                <p className="font-bold text-lg text-[#063D2A] mt-2">
+                  {configuracion.nombreEmpresa || "Grupo Comercial J&G"}
+                </p>
               </div>
 
               <div>
-                <p className="text-gray-500">Contacto Principal</p>
-                <p className="font-bold text-lg">+51 979 501 557</p>
+                <p className="text-gray-500 text-sm">Contacto Principal</p>
+
+                <p className="font-bold text-lg text-[#063D2A] mt-2">
+                  {configuracion.telefono || "Sin registrar"}
+                </p>
               </div>
 
               <div>
-                <p className="text-gray-500">Cobertura</p>
-                <p className="font-bold text-lg">Nivel Nacional</p>
+                <p className="text-gray-500 text-sm">Cobertura</p>
+
+                <p className="font-bold text-lg text-[#063D2A] mt-2">
+                  Nivel Nacional
+                </p>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

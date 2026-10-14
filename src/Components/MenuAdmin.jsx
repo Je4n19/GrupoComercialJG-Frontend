@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+
 import logo from "../assets/logoJ&G.png";
+import { logout } from "../Services/authService";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
-// ========================================
-// ICONOS DEL MENU
-// ========================================
+/* ========================================
+   ICONOS DEL MENÚ
+======================================== */
 
 function Icono({ tipo, className = "w-5 h-5" }) {
   const iconos = {
@@ -18,6 +18,7 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <rect x="14" y="14" width="7" height="7" rx="1.5" />
       </>
     ),
+
     productos: (
       <>
         <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" />
@@ -25,30 +26,36 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="M12 12v9" />
       </>
     ),
+
     repuestos: (
       <path d="M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18a2.1 2.1 0 0 0 3 3l5.3-5.3a5 5 0 0 0 6.4-6.4L14 13l-3-3 3.7-3.7Z" />
     ),
+
     categorias: (
       <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
     ),
+
     etiquetas: (
       <>
         <path d="M20 13 13 20a2 2 0 0 1-2.8 0L3 12.8V4a1 1 0 0 1 1-1h8.8L20 10.2a2 2 0 0 1 0 2.8Z" />
         <circle cx="7.5" cy="7.5" r="1" />
       </>
     ),
+
     inventario: (
       <>
         <rect x="4" y="3" width="16" height="18" rx="2" />
         <path d="M8 8h8M8 12h8M8 16h5" />
       </>
     ),
+
     configuracion: (
       <>
         <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1.1 1.6V21h-4v-.1A1.7 1.7 0 0 0 8.8 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06L4 16.84l.06-.06A1.7 1.7 0 0 0 4.4 14.9 1.7 1.7 0 0 0-1.6-1.1H2v-4h.8A1.7 1.7 0 0 0 4.4 8.7a1.7 1.7 0 0 0-.34-1.88L4 6.76 6.86 3.9l.06.06A1.7 1.7 0 0 0 8.8 4.3a1.7 1.7 0 0 0 1.1-1.6V2h4v.7A1.7 1.7 0 0 0 15 4.3a1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 6.76l-.06.06A1.7 1.7 0 0 0 19.4 8.7a1.7 1.7 0 0 0 1.6 1.1h1v4h-1a1.7 1.7 0 0 0-1.6 1.2Z" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1.1 1.6V21h-4v-.1A1.7 1.7 0 0 0 8.8 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06L4 16.84l.06-.06A1.7 1.7 0 0 0 4.4 14.9a1.7 1.7 0 0 0-1.6-1.1H2v-4h.8A1.7 1.7 0 0 0 4.4 8.7a1.7 1.7 0 0 0-.34-1.88L4 6.76 6.86 3.9l.06.06A1.7 1.7 0 0 0 8.8 4.3a1.7 1.7 0 0 0 1.1-1.6V2h4v.7A1.7 1.7 0 0 0 15 4.3a1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 6.76l-.06.06A1.7 1.7 0 0 0 19.4 8.7a1.7 1.7 0 0 0 1.6 1.1h1v4h-1a1.7 1.7 0 0 0-1.6 1.2Z" />
       </>
     ),
+
     salir: (
       <>
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -56,6 +63,7 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="M21 12H9" />
       </>
     ),
+
     flecha: (
       <>
         <path d="M5 12h14" />
@@ -80,18 +88,19 @@ function Icono({ tipo, className = "w-5 h-5" }) {
   );
 }
 
-// ========================================
-// MENU ADMINISTRATIVO
-// ========================================
+/* ========================================
+   MENÚ ADMINISTRATIVO
+======================================== */
 
 function MenuAdmin() {
   const location = useLocation();
+
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
   const [errorSesion, setErrorSesion] = useState("");
 
-  // ========================================
-  // CERRAR SESION EN SPRING BOOT
-  // ========================================
+  /* ========================================
+     CERRAR SESIÓN CON SPRING BOOT
+  ======================================== */
 
   const cerrarSesion = async () => {
     if (cerrandoSesion) return;
@@ -100,49 +109,27 @@ function MenuAdmin() {
     setErrorSesion("");
 
     try {
-      // Obtener token CSRF
-      const respuestaCsrf = await fetch(`${API_URL}/api/auth/csrf`, {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
+      // authService obtiene CSRF, envía las cookies
+      // e invalida la sesión mediante Spring Boot.
+      await logout();
 
-      if (!respuestaCsrf.ok) {
-        throw new Error("No se pudo obtener el token CSRF");
-      }
-
-      const csrf = await respuestaCsrf.json();
-
-      // Invalidar la sesion en Spring Boot
-      const respuestaLogout = await fetch(`${API_URL}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          [csrf.headerName]: csrf.token,
-        },
-      });
-
-      if (!respuestaLogout.ok) {
-        throw new Error(`Error HTTP ${respuestaLogout.status}`);
-      }
-
-      // Eliminar autenticacion antigua
-      localStorage.removeItem("auth");
-
-      // Regresar al login
+      // Recargar la aplicación para descartar
+      // cualquier estado administrativo anterior.
       window.location.replace("/login");
     } catch (error) {
-      console.error("Error al cerrar sesion:", error);
+      console.error("Error al cerrar sesión:", error);
 
-      setErrorSesion("No se pudo cerrar la sesión. Inténtalo nuevamente.");
+      setErrorSesion(
+        "No se pudo cerrar la sesión. Verifica tu conexión e inténtalo nuevamente.",
+      );
 
       setCerrandoSesion(false);
     }
   };
 
-  // ========================================
-  // OPCIONES DEL MENU
-  // ========================================
+  /* ========================================
+     OPCIONES DEL MENÚ
+  ======================================== */
 
   const menus = [
     {
@@ -270,7 +257,7 @@ function MenuAdmin() {
       </div>
 
       {/* ========================================
-          NAVEGACION
+          NAVEGACIÓN
       ======================================== */}
 
       <nav className="flex-1 min-w-0 p-3 lg:p-4">
@@ -427,7 +414,7 @@ function MenuAdmin() {
               A
             </div>
 
-            {/* INFORMACION */}
+            {/* INFORMACIÓN */}
 
             <div className="min-w-0">
               <h3 className="font-bold text-white text-sm">Administrador</h3>
@@ -440,7 +427,7 @@ function MenuAdmin() {
         </div>
 
         {/* ========================================
-            BOTON CERRAR SESION
+            BOTÓN CERRAR SESIÓN
         ======================================== */}
 
         <button
@@ -479,7 +466,9 @@ function MenuAdmin() {
         {/* MENSAJE DE ERROR */}
 
         {errorSesion && (
-          <p className="mt-3 text-sm text-red-300 text-center">{errorSesion}</p>
+          <p role="alert" className="mt-3 text-sm text-red-300 text-center">
+            {errorSesion}
+          </p>
         )}
       </div>
     </aside>
