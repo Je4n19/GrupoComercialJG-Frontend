@@ -92,6 +92,7 @@ function Carrito() {
       window.dispatchEvent(new Event("jg-carrito-actualizado"));
     } catch (error) {
       console.error("Error guardando carrito:", error);
+
       setMensaje("No se pudieron guardar los cambios del carrito.");
     }
   };
@@ -257,6 +258,10 @@ function Carrito() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  // ========================================
+  // INTERFAZ DEL CARRITO
+  // ========================================
+
   return (
     <main className="min-h-[75vh] bg-[#F4F7F5] px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-6xl">
@@ -268,12 +273,12 @@ function Carrito() {
           </p>
 
           <h1 className="mt-3 text-3xl font-black text-[#063D2A] sm:text-4xl">
-            Mi carrito de cotización
+            Mi carrito de compras
           </h1>
 
           <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
-            Revisa los productos y repuestos seleccionados antes de solicitar tu
-            cotización por WhatsApp.
+            Revisa los productos y repuestos seleccionados. Puedes solicitar una
+            cotización por WhatsApp o continuar con tu pedido desde nuestra web.
           </p>
         </div>
 
@@ -496,12 +501,12 @@ function Carrito() {
             </section>
 
             {/* ========================================
-                RESUMEN DE COTIZACIÓN
+                RESUMEN DEL CARRITO
             ======================================== */}
 
             <aside className="min-w-0 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-28">
               <h2 className="text-xl font-black text-[#063D2A]">
-                Resumen de cotización
+                Resumen del carrito
               </h2>
 
               <div className="mt-5 space-y-4">
@@ -539,7 +544,9 @@ function Carrito() {
                 </div>
               </div>
 
-              {/* WHATSAPP */}
+              {/* ========================================
+                  BOTÓN WHATSAPP
+              ======================================== */}
 
               <button
                 type="button"
@@ -557,9 +564,25 @@ function Carrito() {
                 Solicitar cotización por WhatsApp
               </button>
 
+              {/* ========================================
+                  NUEVO BOTÓN: CONTINUAR PEDIDO
+              ======================================== */}
+
+              <Link
+                to="/checkout"
+                className="mt-3 flex w-full items-center justify-center gap-3 rounded-xl bg-[#FF6600] px-5 py-4 text-center text-sm font-black text-white shadow-sm transition hover:bg-[#E65C00] hover:shadow-lg"
+              >
+                <span aria-hidden="true">🛒</span>
+                Continuar con mi pedido
+                <span aria-hidden="true">→</span>
+              </Link>
+
+              {/* AVISO */}
+
               <p className="mt-4 text-center text-xs leading-relaxed text-gray-500">
                 Los precios y la disponibilidad serán confirmados por Grupo
-                Comercial J&G. Esta solicitud no constituye una compra.
+                Comercial J&G. Registrar un pedido no implica realizar un pago
+                ni reservar los productos.
               </p>
 
               {mensaje && (

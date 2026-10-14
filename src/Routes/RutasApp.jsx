@@ -15,6 +15,9 @@ import NoEncontrado from "../Pages/NoEncontrado";
 // CARRITO DE COTIZACIÓN
 import Carrito from "../Pages/Carrito";
 
+// FINALIZAR COMPRA - NUEVO
+import Checkout from "../Pages/Checkout";
+
 // RASTREAR PEDIDO
 import RastrearPedido from "../Pages/RastrearPedido";
 
@@ -63,8 +66,11 @@ function RutasApp() {
       {/* CONTACTO */}
       <Route path="/contacto" element={<Contacto />} />
 
-      {/* CARRITO DE COTIZACIÓN - NUEVA RUTA */}
+      {/* CARRITO DE COTIZACIÓN */}
       <Route path="/carrito" element={<Carrito />} />
+
+      {/* FINALIZAR COMPRA - NUEVA RUTA */}
+      <Route path="/checkout" element={<Checkout />} />
 
       {/* DETALLE DE PRODUCTO */}
       <Route path="/producto/:id" element={<DetalleProducto />} />
