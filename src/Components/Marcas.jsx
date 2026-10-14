@@ -4,7 +4,7 @@ import mebaLogo from "../assets/Marcas/meba.png";
 import truperLogo from "../assets/Marcas/truper.png";
 
 import bellotaLogo from "../assets/Marcas/BELLOTA_NEGRO.png";
-import blackDeckerLogo from "../assets/Marcas/BLACK_DECKER.PNG";
+import blackDeckerLogo from "../assets/Marcas/BLACK_DECKER.png";
 import fertonLogo from "../assets/Marcas/FERTON.png";
 import jactoLogo from "../assets/Marcas/JACTO.png";
 import jopcoLogo from "../assets/Marcas/JOPCO.png";
