@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import Footer from "../Components/Footer";
 
-// IMAGEN DE FONDO
+// IMAGEN PRINCIPAL
 import rastrearImg from "../assets/rastrear.png";
 
 // LOGOS DE LAS AGENCIAS
@@ -63,7 +63,7 @@ function Icono({ tipo, className = "w-6 h-6" }) {
       <>
         <path d="M14 3h7v7" />
         <path d="M10 14 21 3" />
-        <path d="M21 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7" />
+        <path d="M21 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7" />
       </>
     ),
 
@@ -110,22 +110,19 @@ function RastrearPedido() {
     <>
       <main className="min-h-screen bg-[#F7FAF8]">
         {/* ========================================
-            ENCABEZADO CON IMAGEN DE FONDO
+            ENCABEZADO CON IMAGEN AMPLIADA
         ======================================== */}
 
-        <section className="relative min-h-[340px] sm:min-h-[390px] lg:min-h-[430px] flex items-center justify-center overflow-hidden bg-[#073D27] text-white">
-          {/* IMAGEN RASTREAR.PNG */}
+        <section className="relative min-h-[420px] sm:min-h-[480px] lg:min-h-[540px] flex items-center justify-center overflow-hidden bg-[#073D27] text-white">
+          {/* IMAGEN DE FONDO */}
           <img
             src={rastrearImg}
             alt="Transporte y seguimiento de encomiendas"
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            className="absolute inset-0 w-full h-full object-cover object-[center_45%] lg:object-center"
           />
 
           {/* OSCURECIMIENTO SUAVE */}
-          <div className="absolute inset-0 bg-black/35" />
-
-          {/* DEGRADADO PARA LEGIBILIDAD */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/20 to-black/30" />
+          <div className="absolute inset-0 bg-black/25" />
 
           {/* CONTENIDO */}
           <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-14 sm:py-16 text-center">
@@ -168,23 +165,21 @@ function RastrearPedido() {
             </p>
           </div>
 
-          {/* TARJETAS DE LAS AGENCIAS */}
+          {/* TARJETAS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {agencias.map((agencia) => (
               <article
                 key={agencia.id}
                 className="group flex flex-col bg-white border border-gray-100 rounded-[26px] overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300"
               >
-                {/* LÍNEA SUPERIOR */}
+                {/* COLOR DE LA AGENCIA */}
                 <div
                   className="h-2"
-                  style={{
-                    backgroundColor: agencia.color,
-                  }}
+                  style={{ backgroundColor: agencia.color }}
                 />
 
                 <div className="flex flex-col items-center text-center p-7 sm:p-8 flex-1">
-                  {/* LOGO DE LA AGENCIA */}
+                  {/* LOGO */}
                   <div className="w-full h-36 sm:h-40 flex items-center justify-center bg-white rounded-2xl border border-gray-100 p-5 overflow-hidden">
                     <img
                       src={agencia.logo}
@@ -207,13 +202,12 @@ function RastrearPedido() {
                   {/* DATOS NECESARIOS */}
                   <div className="flex items-start gap-2 bg-[#E8F7EE] text-[#087A3C] text-sm rounded-xl p-3 mt-6 w-full text-left">
                     <Icono tipo="check" className="w-5 h-5 shrink-0" />
-
                     <span>
                       Necesitas: <strong>{agencia.dato}</strong>
                     </span>
                   </div>
 
-                  {/* BOTÓN RASTREAR */}
+                  {/* BOTÓN DE SEGUIMIENTO */}
                   <a
                     href={agencia.enlace}
                     target="_blank"
@@ -242,7 +236,6 @@ function RastrearPedido() {
               <h2 className="text-3xl sm:text-4xl font-black text-[#1A1A1A]">
                 ¿Cómo rastrear tu pedido?
               </h2>
-
               <p className="text-gray-500 mt-3">
                 Sigue estos tres sencillos pasos.
               </p>
