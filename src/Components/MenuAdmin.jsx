@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import logo from "../assets/logoJ&G.png";
@@ -52,7 +52,7 @@ function Icono({ tipo, className = "w-5 h-5" }) {
     configuracion: (
       <>
         <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1.1 1.6V21h-4v-.1A1.7 1.7 0 0 0 8.8 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06L4 16.84l.06-.06A1.7 1.7 0 0 0 4.4 14.9a1.7 1.7 0 0 0-1.6-1.1H2v-4h.8A1.7 1.7 0 0 0 4.4 8.7a1.7 1.7 0 0 0-.34-1.88L4 6.76 6.86 3.9l.06.06A1.7 1.7 0 0 0 8.8 4.3a1.7 1.7 0 0 0 1.1-1.6V2h4v.7A1.7 1.7 0 0 0 15 4.3a1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 6.76l-.06.06A1.7 1.7 0 0 0 19.4 8.7a1.7 1.7 0 0 0 1.6 1.1h1v4h-1a1.7 1.7 0 0 0-1.6 1.2Z" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1.1 1.6V21h-4v-.1A1.7 1.7 0 0 0 8.8 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06L4 16.84l.06-.06A1.7 1.7 0 0 0 4.4 14.9a1.7 1.7 0 0 0-1.6-1.1H2v-4h.8A1.7 1.7 0 0 0 15 4.3a1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 6.76l-.06.06A1.7 1.7 0 0 0 19.4 8.7a1.7 1.7 0 0 0 1.6 1.1h1v4h-1a1.7 1.7 0 0 0-1.6 1.2Z" />
       </>
     ),
 
@@ -68,6 +68,21 @@ function Icono({ tipo, className = "w-5 h-5" }) {
       <>
         <path d="M5 12h14" />
         <path d="m12 5 7 7-7 7" />
+      </>
+    ),
+
+    menu: (
+      <>
+        <path d="M4 6h16" />
+        <path d="M4 12h16" />
+        <path d="M4 18h16" />
+      </>
+    ),
+
+    cerrar: (
+      <>
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
       </>
     ),
   };
@@ -89,14 +104,59 @@ function Icono({ tipo, className = "w-5 h-5" }) {
 }
 
 /* ========================================
-   MENÚ ADMINISTRATIVO
+   MENÚ ADMINISTRATIVO RESPONSIVE
 ======================================== */
 
 function MenuAdmin() {
   const location = useLocation();
 
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
   const [errorSesion, setErrorSesion] = useState("");
+
+  /* ========================================
+     CERRAR MENÚ AL CAMBIAR DE PÁGINA
+  ======================================== */
+
+  useEffect(() => {
+    setMenuAbierto(false);
+  }, [location.pathname]);
+
+  /* ========================================
+     BLOQUEAR SCROLL AL ABRIR MENÚ MÓVIL
+  ======================================== */
+
+  useEffect(() => {
+    if (!menuAbierto) return;
+
+    const overflowAnterior = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+    };
+  }, [menuAbierto]);
+
+  /* ========================================
+     CERRAR MENÚ CON ESCAPE
+  ======================================== */
+
+  useEffect(() => {
+    if (!menuAbierto) return;
+
+    const manejarTeclado = (event) => {
+      if (event.key === "Escape") {
+        setMenuAbierto(false);
+      }
+    };
+
+    window.addEventListener("keydown", manejarTeclado);
+
+    return () => {
+      window.removeEventListener("keydown", manejarTeclado);
+    };
+  }, [menuAbierto]);
 
   /* ========================================
      CERRAR SESIÓN CON SPRING BOOT
@@ -109,12 +169,8 @@ function MenuAdmin() {
     setErrorSesion("");
 
     try {
-      // authService obtiene CSRF, envía las cookies
-      // e invalida la sesión mediante Spring Boot.
       await logout();
 
-      // Recargar la aplicación para descartar
-      // cualquier estado administrativo anterior.
       window.location.replace("/login");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
@@ -179,42 +235,21 @@ function MenuAdmin() {
     );
   };
 
-  return (
-    <aside
-      className="
-        w-full
-        lg:w-72
-        lg:min-h-screen
-        lg:shrink-0
-        bg-[#080F0C]
-        text-white
-        flex
-        flex-col
-        border-b
-        lg:border-b-0
-        lg:border-r
-        border-white/10
-        shadow-2xl
-      "
-    >
-      {/* ========================================
-          CABECERA
-      ======================================== */}
+  /* ========================================
+     CONTENIDO DEL MENÚ
+  ======================================== */
+
+  const contenidoMenu = (
+    <>
+      {/* CABECERA */}
 
       <div className="px-5 py-5 lg:px-6 lg:py-7 border-b border-white/10">
-        <Link to="/admin" className="flex items-center gap-3 group">
-          <div
-            className="
-              bg-white
-              rounded-2xl
-              p-2
-              shrink-0
-              shadow-lg
-              group-hover:scale-105
-              transition-transform
-              duration-300
-            "
-          >
+        <Link
+          to="/admin"
+          onClick={() => setMenuAbierto(false)}
+          className="flex items-center gap-3 group"
+        >
+          <div className="bg-white rounded-2xl p-2 shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-300">
             <img
               src={logo}
               alt="Grupo Comercial J&G"
@@ -232,22 +267,7 @@ function MenuAdmin() {
           </div>
         </Link>
 
-        {/* INDICADOR */}
-
-        <div
-          className="
-            mt-5
-            inline-flex
-            items-center
-            gap-2
-            bg-[#009E49]/10
-            border
-            border-[#009E49]/25
-            rounded-full
-            px-3
-            py-1.5
-          "
-        >
+        <div className="mt-5 inline-flex items-center gap-2 bg-[#009E49]/10 border border-[#009E49]/25 rounded-full px-3 py-1.5">
           <span className="w-2 h-2 rounded-full bg-[#009E49]" />
 
           <span className="text-[#5FE29C] text-[11px] font-bold">
@@ -256,61 +276,27 @@ function MenuAdmin() {
         </div>
       </div>
 
-      {/* ========================================
-          NAVEGACIÓN
-      ======================================== */}
+      {/* NAVEGACIÓN */}
 
-      <nav className="flex-1 min-w-0 p-3 lg:p-4">
-        <p
-          className="
-            hidden
-            lg:block
-            text-[11px]
-            uppercase
-            tracking-[0.18em]
-            text-gray-500
-            font-bold
-            px-3
-            mb-4
-          "
-        >
+      <nav className="flex-1 min-h-0 overflow-y-auto p-3 lg:p-4">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500 font-bold px-3 mb-4">
           Navegación
         </p>
 
-        <ul
-          className="
-            flex
-            lg:flex-col
-            gap-2
-            overflow-x-auto
-            lg:overflow-visible
-            pb-1
-            lg:pb-0
-          "
-        >
+        <ul className="flex flex-col gap-2">
           {menus.map((item) => {
             const activo = estaActivo(item.ruta);
 
             return (
-              <li key={item.ruta} className="shrink-0 lg:w-full">
+              <li key={item.ruta} className="w-full">
                 <Link
                   to={item.ruta}
+                  onClick={() => setMenuAbierto(false)}
                   aria-current={activo ? "page" : undefined}
                   className={`
-                    group
-                    relative
-                    flex
-                    items-center
-                    gap-3
-                    px-4
-                    py-3.5
-                    rounded-xl
-                    font-semibold
-                    text-sm
-                    whitespace-nowrap
-                    lg:whitespace-normal
-                    transition-all
-                    duration-300
+                    group relative flex items-center gap-3
+                    px-4 py-3.5 rounded-xl font-semibold
+                    text-sm transition-all duration-300
                     ${
                       activo
                         ? "bg-[#009E49] text-white shadow-lg shadow-green-950/30"
@@ -318,28 +304,13 @@ function MenuAdmin() {
                     }
                   `}
                 >
-                  {/* BARRA NARANJA */}
-
                   {activo && (
-                    <span
-                      className="
-                        absolute
-                        left-0
-                        top-3
-                        bottom-3
-                        w-1
-                        rounded-r-full
-                        bg-[#FF6600]
-                      "
-                    />
+                    <span className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-[#FF6600]" />
                   )}
-
-                  {/* ICONO */}
 
                   <span
                     className={`
-                      shrink-0
-                      transition-colors
+                      shrink-0 transition-colors
                       ${
                         activo
                           ? "text-white"
@@ -350,16 +321,10 @@ function MenuAdmin() {
                     <Icono tipo={item.icono} />
                   </span>
 
-                  {/* TEXTO */}
-
-                  <span className="flex-1">{item.nombre}</span>
-
-                  {/* FLECHA */}
+                  <span className="flex-1 min-w-0">{item.nombre}</span>
 
                   <span
                     className={`
-                      hidden
-                      lg:block
                       transition-all
                       ${
                         activo
@@ -377,44 +342,14 @@ function MenuAdmin() {
         </ul>
       </nav>
 
-      {/* ========================================
-          PERFIL ADMINISTRADOR
-      ======================================== */}
+      {/* PERFIL ADMINISTRADOR */}
 
       <div className="p-4 lg:p-5 border-t border-white/10">
-        <div
-          className="
-            bg-white/5
-            rounded-2xl
-            p-4
-            border
-            border-white/10
-          "
-        >
+        <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
           <div className="flex items-center gap-3">
-            {/* AVATAR */}
-
-            <div
-              className="
-                w-11
-                h-11
-                shrink-0
-                rounded-xl
-                bg-[#009E49]
-                flex
-                items-center
-                justify-center
-                font-black
-                text-lg
-                text-white
-                border-b-[3px]
-                border-[#FF6600]
-              "
-            >
+            <div className="w-11 h-11 shrink-0 rounded-xl bg-[#009E49] flex items-center justify-center font-black text-lg text-white border-b-[3px] border-[#FF6600]">
               A
             </div>
-
-            {/* INFORMACIÓN */}
 
             <div className="min-w-0">
               <h3 className="font-bold text-white text-sm">Administrador</h3>
@@ -426,35 +361,19 @@ function MenuAdmin() {
           </div>
         </div>
 
-        {/* ========================================
-            BOTÓN CERRAR SESIÓN
-        ======================================== */}
+        {/* CERRAR SESIÓN */}
 
         <button
           type="button"
           onClick={cerrarSesion}
           disabled={cerrandoSesion}
           className="
-            w-full
-            mt-4
-            flex
-            items-center
-            justify-center
-            gap-3
-            bg-[#FF6600]
-            hover:bg-[#E65C00]
-            disabled:opacity-60
-            disabled:cursor-not-allowed
-            text-white
-            px-4
-            py-3.5
-            rounded-xl
-            font-black
-            text-sm
-            transition-all
-            duration-300
-            hover:-translate-y-0.5
-            shadow-lg
+            w-full mt-4 flex items-center justify-center
+            gap-3 bg-[#FF6600] hover:bg-[#E65C00]
+            disabled:opacity-60 disabled:cursor-not-allowed
+            text-white px-4 py-3.5 rounded-xl
+            font-black text-sm transition-all duration-300
+            hover:-translate-y-0.5 shadow-lg
             shadow-orange-950/20
           "
         >
@@ -463,15 +382,119 @@ function MenuAdmin() {
           {cerrandoSesion ? "Cerrando sesión..." : "Cerrar Sesión"}
         </button>
 
-        {/* MENSAJE DE ERROR */}
-
         {errorSesion && (
           <p role="alert" className="mt-3 text-sm text-red-300 text-center">
             {errorSesion}
           </p>
         )}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* ========================================
+          BARRA SUPERIOR PARA CELULARES
+      ======================================== */}
+
+      <div className="lg:hidden w-full min-w-0 bg-[#080F0C] text-white border-b border-white/10">
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <Link to="/admin" className="flex items-center gap-3 min-w-0">
+            <div className="bg-white rounded-xl p-1.5 shrink-0">
+              <img
+                src={logo}
+                alt="Grupo Comercial J&G"
+                className="w-9 h-9 object-contain"
+              />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-sm font-black text-white truncate">
+                Grupo Comercial J&G
+              </p>
+
+              <p className="text-[11px] text-[#5FE29C]">Administración</p>
+            </div>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setMenuAbierto(true)}
+            aria-label="Abrir menú administrativo"
+            aria-expanded={menuAbierto}
+            aria-controls="menu-admin-movil"
+            className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-[#009E49] hover:bg-[#007A39] transition"
+          >
+            <Icono tipo="menu" className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      {/* ========================================
+          FONDO OSCURO DEL MENÚ MÓVIL
+      ======================================== */}
+
+      {menuAbierto && (
+        <button
+          type="button"
+          onClick={() => setMenuAbierto(false)}
+          aria-label="Cerrar menú administrativo"
+          className="lg:hidden fixed inset-0 z-40 bg-black/70"
+        />
+      )}
+
+      {/* ========================================
+          MENÚ DESPLEGABLE PARA CELULARES
+      ======================================== */}
+
+      <div
+        id="menu-admin-movil"
+        aria-hidden={!menuAbierto}
+        inert={!menuAbierto}
+        className={`
+          lg:hidden fixed inset-y-0 left-0 z-50
+          w-[min(85vw,320px)] max-w-full
+          bg-[#080F0C] text-white
+          flex flex-col shadow-2xl
+          transform transition-transform duration-300
+          ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        <button
+          type="button"
+          onClick={() => setMenuAbierto(false)}
+          aria-label="Cerrar menú"
+          className="
+            absolute top-5 right-4 z-10
+            flex items-center justify-center
+            w-9 h-9 rounded-lg
+            bg-white/10 hover:bg-[#FF6600]
+            text-white transition
+          "
+        >
+          <Icono tipo="cerrar" />
+        </button>
+
+        {contenidoMenu}
+      </div>
+
+      {/* ========================================
+          MENÚ LATERAL PARA COMPUTADORAS
+      ======================================== */}
+
+      <aside
+        className="
+          hidden lg:flex
+          lg:w-72 lg:min-h-screen lg:shrink-0
+          bg-[#080F0C] text-white
+          flex-col
+          border-r border-white/10
+          shadow-2xl
+        "
+      >
+        {contenidoMenu}
+      </aside>
+    </>
   );
 }
 

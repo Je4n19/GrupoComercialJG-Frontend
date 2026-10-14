@@ -7,14 +7,30 @@ import { obtenerProductos } from "../Services/productoService";
 import { obtenerRepuestos } from "../Services/repuestoService";
 import { obtenerCategorias } from "../Services/categoriaService";
 
+/* ========================================
+   FUNCIONES AUXILIARES
+======================================== */
+
 const obtenerStock = (item) => {
-  const stock = Number(item?.stock);
+  if (item?.stock === null || item?.stock === undefined || item?.stock === "") {
+    return null;
+  }
+
+  const stock = Number(item.stock);
 
   return Number.isFinite(stock) && stock >= 0 ? stock : null;
 };
 
 const obtenerPrecio = (item) => {
-  const precio = Number(item?.precio);
+  if (
+    item?.precio === null ||
+    item?.precio === undefined ||
+    item?.precio === ""
+  ) {
+    return null;
+  }
+
+  const precio = Number(item.precio);
 
   return Number.isFinite(precio) && precio >= 0 ? precio : null;
 };
@@ -26,6 +42,10 @@ const formatoSoles = (valor) =>
     minimumFractionDigits: 2,
   }).format(valor);
 
+/* ========================================
+   PANEL ADMINISTRATIVO
+======================================== */
+
 function PanelControl() {
   const [productos, setProductos] = useState([]);
   const [repuestos, setRepuestos] = useState([]);
@@ -33,6 +53,10 @@ function PanelControl() {
 
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+
+  /* ========================================
+     CARGAR INFORMACIÓN
+  ======================================== */
 
   const cargarDatos = async () => {
     try {
@@ -74,6 +98,10 @@ function PanelControl() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  /* ========================================
+     CÁLCULOS DEL INVENTARIO
+  ======================================== */
 
   const inventario = [
     ...productos.map((item) => ({
@@ -128,6 +156,10 @@ function PanelControl() {
     (item) => obtenerStock(item) === null || obtenerPrecio(item) === null,
   ).length;
 
+  /* ========================================
+     TARJETAS DE ESTADÍSTICAS
+  ======================================== */
+
   const estadisticas = [
     {
       titulo: "Productos",
@@ -163,6 +195,10 @@ function PanelControl() {
     },
   ];
 
+  /* ========================================
+     ACCIONES RÁPIDAS
+  ======================================== */
+
   const accionesRapidas = [
     {
       titulo: "Productos",
@@ -190,25 +226,58 @@ function PanelControl() {
     },
   ];
 
+  const resumenGeneral = [
+    {
+      etiqueta: "Total Productos",
+      valor: productos.length,
+    },
+    {
+      etiqueta: "Total Repuestos",
+      valor: repuestos.length,
+    },
+    {
+      etiqueta: "Total Categorías",
+      valor: categorias.length,
+    },
+    {
+      etiqueta: "Stock Bajo",
+      valor: stockBajo,
+    },
+    {
+      etiqueta: "Sin Stock",
+      valor: sinStock,
+    },
+  ];
+
+  /* ========================================
+     INTERFAZ
+  ======================================== */
+
   return (
-    <div className="flex min-h-screen bg-[#F4F7F5]">
+    <div className="flex flex-col lg:flex-row min-h-screen min-w-0 w-full max-w-full bg-[#F4F7F5]">
+      {/* MENÚ ADMINISTRATIVO */}
+
       <MenuAdmin />
 
-      <main className="flex-1 min-w-0 min-h-screen">
-        {/* ENCABEZADO */}
+      {/* CONTENIDO PRINCIPAL */}
+
+      <main className="flex-1 min-w-0 w-full lg:w-auto min-h-screen overflow-x-hidden">
+        {/* ========================================
+            ENCABEZADO
+        ======================================== */}
 
         <header className="bg-gradient-to-r from-[#063D2A] via-[#006B3C] to-[#009E49] text-white shadow-lg">
-          <div className="px-5 sm:px-8 lg:px-10 py-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-7">
-            <div>
-              <p className="uppercase tracking-[0.2em] text-green-100 text-xs font-bold">
+          <div className="px-4 sm:px-8 lg:px-10 py-7 sm:py-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 xl:gap-8">
+            <div className="min-w-0 flex-1">
+              <p className="uppercase tracking-[0.2em] text-green-100 text-[10px] sm:text-xs font-bold">
                 Grupo Comercial J&G
               </p>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-3">
+              <h1 className="text-2xl sm:text-4xl xl:text-5xl font-black mt-3 leading-tight break-words">
                 Panel Administrativo
               </h1>
 
-              <p className="text-green-100 mt-3 text-sm sm:text-lg">
+              <p className="text-green-100 mt-3 text-sm sm:text-lg leading-relaxed">
                 Gestión integral de productos, repuestos e inventario.
               </p>
 
@@ -217,12 +286,12 @@ function PanelControl() {
 
             {/* INVENTARIO VALORIZADO */}
 
-            <div className="bg-white/10 border border-white/20 backdrop-blur-md rounded-2xl p-6 min-w-0 lg:min-w-[280px]">
-              <p className="text-green-100 font-semibold">
+            <div className="w-full xl:w-auto xl:min-w-[280px] xl:max-w-[380px] bg-white/10 border border-white/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 min-w-0">
+              <p className="text-green-100 font-semibold text-sm sm:text-base">
                 Inventario Valorizado
               </p>
 
-              <h2 className="text-3xl sm:text-4xl font-black mt-3 break-words">
+              <h2 className="text-2xl sm:text-3xl xl:text-4xl font-black mt-3 break-words leading-tight">
                 {cargando
                   ? "Cargando..."
                   : error
@@ -237,13 +306,17 @@ function PanelControl() {
           </div>
         </header>
 
-        <div className="p-5 sm:p-8 lg:p-10">
+        {/* ========================================
+            CONTENIDO
+        ======================================== */}
+
+        <div className="w-full min-w-0 p-4 sm:p-6 lg:p-8 xl:p-10">
           {/* MENSAJE DE ERROR */}
 
           {error && (
             <div
               role="alert"
-              className="mb-7 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl"
+              className="mb-7 bg-red-50 border border-red-200 text-red-700 px-4 sm:px-5 py-4 rounded-xl"
             >
               <p className="font-semibold">{error}</p>
 
@@ -257,18 +330,22 @@ function PanelControl() {
             </div>
           )}
 
-          {/* TARJETAS KPI */}
+          {/* ========================================
+              TARJETAS KPI
+          ======================================== */}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4 sm:gap-5">
             {estadisticas.map((item) => (
               <Link
                 key={item.titulo}
                 to={item.ruta}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 hover:shadow-lg hover:-translate-y-1 transition-all"
+                className="min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7 hover:shadow-lg hover:-translate-y-1 transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-gray-600 font-semibold">{item.titulo}</p>
+                  <div className="min-w-0">
+                    <p className="text-gray-600 font-semibold text-sm sm:text-base">
+                      {item.titulo}
+                    </p>
 
                     <h2
                       className={`text-4xl sm:text-5xl font-black mt-4 ${item.color}`}
@@ -278,7 +355,7 @@ function PanelControl() {
                   </div>
 
                   <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl ${item.fondo}`}
+                    className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl ${item.fondo}`}
                   >
                     {item.icono}
                   </div>
@@ -289,18 +366,20 @@ function PanelControl() {
             ))}
           </div>
 
-          {/* ACCIONES RÁPIDAS */}
+          {/* ========================================
+              ACCIONES RÁPIDAS
+          ======================================== */}
 
-          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mt-8">
+          <section className="min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8 mt-6 sm:mt-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+              <div className="shrink-0 w-2 h-9 bg-[#FF6600] rounded-full" />
 
               <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
                 Acciones Rápidas
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4">
               {accionesRapidas.map((accion) => (
                 <Link
                   key={accion.ruta}
@@ -308,18 +387,23 @@ function PanelControl() {
                   className={`${accion.color} text-white text-center py-5 px-4 rounded-xl font-bold transition shadow-sm`}
                 >
                   <span className="mr-2">{accion.icono}</span>
+
                   {accion.titulo}
                 </Link>
               ))}
             </div>
           </section>
 
-          {/* RESUMEN GENERAL */}
+          {/* ========================================
+              RESUMEN E INDICADORES
+          ======================================== */}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+          <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5 sm:gap-6 mt-6 sm:mt-8">
+            {/* RESUMEN GENERAL */}
+
+            <section className="min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8">
               <div className="flex items-center gap-3 mb-7">
-                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+                <div className="shrink-0 w-2 h-9 bg-[#FF6600] rounded-full" />
 
                 <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
                   Resumen General
@@ -327,36 +411,17 @@ function PanelControl() {
               </div>
 
               <div className="space-y-5">
-                {[
-                  {
-                    etiqueta: "Total Productos",
-                    valor: productos.length,
-                  },
-                  {
-                    etiqueta: "Total Repuestos",
-                    valor: repuestos.length,
-                  },
-                  {
-                    etiqueta: "Total Categorías",
-                    valor: categorias.length,
-                  },
-                  {
-                    etiqueta: "Stock Bajo",
-                    valor: stockBajo,
-                  },
-                  {
-                    etiqueta: "Sin Stock",
-                    valor: sinStock,
-                  },
-                ].map((dato) => (
+                {resumenGeneral.map((dato) => (
                   <div
                     key={dato.etiqueta}
-                    className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4 last:border-0"
+                    className="flex justify-between items-center gap-3 border-b border-gray-100 pb-4 last:border-0"
                   >
-                    <span className="text-gray-600">{dato.etiqueta}</span>
+                    <span className="text-gray-600 text-sm sm:text-base min-w-0">
+                      {dato.etiqueta}
+                    </span>
 
                     <span
-                      className={`font-black text-lg ${
+                      className={`shrink-0 font-black text-lg ${
                         dato.etiqueta === "Stock Bajo" ||
                         dato.etiqueta === "Sin Stock"
                           ? "text-red-600"
@@ -372,9 +437,9 @@ function PanelControl() {
 
             {/* INDICADORES */}
 
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+            <section className="min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8">
               <div className="flex items-center gap-3 mb-7">
-                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+                <div className="shrink-0 w-2 h-9 bg-[#FF6600] rounded-full" />
 
                 <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
                   Indicadores
@@ -382,38 +447,44 @@ function PanelControl() {
               </div>
 
               <div className="space-y-5">
-                <div className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4">
-                  <span className="text-gray-600">Stock Total</span>
+                <div className="flex justify-between items-center gap-3 border-b border-gray-100 pb-4">
+                  <span className="text-gray-600 text-sm sm:text-base">
+                    Stock Total
+                  </span>
 
-                  <span className="font-black text-lg text-[#063D2A]">
+                  <span className="font-black text-lg text-[#063D2A] text-right">
                     {cargando || error
                       ? "—"
                       : stockTotal.toLocaleString("es-PE")}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4">
-                  <span className="text-gray-600">Marcas Registradas</span>
+                <div className="flex justify-between items-center gap-3 border-b border-gray-100 pb-4">
+                  <span className="text-gray-600 text-sm sm:text-base">
+                    Marcas Registradas
+                  </span>
 
-                  <span className="font-black text-lg text-[#063D2A]">
+                  <span className="font-black text-lg text-[#063D2A] text-right">
                     {cargando || error ? "—" : marcas.length}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center gap-4 border-b border-gray-100 pb-4">
-                  <span className="text-gray-600">Inventario Valorizado</span>
+                <div className="flex justify-between items-center gap-3 border-b border-gray-100 pb-4">
+                  <span className="text-gray-600 text-sm sm:text-base min-w-0">
+                    Inventario Valorizado
+                  </span>
 
-                  <span className="font-black text-lg text-[#009E49] text-right">
+                  <span className="font-black text-sm sm:text-lg text-[#009E49] text-right break-all min-w-0">
                     {cargando || error ? "—" : formatoSoles(valorInventario)}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center gap-4">
-                  <span className="text-gray-600">
+                <div className="flex justify-between items-center gap-3">
+                  <span className="text-gray-600 text-sm sm:text-base min-w-0">
                     Registros sin datos válidos
                   </span>
 
-                  <span className="font-black text-lg text-[#FF6600]">
+                  <span className="font-black text-lg text-[#FF6600] text-right">
                     {cargando || error ? "—" : registrosSinDatos}
                   </span>
                 </div>
@@ -421,12 +492,14 @@ function PanelControl() {
             </section>
           </div>
 
-          {/* ALERTAS DE INVENTARIO */}
+          {/* ========================================
+              ALERTAS DE INVENTARIO
+          ======================================== */}
 
-          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mt-8">
+          <section className="min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8 mt-6 sm:mt-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+                <div className="shrink-0 w-2 h-9 bg-[#FF6600] rounded-full" />
 
                 <h2 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
                   Alertas de Inventario
@@ -455,15 +528,15 @@ function PanelControl() {
                   return (
                     <div
                       key={`${item.tipo}-${item.id}`}
-                      className={`border-l-4 p-5 rounded-xl ${
+                      className={`border-l-4 p-4 sm:p-5 rounded-xl ${
                         stock === 0
                           ? "bg-red-50 border-red-500"
                           : "bg-orange-50 border-[#FF6600]"
                       }`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div>
-                          <p className="font-bold text-gray-800">
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-800 break-words">
                             ⚠️ {item.nombre || "Sin nombre"}
                           </p>
 
@@ -476,7 +549,7 @@ function PanelControl() {
                         </div>
 
                         <span
-                          className={`inline-flex self-start px-3 py-1.5 rounded-full text-xs font-bold ${
+                          className={`inline-flex self-start shrink-0 px-3 py-1.5 rounded-full text-xs font-bold ${
                             stock === 0
                               ? "bg-red-100 text-red-700"
                               : "bg-orange-100 text-[#D45500]"
@@ -496,7 +569,9 @@ function PanelControl() {
             )}
           </section>
 
-          {/* PIE DEL PANEL */}
+          {/* ========================================
+              PIE DEL PANEL
+          ======================================== */}
 
           <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-500">
             <p>Grupo Comercial J&G · Panel Administrativo</p>
