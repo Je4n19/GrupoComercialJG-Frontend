@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { obtenerRepuestos } from "../Services/repuestoService";
 import { obtenerCategoriasRepuesto } from "../Services/categoriaRepuestoService";
@@ -8,8 +8,11 @@ import Footer from "../Components/Footer";
 import imagenRepuestos from "../assets/repuesto.png";
 
 // ========================================
-// FUNCIONES AUXILIARES
+// CONFIGURACIÓN
 // ========================================
+
+const CLAVE_CARRITO = "jg_carrito";
+const WHATSAPP = "51979501557";
 
 const normalizar = (valor) =>
   String(valor ?? "")
@@ -28,14 +31,14 @@ const obtenerNombreCategoria = (categoria) => {
   return categoria?.nombre || "";
 };
 
-const formatearPrecio = (precio) => {
-  if (precio === null || precio === undefined || precio === "") {
+const formatearPrecio = (valor) => {
+  if (valor === null || valor === undefined || valor === "") {
     return "Consultar precio";
   }
 
-  const numero = Number(precio);
+  const numero = Number(valor);
 
-  if (!Number.isFinite(numero)) {
+  if (!Number.isFinite(numero) || numero < 0) {
     return "Consultar precio";
   }
 
@@ -46,7 +49,7 @@ const formatearPrecio = (precio) => {
 };
 
 const enlaceWhatsApp = (mensaje) =>
-  `https://wa.me/51979501557?text=${encodeURIComponent(mensaje)}`;
+  `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
 
 // ========================================
 // ICONOS
@@ -90,6 +93,13 @@ function IconoRepuesto({ tipo, className = "w-5 h-5" }) {
         <path d="M3 7v10l9 5 9-5V7M12 12v10" />
       </>
     ),
+    carrito: (
+      <>
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.5 13h12.7l2-9H6" />
+      </>
+    ),
   };
 
   return (
@@ -109,7 +119,318 @@ function IconoRepuesto({ tipo, className = "w-5 h-5" }) {
 }
 
 // ========================================
-// COMPONENTE PRINCIPAL
+// TARJETA DE REPUESTO
+// ========================================
+
+function TarjetaRepuesto({ repuesto, destacado }) {
+  const [agregado, setAgregado] = useState(false);
+  const [mensaje, setMensaje] = useState("");
+
+  const categoria = obtenerNombreCategoria(repuesto.categoria) || "Repuesto";
+
+  const stockNumero = Number(repuesto.stock);
+
+  const stockRegistrado =
+    repuesto.stock !== null &&
+    repuesto.stock !== undefined &&
+    repuesto.stock !== "" &&
+    Number.isFinite(stockNumero) &&
+    stockNumero >= 0;
+
+  const disponible = stockRegistrado && stockNumero > 0;
+
+  const precioNumero = Number(repuesto.precio);
+
+  const precioValido =
+    repuesto.precio !== null &&
+    repuesto.precio !== undefined &&
+    repuesto.precio !== "" &&
+    Number.isFinite(precioNumero) &&
+    precioNumero >= 0;
+
+  // ========================================
+  // AGREGAR AL CARRITO
+  // ========================================
+
+  const agregarAlCarrito = () => {
+    if (repuesto.id === null || repuesto.id === undefined) {
+      setMensaje("No se pudo identificar el repuesto.");
+      return;
+    }
+
+    if (!disponible) {
+      setMensaje("Disponibilidad por consultar.");
+      return;
+    }
+
+    try {
+      const guardado = localStorage.getItem(CLAVE_CARRITO);
+      const datos = guardado ? JSON.parse(guardado) : [];
+      const carrito = Array.isArray(datos) ? datos : [];
+
+      const identificador = `repuesto-${repuesto.id}`;
+
+      const indice = carrito.findIndex(
+        (item) =>
+          String(item.carritoId) === identificador ||
+          (item.tipo === "repuesto" && String(item.id) === String(repuesto.id)),
+      );
+
+      const nuevoCarrito = [...carrito];
+
+      if (indice >= 0) {
+        const existente = nuevoCarrito[indice];
+
+        const cantidadActual = Math.max(
+          0,
+          Math.floor(Number(existente.cantidad) || 0),
+        );
+
+        if (cantidadActual >= stockNumero) {
+          setAgregado(false);
+          setMensaje("Ya agregaste todas las unidades disponibles.");
+          return;
+        }
+
+        nuevoCarrito[indice] = {
+          ...existente,
+          carritoId: identificador,
+          tipo: "repuesto",
+          cantidad: cantidadActual + 1,
+          stock: stockNumero,
+          precio: precioValido ? precioNumero : null,
+        };
+      } else {
+        nuevoCarrito.push({
+          carritoId: identificador,
+          id: repuesto.id,
+          tipo: "repuesto",
+          nombre: repuesto.nombre,
+          marca: repuesto.marca || "",
+          modelo: repuesto.modelo || "",
+          categoria,
+          descripcion: repuesto.descripcion || "",
+          imagen: repuesto.imagen || "",
+          precio: precioValido ? precioNumero : null,
+          stock: stockNumero,
+          cantidad: 1,
+        });
+      }
+
+      localStorage.setItem(CLAVE_CARRITO, JSON.stringify(nuevoCarrito));
+
+      window.dispatchEvent(new Event("jg-carrito-actualizado"));
+
+      setAgregado(true);
+      setMensaje("¡Repuesto agregado al carrito!");
+    } catch (error) {
+      console.error("Error agregando repuesto:", error);
+      setAgregado(false);
+      setMensaje("No se pudo agregar el repuesto.");
+    }
+  };
+
+  return (
+    <article
+      id={`repuesto-${repuesto.id}`}
+      className={`
+        group flex min-w-0 flex-col overflow-hidden
+        rounded-[26px] border border-gray-100 bg-white
+        shadow-md transition-all duration-300
+        hover:-translate-y-1.5 hover:shadow-xl
+        ${destacado ? "ring-4 ring-[#FF6600] ring-offset-4" : ""}
+      `}
+    >
+      {/* IMAGEN */}
+
+      <div className="relative h-64 overflow-hidden bg-[#F8FAF9] p-6">
+        {repuesto.imagen ? (
+          <img
+            src={repuesto.imagen}
+            alt={repuesto.nombre}
+            loading="lazy"
+            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-gray-400">
+            <IconoRepuesto tipo="herramienta" className="h-12 w-12" />
+            <span className="text-xs font-semibold">Imagen no disponible</span>
+          </div>
+        )}
+
+        {destacado && (
+          <span className="absolute left-4 top-4 rounded-full bg-[#FF6600] px-3 py-2 text-xs font-black text-white shadow-md">
+            Destacado
+          </span>
+        )}
+
+        {/* STOCK */}
+
+        <span
+          className={`
+            absolute right-4 top-4 inline-flex items-center
+            gap-1.5 rounded-full px-3 py-2
+            text-xs font-black shadow-sm
+            ${
+              !stockRegistrado
+                ? "bg-white text-gray-600"
+                : disponible
+                  ? "bg-[#E8F7EE] text-[#00843D]"
+                  : "bg-red-50 text-red-600"
+            }
+          `}
+        >
+          <span
+            className={`
+              h-2 w-2 rounded-full
+              ${
+                !stockRegistrado
+                  ? "bg-gray-400"
+                  : disponible
+                    ? "bg-[#009E49]"
+                    : "bg-red-500"
+              }
+            `}
+          />
+
+          {!stockRegistrado
+            ? "Consultar"
+            : disponible
+              ? "Disponible"
+              : "Sin stock"}
+        </span>
+      </div>
+
+      {/* INFORMACIÓN */}
+
+      <div className="flex flex-1 flex-col p-6 sm:p-7">
+        <span className="self-start rounded-full bg-[#E8F7EE] px-4 py-2 text-xs font-black text-[#009E49]">
+          {categoria}
+        </span>
+
+        <h3 className="mt-5 break-words text-xl font-black leading-snug text-[#1A1A1A] sm:text-2xl">
+          {repuesto.nombre}
+        </h3>
+
+        {repuesto.marca && (
+          <p className="mt-3 text-sm text-gray-500">
+            Marca:{" "}
+            <span className="font-bold text-[#1A1A1A]">{repuesto.marca}</span>
+          </p>
+        )}
+
+        {repuesto.modelo && (
+          <p className="mt-2 text-sm text-gray-500">
+            Modelo:{" "}
+            <span className="font-bold text-[#1A1A1A]">{repuesto.modelo}</span>
+          </p>
+        )}
+
+        <p className="mt-4 line-clamp-3 min-h-[60px] text-sm leading-relaxed text-gray-600">
+          {repuesto.descripcion ||
+            "Consulta las características y compatibilidad de este repuesto."}
+        </p>
+
+        {/* PRECIO */}
+
+        <div className="mt-auto pt-6">
+          <div className="border-t border-gray-100 pt-5">
+            <p className="text-xs font-semibold text-gray-500">
+              Precio de venta
+            </p>
+
+            <p className="mt-2 break-words text-3xl font-black tracking-tight text-[#FF6600]">
+              {formatearPrecio(repuesto.precio)}
+            </p>
+
+            <p className="mt-3 text-xs text-gray-500 sm:text-sm">
+              {stockRegistrado
+                ? disponible
+                  ? `Stock disponible: ${stockNumero}`
+                  : "Sin stock disponible"
+                : "Stock por confirmar"}
+            </p>
+          </div>
+
+          {/* AGREGAR AL CARRITO */}
+
+          <button
+            type="button"
+            onClick={agregarAlCarrito}
+            disabled={!disponible}
+            className={`
+              mt-6 inline-flex w-full items-center
+              justify-center gap-3 rounded-xl px-4 py-4
+              text-center text-sm font-black
+              transition-all duration-300
+              ${
+                !disponible
+                  ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                  : agregado
+                    ? "bg-[#063D2A] text-white"
+                    : "bg-[#FF6600] text-white hover:bg-[#E65C00]"
+              }
+            `}
+          >
+            <IconoRepuesto tipo={agregado ? "check" : "carrito"} />
+
+            {!disponible
+              ? stockRegistrado
+                ? "Repuesto agotado"
+                : "Disponibilidad por consultar"
+              : agregado
+                ? "¡Agregado al carrito!"
+                : "Agregar al carrito"}
+          </button>
+
+          {mensaje && (
+            <p
+              role="status"
+              aria-live="polite"
+              className={`mt-3 text-center text-xs font-bold ${
+                agregado ? "text-[#009E49]" : "text-red-600"
+              }`}
+            >
+              {mensaje}
+            </p>
+          )}
+
+          {/* VER CARRITO */}
+
+          {agregado && (
+            <Link
+              to="/carrito"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#009E49] px-4 py-3 text-sm font-black text-[#009E49] transition hover:bg-[#E8F7EE]"
+            >
+              Ver mi carrito
+              <IconoRepuesto tipo="flecha" />
+            </Link>
+          )}
+
+          {/* WHATSAPP ORIGINAL */}
+
+          <a
+            href={enlaceWhatsApp(
+              `Hola, deseo información sobre el repuesto ${repuesto.nombre}${
+                repuesto.marca ? ` de la marca ${repuesto.marca}` : ""
+              }. Quisiera consultar su disponibilidad y precio.`,
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[#009E49] px-4 py-4 text-center text-sm font-black text-white transition-all duration-300 hover:bg-[#00843D]"
+          >
+            <IconoRepuesto tipo="whatsapp" />
+            Consultar Disponibilidad
+            <IconoRepuesto tipo="flecha" className="h-4 w-4" />
+          </a>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ========================================
+// PÁGINA PRINCIPAL DE REPUESTOS
 // ========================================
 
 function Repuestos() {
@@ -124,7 +445,7 @@ function Repuestos() {
   const [error, setError] = useState("");
 
   // ========================================
-  // CARGAR REPUESTOS Y CATEGORÍAS
+  // CARGAR DATOS DEL BACKEND
   // ========================================
 
   useEffect(() => {
@@ -164,7 +485,7 @@ function Repuestos() {
   }, []);
 
   // ========================================
-  // BÚSQUEDA DESDE EL ENCABEZADO
+  // BÚSQUEDA FLEXIBLE
   // ========================================
 
   const palabras = useMemo(
@@ -221,7 +542,10 @@ function Repuestos() {
 
   const verTodos = () => setSearchParams({});
 
-  // Desplazamiento automático hacia resultados
+  // ========================================
+  // DESPLAZAMIENTO A RESULTADOS
+  // ========================================
+
   useEffect(() => {
     if (!busquedaURL || cargando) return;
 
@@ -233,44 +557,44 @@ function Repuestos() {
 
   return (
     <>
-      <main className="bg-white min-h-screen overflow-x-hidden">
-        {/* ======================================== */}
-        {/* HERO */}
-        {/* ======================================== */}
+      <main className="min-h-screen overflow-x-hidden bg-white">
+        {/* ========================================
+            HERO
+        ======================================== */}
 
-        <section className="relative min-h-[470px] sm:min-h-[540px] flex items-center text-white overflow-hidden">
+        <section className="relative flex min-h-[470px] items-center overflow-hidden text-white sm:min-h-[540px]">
           <img
             src={imagenRepuestos}
             alt="Repuestos para maquinaria agrícola, forestal e industrial"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
 
           <div className="absolute inset-0 bg-gradient-to-r from-[#07170F]/95 via-[#07170F]/75 to-[#07170F]/25" />
 
-          <div className="pointer-events-none absolute -left-24 -bottom-32 w-96 h-96 bg-[#009E49]/20 blur-3xl rounded-full" />
+          <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-[#009E49]/20 blur-3xl" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full py-20">
+          <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-20 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
-              <span className="inline-flex items-center gap-2 bg-[#009E49]/20 border border-[#75E4A4]/40 text-[#B6F5D0] px-4 py-2 rounded-full font-black text-xs sm:text-sm">
-                <span className="w-2 h-2 bg-[#FF6600] rounded-full" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#75E4A4]/40 bg-[#009E49]/20 px-4 py-2 text-xs font-black text-[#B6F5D0] sm:text-sm">
+                <span className="h-2 w-2 rounded-full bg-[#FF6600]" />
                 Grupo Comercial J&G
               </span>
 
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mt-7 leading-tight tracking-tight">
+              <h1 className="mt-7 text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
                 Repuestos para
                 <span className="block text-[#75E4A4]">tu maquinaria</span>
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-gray-200 mt-6 max-w-xl leading-relaxed">
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-gray-200 sm:text-lg md:text-xl">
                 Encuentra repuestos para maquinaria agrícola, forestal e
                 industrial. Consulta disponibilidad, compatibilidad y precios
                 con nuestro equipo.
               </p>
 
-              <div className="flex flex-col sm:flex-row flex-wrap gap-4 mt-8">
+              <div className="mt-8 flex flex-col flex-wrap gap-4 sm:flex-row">
                 <a
                   href="#repuestos-disponibles"
-                  className="inline-flex items-center justify-center gap-3 bg-[#FF6600] hover:bg-[#E65C00] text-white px-7 py-4 rounded-xl font-black text-sm shadow-lg transition-all duration-300 hover:-translate-y-1"
+                  className="inline-flex items-center justify-center gap-3 rounded-xl bg-[#FF6600] px-7 py-4 text-sm font-black text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#E65C00]"
                 >
                   Ver Repuestos
                   <IconoRepuesto tipo="flecha" />
@@ -282,7 +606,7 @@ function Repuestos() {
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-sm text-white px-7 py-4 rounded-xl font-black text-sm transition-all duration-300"
+                  className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/30 bg-white/10 px-7 py-4 text-sm font-black text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
                 >
                   <IconoRepuesto tipo="whatsapp" />
                   Consultar por WhatsApp
@@ -292,12 +616,12 @@ function Repuestos() {
           </div>
         </section>
 
-        {/* ======================================== */}
-        {/* ESTADÍSTICAS */}
-        {/* ======================================== */}
+        {/* ========================================
+            ESTADÍSTICAS
+        ======================================== */}
 
-        <section className="relative z-20 -mt-9 sm:-mt-11 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <section className="relative z-20 mx-auto -mt-9 max-w-7xl px-5 sm:-mt-11 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             {[
               {
                 valor: cargando ? "..." : repuestos.length,
@@ -322,17 +646,17 @@ function Repuestos() {
             ].map((item) => (
               <div
                 key={item.titulo}
-                className="group bg-white rounded-[22px] sm:rounded-[26px] shadow-lg border border-gray-100 p-4 sm:p-6 text-center hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
+                className="group rounded-[22px] border border-gray-100 bg-white p-4 text-center shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:rounded-[26px] sm:p-6"
               >
-                <div className="w-11 h-11 sm:w-12 sm:h-12 mx-auto bg-[#E8F7EE] text-[#009E49] rounded-xl flex items-center justify-center mb-3 group-hover:bg-[#009E49] group-hover:text-white transition-colors duration-300">
-                  <IconoRepuesto tipo={item.icono} className="w-6 h-6" />
+                <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[#E8F7EE] text-[#009E49] transition-colors duration-300 group-hover:bg-[#009E49] group-hover:text-white sm:h-12 sm:w-12">
+                  <IconoRepuesto tipo={item.icono} className="h-6 w-6" />
                 </div>
 
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#009E49]">
+                <h3 className="text-2xl font-black text-[#009E49] sm:text-3xl lg:text-4xl">
                   {item.valor}
                 </h3>
 
-                <p className="text-gray-500 text-xs sm:text-sm mt-2 font-semibold">
+                <p className="mt-2 text-xs font-semibold text-gray-500 sm:text-sm">
                   {item.titulo}
                 </p>
               </div>
@@ -340,26 +664,25 @@ function Repuestos() {
           </div>
         </section>
 
-        {/* ======================================== */}
-        {/* LISTADO DE REPUESTOS */}
-        {/* ======================================== */}
+        {/* ========================================
+            LISTADO DE REPUESTOS
+        ======================================== */}
 
         <section
           id="repuestos-disponibles"
-          className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-20 pb-20 scroll-mt-28"
+          className="mx-auto max-w-7xl scroll-mt-28 px-5 pb-20 pt-20 sm:px-6 lg:px-8"
         >
-          {/* ENCABEZADO */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-5 mb-10">
+          <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <span className="w-10 h-[3px] bg-[#FF6600] rounded-full" />
+                <span className="h-[3px] w-10 rounded-full bg-[#FF6600]" />
 
-                <span className="text-[#009E49] font-black uppercase tracking-[0.16em] text-xs sm:text-sm">
+                <span className="text-xs font-black uppercase tracking-[0.16em] text-[#009E49] sm:text-sm">
                   Nuestro Catálogo
                 </span>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1A1A1A] mt-4 leading-tight">
+              <h2 className="mt-4 text-3xl font-black leading-tight text-[#1A1A1A] sm:text-4xl lg:text-5xl">
                 {busquedaURL ? (
                   "Resultados de búsqueda"
                 ) : (
@@ -371,8 +694,8 @@ function Repuestos() {
               </h2>
 
               {busquedaURL ? (
-                <div className="flex flex-wrap items-center gap-3 mt-4">
-                  <p className="text-gray-500 text-sm sm:text-base">
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <p className="text-sm text-gray-500 sm:text-base">
                     Buscando:{" "}
                     <strong className="text-[#009E49]">{busquedaURL}</strong>
                   </p>
@@ -380,40 +703,41 @@ function Repuestos() {
                   <button
                     type="button"
                     onClick={quitarBusqueda}
-                    className="text-sm font-black text-[#FF6600] hover:text-[#E65C00] transition-colors"
+                    className="text-sm font-black text-[#FF6600] transition-colors hover:text-[#E65C00]"
                   >
                     Quitar búsqueda ×
                   </button>
                 </div>
               ) : (
-                <p className="text-gray-500 mt-4 max-w-xl leading-relaxed">
+                <p className="mt-4 max-w-xl leading-relaxed text-gray-500">
                   Explora nuestros repuestos y consulta con nosotros para
                   encontrar la pieza adecuada.
                 </p>
               )}
             </div>
 
-            <span className="self-start sm:self-auto bg-[#E8F7EE] text-[#009E49] px-5 py-3 rounded-full font-black text-sm whitespace-nowrap">
+            <span className="self-start whitespace-nowrap rounded-full bg-[#E8F7EE] px-5 py-3 text-sm font-black text-[#009E49] sm:self-auto">
               {cargando
                 ? "Cargando..."
                 : `${repuestosVisibles.length} resultados`}
             </span>
           </div>
 
-          {/* ======================================== */}
           {/* ESTADO DE CARGA */}
-          {/* ======================================== */}
 
           {cargando ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-12 h-12 border-4 border-[#DCEFE4] border-t-[#009E49] rounded-full animate-spin" />
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#DCEFE4] border-t-[#009E49]" />
 
-              <p className="text-gray-500 font-semibold mt-5">
+              <p className="mt-5 font-semibold text-gray-500">
                 Cargando repuestos...
               </p>
             </div>
           ) : error ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-8 text-center">
+            <div
+              role="alert"
+              className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700"
+            >
               <h3 className="text-xl font-black">
                 No pudimos cargar los repuestos
               </h3>
@@ -421,17 +745,16 @@ function Repuestos() {
               <p className="mt-3 text-sm">{error}</p>
             </div>
           ) : repuestosVisibles.length === 0 ? (
-            /* SIN RESULTADOS */
-            <div className="bg-[#F7FAF8] rounded-[28px] border border-[#DCEFE4] p-8 sm:p-12 text-center">
-              <div className="w-20 h-20 mx-auto bg-[#E8F7EE] text-[#009E49] rounded-3xl flex items-center justify-center">
-                <IconoRepuesto tipo="buscar" className="w-10 h-10" />
+            <div className="rounded-[28px] border border-[#DCEFE4] bg-[#F7FAF8] p-8 text-center sm:p-12">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-[#E8F7EE] text-[#009E49]">
+                <IconoRepuesto tipo="buscar" className="h-10 w-10" />
               </div>
 
-              <h3 className="text-2xl sm:text-3xl font-black text-[#1A1A1A] mt-6">
+              <h3 className="mt-6 text-2xl font-black text-[#1A1A1A] sm:text-3xl">
                 No encontramos repuestos
               </h3>
 
-              <p className="text-gray-500 mt-4 max-w-lg mx-auto leading-relaxed">
+              <p className="mx-auto mt-4 max-w-lg leading-relaxed text-gray-500">
                 {busquedaURL
                   ? "No hay repuestos que coincidan con tu búsqueda. Prueba con otro nombre, marca o modelo."
                   : "Todavía no hay repuestos registrados en el catálogo."}
@@ -441,7 +764,7 @@ function Repuestos() {
                 <button
                   type="button"
                   onClick={verTodos}
-                  className="inline-flex items-center justify-center gap-2 mt-7 bg-[#009E49] hover:bg-[#00843D] text-white px-7 py-4 rounded-xl font-black transition-colors"
+                  className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-[#009E49] px-7 py-4 font-black text-white transition-colors hover:bg-[#00843D]"
                 >
                   Ver todos los repuestos
                   <IconoRepuesto tipo="flecha" />
@@ -449,197 +772,40 @@ function Repuestos() {
               )}
             </div>
           ) : (
-            /* ======================================== */
-            /* TARJETAS DE REPUESTOS */
-            /* ======================================== */
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {repuestosVisibles.map((repuesto) => {
-                const destacado = repuestoDestacado === String(repuesto.id);
-
-                const categoria =
-                  obtenerNombreCategoria(repuesto.categoria) || "Repuesto";
-
-                const stockNumero = Number(repuesto.stock);
-
-                const stockRegistrado =
-                  repuesto.stock !== null &&
-                  repuesto.stock !== undefined &&
-                  repuesto.stock !== "" &&
-                  Number.isFinite(stockNumero);
-
-                const disponible = stockRegistrado && stockNumero > 0;
-
-                return (
-                  <article
-                    key={repuesto.id}
-                    id={`repuesto-${repuesto.id}`}
-                    className={`group flex flex-col bg-white rounded-[26px] overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 border border-gray-100 ${
-                      destacado ? "ring-4 ring-[#FF6600] ring-offset-4" : ""
-                    }`}
-                  >
-                    {/* IMAGEN */}
-                    <div className="relative h-64 bg-[#F8FAF9] p-6 overflow-hidden">
-                      {repuesto.imagen ? (
-                        <img
-                          src={repuesto.imagen}
-                          alt={repuesto.nombre}
-                          loading="lazy"
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-3">
-                          <IconoRepuesto
-                            tipo="herramienta"
-                            className="w-12 h-12"
-                          />
-                          <span className="text-xs font-semibold">
-                            Imagen no disponible
-                          </span>
-                        </div>
-                      )}
-
-                      {/* ETIQUETA DESTACADO */}
-                      {destacado && (
-                        <span className="absolute top-4 left-4 bg-[#FF6600] text-white text-xs font-black px-3 py-2 rounded-full shadow-md">
-                          Destacado
-                        </span>
-                      )}
-
-                      {/* STOCK */}
-                      <span
-                        className={`absolute top-4 right-4 inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-black shadow-sm ${
-                          !stockRegistrado
-                            ? "bg-white text-gray-600"
-                            : disponible
-                              ? "bg-[#E8F7EE] text-[#00843D]"
-                              : "bg-red-50 text-red-600"
-                        }`}
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            !stockRegistrado
-                              ? "bg-gray-400"
-                              : disponible
-                                ? "bg-[#009E49]"
-                                : "bg-red-500"
-                          }`}
-                        />
-
-                        {!stockRegistrado
-                          ? "Consultar"
-                          : disponible
-                            ? "Disponible"
-                            : "Sin stock"}
-                      </span>
-                    </div>
-
-                    {/* INFORMACIÓN */}
-                    <div className="flex flex-col flex-1 p-6 sm:p-7">
-                      {/* CATEGORÍA */}
-                      <span className="self-start bg-[#E8F7EE] text-[#009E49] px-4 py-2 rounded-full text-xs font-black">
-                        {categoria}
-                      </span>
-
-                      {/* NOMBRE */}
-                      <h3 className="text-xl sm:text-2xl font-black text-[#1A1A1A] mt-5 leading-snug">
-                        {repuesto.nombre}
-                      </h3>
-
-                      {/* MARCA */}
-                      {repuesto.marca && (
-                        <p className="text-sm text-gray-500 mt-3">
-                          Marca:{" "}
-                          <span className="font-bold text-[#1A1A1A]">
-                            {repuesto.marca}
-                          </span>
-                        </p>
-                      )}
-
-                      {/* MODELO */}
-                      {repuesto.modelo && (
-                        <p className="text-sm text-gray-500 mt-2">
-                          Modelo:{" "}
-                          <span className="font-bold text-[#1A1A1A]">
-                            {repuesto.modelo}
-                          </span>
-                        </p>
-                      )}
-
-                      {/* DESCRIPCIÓN */}
-                      <p className="text-gray-600 text-sm leading-relaxed mt-4 line-clamp-3 min-h-[60px]">
-                        {repuesto.descripcion ||
-                          "Consulta las características y compatibilidad de este repuesto."}
-                      </p>
-
-                      {/* PRECIO */}
-                      <div className="mt-auto pt-6">
-                        <div className="border-t border-gray-100 pt-5">
-                          <p className="text-xs text-gray-500 font-semibold">
-                            Precio de venta
-                          </p>
-
-                          <p className="text-3xl font-black text-[#FF6600] mt-2 tracking-tight">
-                            {formatearPrecio(repuesto.precio)}
-                          </p>
-
-                          <p className="text-xs sm:text-sm text-gray-500 mt-3">
-                            {stockRegistrado
-                              ? disponible
-                                ? `Stock disponible: ${repuesto.stock}`
-                                : "Consultar disponibilidad"
-                              : "Stock por confirmar"}
-                          </p>
-                        </div>
-
-                        {/* BOTÓN WHATSAPP */}
-                        <a
-                          href={enlaceWhatsApp(
-                            `Hola, deseo información sobre el repuesto ${repuesto.nombre}${
-                              repuesto.marca
-                                ? ` de la marca ${repuesto.marca}`
-                                : ""
-                            }. Quisiera consultar su disponibilidad y precio.`,
-                          )}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center gap-3 text-center mt-6 bg-[#009E49] hover:bg-[#00843D] text-white py-4 px-4 rounded-xl font-black text-sm transition-all duration-300"
-                        >
-                          <IconoRepuesto tipo="whatsapp" className="w-5 h-5" />
-                          Consultar Disponibilidad
-                          <IconoRepuesto tipo="flecha" className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+              {repuestosVisibles.map((repuesto) => (
+                <TarjetaRepuesto
+                  key={repuesto.id}
+                  repuesto={repuesto}
+                  destacado={repuestoDestacado === String(repuesto.id)}
+                />
+              ))}
             </div>
           )}
         </section>
 
-        {/* ======================================== */}
-        {/* ASESORÍA FINAL */}
-        {/* ======================================== */}
+        {/* ========================================
+            ASESORÍA PERSONALIZADA
+        ======================================== */}
 
-        <section className="relative bg-[#073D27] text-white py-16 sm:py-20 overflow-hidden">
-          <div className="pointer-events-none absolute -right-32 -bottom-32 w-96 h-96 bg-[#009E49]/20 blur-3xl rounded-full" />
+        <section className="relative overflow-hidden bg-[#073D27] py-16 text-white sm:py-20">
+          <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-[#009E49]/20 blur-3xl" />
 
-          <div className="relative max-w-5xl mx-auto text-center px-5 sm:px-6">
-            <div className="w-16 h-16 mx-auto bg-white/10 border border-white/15 text-[#75E4A4] rounded-2xl flex items-center justify-center mb-6">
-              <IconoRepuesto tipo="herramienta" className="w-8 h-8" />
+          <div className="relative mx-auto max-w-5xl px-5 text-center sm:px-6">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-[#75E4A4]">
+              <IconoRepuesto tipo="herramienta" className="h-8 w-8" />
             </div>
 
-            <span className="text-[#FFB17A] font-black uppercase tracking-[0.16em] text-xs sm:text-sm">
+            <span className="text-xs font-black uppercase tracking-[0.16em] text-[#FFB17A] sm:text-sm">
               Asesoría Personalizada
             </span>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-5 leading-tight">
+            <h2 className="mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
               ¿No encuentras
               <span className="block text-[#75E4A4]">el repuesto?</span>
             </h2>
 
-            <p className="text-green-50/80 text-base sm:text-lg mt-6 max-w-2xl mx-auto leading-relaxed">
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-green-50/80 sm:text-lg">
               Nuestro equipo puede ayudarte a identificar el repuesto adecuado
               para tu maquinaria. Escríbenos con la marca y el modelo de tu
               equipo.
@@ -651,11 +817,11 @@ function Repuestos() {
               )}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-3 mt-9 bg-[#FF6600] hover:bg-[#E65C00] text-white px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className="mt-9 inline-flex items-center justify-center gap-3 rounded-xl bg-[#FF6600] px-8 py-4 font-black text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#E65C00]"
             >
-              <IconoRepuesto tipo="whatsapp" className="w-6 h-6" />
+              <IconoRepuesto tipo="whatsapp" className="h-6 w-6" />
               Solicitar Repuesto
-              <IconoRepuesto tipo="flecha" className="w-5 h-5" />
+              <IconoRepuesto tipo="flecha" className="h-5 w-5" />
             </a>
           </div>
         </section>

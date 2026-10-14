@@ -1,21 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-
 import logo from "../assets/logoJ&G.png";
 import { obtenerCategorias } from "../Services/categoriaService";
 import Buscador from "./Buscador";
 
-// ========================================
-// DATOS DE CONTACTO
-// ========================================
-
 const TELEFONO = "979501557";
 const CORREO = "grupo.comercial@yahoo.es";
-
 const FACEBOOK_URL =
   "https://www.facebook.com/p/Grupo-Comercial-JG-61572533279515/";
-
 const INSTAGRAM_URL = "https://www.instagram.com/grupocomercialjg/";
+
+const CLAVE_CARRITO = "jg_carrito";
 
 // ========================================
 // ICONOS
@@ -26,23 +21,19 @@ function Icono({ tipo, className = "w-5 h-5" }) {
     telefono: (
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.09 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.96.35 1.9.68 2.8a2 2 0 0 1-.45 2.11L9.03 10.9a16 16 0 0 0 4.07 4.07l1.27-1.28a2 2 0 0 1 2.11-.45c.9.33 1.84.56 2.8.68A2 2 0 0 1 22 16.92z" />
     ),
-
     correo: (
       <>
         <rect x="2" y="4" width="20" height="16" rx="2" />
         <path d="m22 7-10 6L2 7" />
       </>
     ),
-
     reloj: (
       <>
         <circle cx="12" cy="12" r="10" />
         <path d="M12 6v6l4 2" />
       </>
     ),
-
     flecha: <path d="m6 9 6 6 6-6" />,
-
     menu: (
       <>
         <path d="M4 6h16" />
@@ -50,14 +41,12 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="M4 18h16" />
       </>
     ),
-
     cerrar: (
       <>
         <path d="M18 6 6 18" />
         <path d="m6 6 12 12" />
       </>
     ),
-
     paquete: (
       <>
         <path d="m12 2 9 5-9 5-9-5 9-5Z" />
@@ -66,11 +55,17 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="m7.5 4.5 9 5" />
       </>
     ),
-
     flechaDerecha: (
       <>
         <path d="M5 12h14" />
         <path d="m12 5 7 7-7 7" />
+      </>
+    ),
+    carrito: (
+      <>
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.5 13h12.7l2-9H6" />
       </>
     ),
   };
@@ -92,7 +87,7 @@ function Icono({ tipo, className = "w-5 h-5" }) {
 }
 
 // ========================================
-// FACEBOOK
+// REDES SOCIALES
 // ========================================
 
 function FacebookIcon() {
@@ -107,10 +102,6 @@ function FacebookIcon() {
   );
 }
 
-// ========================================
-// INSTAGRAM
-// ========================================
-
 function InstagramIcon() {
   return (
     <svg
@@ -122,10 +113,6 @@ function InstagramIcon() {
     </svg>
   );
 }
-
-// ========================================
-// REDES SOCIALES
-// ========================================
 
 function RedesSociales({ oscuro = false }) {
   const estilo = oscuro
@@ -167,30 +154,77 @@ function BotonRastrear({ onClick, className = "" }) {
       to="/rastrear-pedido"
       onClick={onClick}
       className={`
-        inline-flex
-        items-center
-        justify-center
-        gap-2
-        bg-[#FF6600]
-        hover:bg-[#E65C00]
-        text-white
-        px-4
-        py-2.5
-        rounded-lg
-        font-black
-        text-xs
-        sm:text-sm
-        whitespace-nowrap
-        shadow-md
-        hover:shadow-lg
-        transition-all
-        duration-300
+        inline-flex items-center justify-center gap-2
+        bg-[#FF6600] hover:bg-[#E65C00]
+        text-white px-4 py-2.5 rounded-lg
+        font-black text-xs sm:text-sm
+        whitespace-nowrap shadow-md
+        hover:shadow-lg transition-all duration-300
         ${className}
       `}
     >
       <Icono tipo="paquete" className="w-4 h-4" />
       Rastrear pedido
       <Icono tipo="flechaDerecha" className="w-4 h-4" />
+    </Link>
+  );
+}
+
+// ========================================
+// CARRITO DE COTIZACIÓN
+// ========================================
+
+function leerCantidadCarrito() {
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE_CARRITO) || "[]");
+
+    if (!Array.isArray(datos)) return 0;
+
+    return datos.reduce((total, item) => {
+      const cantidad = Number(item.cantidad ?? 1);
+
+      return (
+        total +
+        (Number.isFinite(cantidad) && cantidad > 0 ? Math.floor(cantidad) : 0)
+      );
+    }, 0);
+  } catch {
+    return 0;
+  }
+}
+
+function BotonCarrito({ cantidad, onClick, className = "" }) {
+  return (
+    <Link
+      to="/carrito"
+      onClick={onClick}
+      aria-label={`Ver carrito de cotización, ${cantidad} artículos`}
+      title="Mi carrito de cotización"
+      className={`
+        relative flex items-center justify-center
+        w-11 h-11 shrink-0 rounded-xl
+        border border-[#009E49]/20
+        bg-[#F0F9F3] text-[#063D2A]
+        hover:bg-[#009E49] hover:text-white
+        transition-colors
+        ${className}
+      `}
+    >
+      <Icono tipo="carrito" className="w-6 h-6" />
+
+      {cantidad > 0 && (
+        <span
+          className="
+            absolute -top-2 -right-2
+            min-w-5 h-5 px-1 rounded-full
+            bg-[#FF6600] text-white
+            text-[11px] font-black
+            flex items-center justify-center
+          "
+        >
+          {cantidad > 99 ? "99+" : cantidad}
+        </span>
+      )}
     </Link>
   );
 }
@@ -208,9 +242,30 @@ function Encabezado() {
 
   const [categorias, setCategorias] = useState([]);
   const [busqueda, setBusqueda] = useState("");
+  const [cantidadCarrito, setCantidadCarrito] = useState(leerCantidadCarrito);
 
   // ========================================
-  // CARGAR CATEGORÍAS DESDE EL BACKEND
+  // ACTUALIZAR CONTADOR DEL CARRITO
+  // ========================================
+
+  useEffect(() => {
+    const actualizar = () => {
+      setCantidadCarrito(leerCantidadCarrito());
+    };
+
+    window.addEventListener("storage", actualizar);
+    window.addEventListener("jg-carrito-actualizado", actualizar);
+    window.addEventListener("focus", actualizar);
+
+    return () => {
+      window.removeEventListener("storage", actualizar);
+      window.removeEventListener("jg-carrito-actualizado", actualizar);
+      window.removeEventListener("focus", actualizar);
+    };
+  }, []);
+
+  // ========================================
+  // CARGAR CATEGORÍAS DESDE RENDER
   // ========================================
 
   useEffect(() => {
@@ -236,7 +291,7 @@ function Encabezado() {
   }, []);
 
   // ========================================
-  // SINCRONIZAR BÚSQUEDA CON LA URL
+  // SINCRONIZAR BÚSQUEDA Y NAVEGACIÓN
   // ========================================
 
   useEffect(() => {
@@ -245,11 +300,8 @@ function Encabezado() {
     setBusqueda(parametros.get("buscar") || "");
     setMenuAbierto(false);
     setCategoriasAbiertas(false);
+    setCantidadCarrito(leerCantidadCarrito());
   }, [location.pathname, location.search]);
-
-  // ========================================
-  // CERRAR MENÚ
-  // ========================================
 
   const cerrarMenu = () => {
     setMenuAbierto(false);
@@ -284,7 +336,7 @@ function Encabezado() {
   };
 
   // ========================================
-  // ORGANIZAR CATEGORÍAS
+  // CATEGORÍAS DINÁMICAS
   // ========================================
 
   const gruposOrdenados = useMemo(() => {
@@ -315,10 +367,6 @@ function Encabezado() {
   const enlaceCategoria = (nombre) =>
     `/catalogo?categoria=${encodeURIComponent(nombre)}`;
 
-  // ========================================
-  // ESTILO DE ENLACES
-  // ========================================
-
   const estiloEnlace = (ruta) => {
     const activo = location.pathname === ruta;
 
@@ -329,125 +377,91 @@ function Encabezado() {
 
   return (
     <>
-      {/* ======================================== */}
-      {/* BARRA SUPERIOR VERDE */}
-      {/* ======================================== */}
+      {/* ========================================
+          BARRA SUPERIOR VERDE
+      ======================================== */}
 
       <div className="bg-[#009E49] text-white">
         <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10">
-          {/* ======================================== */}
           {/* ESCRITORIO */}
-          {/* ======================================== */}
 
           <div className="hidden xl:flex items-center justify-between gap-4 py-3">
-            {/* INFORMACIÓN DE CONTACTO */}
             <div className="flex items-center gap-4 2xl:gap-6 min-w-0">
-              {/* TELÉFONO */}
               <a
                 href={`tel:+51${TELEFONO}`}
                 className="flex items-center gap-2 whitespace-nowrap text-[12px] 2xl:text-sm hover:text-green-100 transition"
               >
                 <Icono tipo="telefono" className="w-4 h-4 shrink-0" />
-
                 <span className="font-bold">¡Llámanos!</span>
-
                 <span className="font-semibold">{TELEFONO}</span>
               </a>
 
-              {/* SEPARADOR */}
               <div className="w-px h-7 bg-white/40 shrink-0" />
 
-              {/* CORREO */}
               <a
                 href={`mailto:${CORREO}`}
                 className="flex items-center gap-2 whitespace-nowrap text-[12px] 2xl:text-sm hover:text-green-100 transition"
               >
                 <Icono tipo="correo" className="w-4 h-4 shrink-0" />
-
                 <span className="font-bold">¡Escríbenos!</span>
-
                 <span className="font-semibold">{CORREO}</span>
               </a>
 
-              {/* SEPARADOR */}
               <div className="w-px h-7 bg-white/40 shrink-0" />
 
-              {/* HORARIO */}
               <div className="flex items-center gap-2 whitespace-nowrap text-[12px] 2xl:text-sm font-semibold">
                 <Icono tipo="reloj" className="w-4 h-4 shrink-0" />
-
                 <span>Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00</span>
               </div>
             </div>
 
-            {/* ======================================== */}
-            {/* LADO DERECHO: RASTREO Y REDES */}
-            {/* ======================================== */}
-
             <div className="flex items-center gap-4 shrink-0 ml-auto">
-              {/* NUEVO BOTÓN */}
               <BotonRastrear />
 
-              {/* SEPARADOR */}
               <div className="w-px h-7 bg-white/40" />
 
-              {/* REDES SOCIALES */}
               <div className="flex items-center gap-3">
                 <span className="hidden 2xl:inline text-sm font-semibold whitespace-nowrap">
                   Síguenos en nuestras redes:
                 </span>
-
                 <RedesSociales />
               </div>
             </div>
           </div>
 
-          {/* ======================================== */}
           {/* TABLETS Y CELULARES */}
-          {/* ======================================== */}
 
           <div className="xl:hidden py-3">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-              {/* TELÉFONO */}
               <a
                 href={`tel:+51${TELEFONO}`}
                 className="flex items-center gap-2 text-xs sm:text-sm hover:text-green-100 transition"
               >
                 <Icono tipo="telefono" className="w-4 h-4 shrink-0" />
-
                 <span className="font-bold">¡Llámanos!</span>
-
                 <span className="font-semibold">{TELEFONO}</span>
               </a>
 
-              {/* CORREO */}
               <a
                 href={`mailto:${CORREO}`}
                 className="hidden sm:flex items-center gap-2 text-xs sm:text-sm hover:text-green-100 transition"
               >
                 <Icono tipo="correo" className="w-4 h-4 shrink-0" />
-
                 <span className="font-bold">¡Escríbenos!</span>
-
                 <span className="font-semibold">{CORREO}</span>
               </a>
 
-              {/* NUEVO BOTÓN RASTREO */}
               <BotonRastrear className="ml-auto" />
 
-              {/* HORARIO */}
               <div className="hidden md:flex items-center gap-2 text-xs sm:text-sm font-semibold">
                 <Icono tipo="reloj" className="w-4 h-4 shrink-0" />
-
                 <span>Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00</span>
               </div>
 
-              {/* REDES SOCIALES */}
               <div className="hidden sm:flex items-center gap-3">
                 <span className="text-xs sm:text-sm font-semibold">
                   Síguenos:
                 </span>
-
                 <RedesSociales />
               </div>
             </div>
@@ -455,14 +469,15 @@ function Encabezado() {
         </div>
       </div>
 
-      {/* ======================================== */}
-      {/* ENCABEZADO PRINCIPAL BLANCO */}
-      {/* ======================================== */}
+      {/* ========================================
+          ENCABEZADO PRINCIPAL
+      ======================================== */}
 
       <header className="bg-white shadow-md sticky top-0 z-50 border-b border-gray-200">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 xl:gap-5 min-h-20 py-3">
-            {/* LOGO Y NOMBRE */}
+          <div className="flex items-center gap-3 xl:gap-5 min-h-20 py-3">
+            {/* LOGO */}
+
             <Link
               to="/"
               onClick={cerrarMenu}
@@ -487,9 +502,7 @@ function Encabezado() {
               </div>
             </Link>
 
-            {/* ======================================== */}
-            {/* BUSCADOR GLOBAL - ESCRITORIO */}
-            {/* ======================================== */}
+            {/* BUSCADOR ESCRITORIO */}
 
             <div className="hidden md:block flex-1 min-w-0 max-w-[480px] mx-auto relative z-[60]">
               <Buscador
@@ -500,16 +513,15 @@ function Encabezado() {
               />
             </div>
 
-            {/* ======================================== */}
             {/* NAVEGACIÓN ESCRITORIO */}
-            {/* ======================================== */}
 
             <nav className="hidden xl:flex items-center justify-end gap-4 2xl:gap-6 h-16 shrink-0">
               <Link to="/" className={estiloEnlace("/")}>
                 Inicio
               </Link>
 
-              {/* CATEGORÍAS DINÁMICAS */}
+              {/* CATEGORÍAS */}
+
               <div className="relative group h-full flex items-center">
                 <button
                   type="button"
@@ -522,12 +534,9 @@ function Encabezado() {
                   />
                 </button>
 
-                {/* ======================================== */}
                 {/* MEGA MENÚ */}
-                {/* ======================================== */}
 
                 <div className="invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0 absolute top-full right-0 w-[min(1050px,92vw)] bg-white text-gray-800 shadow-2xl rounded-b-3xl border border-gray-100 transition-all duration-200 z-[100]">
-                  {/* CABECERA DEL MEGA MENÚ */}
                   <div className="flex justify-between items-center gap-4 px-7 py-5 border-b border-gray-100">
                     <div>
                       <p className="text-xs font-black text-[#009E49] uppercase">
@@ -547,7 +556,6 @@ function Encabezado() {
                     </Link>
                   </div>
 
-                  {/* LISTADO DE CATEGORÍAS */}
                   <div className="p-7 max-h-[65vh] overflow-y-auto">
                     {gruposOrdenados.length > 0 ? (
                       <div className="grid grid-cols-3 gap-7">
@@ -578,7 +586,6 @@ function Encabezado() {
                     )}
                   </div>
 
-                  {/* PIE DEL MEGA MENÚ */}
                   <div className="bg-[#F4FAF6] px-7 py-4 rounded-b-3xl flex justify-between gap-4">
                     <span className="text-sm text-gray-500">
                       Encuentra maquinaria para cada trabajo.
@@ -596,25 +603,29 @@ function Encabezado() {
                 </div>
               </div>
 
-              {/* REPUESTOS */}
               <Link to="/repuestos" className={estiloEnlace("/repuestos")}>
                 Repuestos
               </Link>
 
-              {/* CONTACTO */}
               <Link to="/contacto" className={estiloEnlace("/contacto")}>
                 Contacto
               </Link>
             </nav>
 
-            {/* ======================================== */}
-            {/* BOTÓN MENÚ MÓVIL */}
-            {/* ======================================== */}
+            {/* CARRITO VISIBLE EN TODAS LAS PANTALLAS */}
+
+            <BotonCarrito
+              cantidad={cantidadCarrito}
+              onClick={cerrarMenu}
+              className="ml-auto xl:ml-0"
+            />
+
+            {/* MENÚ MÓVIL */}
 
             <button
               type="button"
               onClick={() => setMenuAbierto(!menuAbierto)}
-              className="xl:hidden shrink-0 w-11 h-11 flex items-center justify-center bg-[#009E49] hover:bg-[#00843D] rounded-xl text-white ml-auto transition"
+              className="xl:hidden shrink-0 w-11 h-11 flex items-center justify-center bg-[#009E49] hover:bg-[#00843D] rounded-xl text-white transition"
               aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
               aria-expanded={menuAbierto}
             >
@@ -625,9 +636,7 @@ function Encabezado() {
             </button>
           </div>
 
-          {/* ======================================== */}
-          {/* BUSCADOR GLOBAL - CELULARES */}
-          {/* ======================================== */}
+          {/* BUSCADOR CELULARES */}
 
           <div className="md:hidden pb-4 relative z-[60]">
             <Buscador
@@ -638,15 +647,12 @@ function Encabezado() {
             />
           </div>
 
-          {/* ======================================== */}
           {/* MENÚ RESPONSIVE */}
-          {/* ======================================== */}
 
           {menuAbierto && (
             <div className="xl:hidden pb-5">
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-h-[75vh] overflow-y-auto p-3">
                 <nav className="flex flex-col">
-                  {/* INICIO */}
                   <Link
                     to="/"
                     onClick={cerrarMenu}
@@ -656,6 +662,7 @@ function Encabezado() {
                   </Link>
 
                   {/* CATEGORÍAS */}
+
                   <button
                     type="button"
                     onClick={() => setCategoriasAbiertas(!categoriasAbiertas)}
@@ -670,7 +677,6 @@ function Encabezado() {
                     />
                   </button>
 
-                  {/* CATEGORÍAS DESPLEGADAS */}
                   {categoriasAbiertas && (
                     <div className="bg-[#F4FAF6] rounded-xl p-4 mx-2">
                       <Link
@@ -703,6 +709,7 @@ function Encabezado() {
                   )}
 
                   {/* REPUESTOS */}
+
                   <Link
                     to="/repuestos"
                     onClick={cerrarMenu}
@@ -712,6 +719,7 @@ function Encabezado() {
                   </Link>
 
                   {/* CONTACTO */}
+
                   <Link
                     to="/contacto"
                     onClick={cerrarMenu}
@@ -720,7 +728,24 @@ function Encabezado() {
                     Contacto
                   </Link>
 
+                  {/* CARRITO */}
+
+                  <Link
+                    to="/carrito"
+                    onClick={cerrarMenu}
+                    className="flex items-center gap-3 px-5 py-4 mt-2 bg-[#F0F9F3] text-[#063D2A] hover:bg-[#E0F3E6] rounded-xl font-black transition"
+                  >
+                    <Icono tipo="carrito" />
+                    Mi carrito de cotización
+                    {cantidadCarrito > 0 && (
+                      <span className="ml-auto bg-[#FF6600] text-white text-xs px-2 py-1 rounded-full">
+                        {cantidadCarrito}
+                      </span>
+                    )}
+                  </Link>
+
                   {/* RASTREAR PEDIDO */}
+
                   <Link
                     to="/rastrear-pedido"
                     onClick={cerrarMenu}
@@ -733,6 +758,7 @@ function Encabezado() {
                 </nav>
 
                 {/* REDES SOCIALES */}
+
                 <div className="border-t border-gray-100 mt-3 pt-4 px-4 flex justify-between items-center">
                   <span className="text-sm text-gray-500">Síguenos:</span>
 

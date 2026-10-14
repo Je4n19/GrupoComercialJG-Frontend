@@ -12,7 +12,10 @@ import DetalleProducto from "../Pages/DetalleProducto";
 import Login from "../Pages/Login";
 import NoEncontrado from "../Pages/NoEncontrado";
 
-// NUEVA PÁGINA: RASTREAR PEDIDO
+// CARRITO DE COTIZACIÓN
+import Carrito from "../Pages/Carrito";
+
+// RASTREAR PEDIDO
 import RastrearPedido from "../Pages/RastrearPedido";
 
 /* ========================================
@@ -60,10 +63,13 @@ function RutasApp() {
       {/* CONTACTO */}
       <Route path="/contacto" element={<Contacto />} />
 
+      {/* CARRITO DE COTIZACIÓN - NUEVA RUTA */}
+      <Route path="/carrito" element={<Carrito />} />
+
       {/* DETALLE DE PRODUCTO */}
       <Route path="/producto/:id" element={<DetalleProducto />} />
 
-      {/* RASTREAR PEDIDO - NUEVA RUTA */}
+      {/* RASTREAR PEDIDO */}
       <Route path="/rastrear-pedido" element={<RastrearPedido />} />
 
       {/* ========================================

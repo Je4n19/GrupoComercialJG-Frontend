@@ -1,6 +1,13 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+const CLAVE_CARRITO = "jg_carrito";
+
 function TarjetaProducto({ producto }) {
+  const [agregado, setAgregado] = useState(false);
+  const [mensaje, setMensaje] = useState("");
+  const temporizador = useRef(null);
+
   const precio = Number(producto.precio);
 
   const precioFormateado =
@@ -15,16 +22,128 @@ function TarjetaProducto({ producto }) {
       : null;
 
   const stock = Number(producto.stock);
+
   const stockValido =
     producto.stock !== null &&
     producto.stock !== undefined &&
     producto.stock !== "" &&
-    Number.isFinite(stock);
+    Number.isFinite(stock) &&
+    stock >= 0;
 
   const disponible = stockValido && stock > 0;
 
   const imagenFallback =
     "https://placehold.co/600x450/f3f4f6/6b7280?text=Producto";
+
+  useEffect(() => {
+    return () => {
+      if (temporizador.current) {
+        clearTimeout(temporizador.current);
+      }
+    };
+  }, []);
+
+  // ========================================
+  // MOSTRAR MENSAJE TEMPORAL
+  // ========================================
+
+  const mostrarMensaje = (texto, fueAgregado = false) => {
+    setMensaje(texto);
+    setAgregado(fueAgregado);
+
+    if (temporizador.current) {
+      clearTimeout(temporizador.current);
+    }
+
+    temporizador.current = setTimeout(() => {
+      setMensaje("");
+      setAgregado(false);
+    }, 2500);
+  };
+
+  // ========================================
+  // AGREGAR PRODUCTO AL CARRITO
+  // ========================================
+
+  const agregarAlCarrito = () => {
+    if (!producto?.id) {
+      mostrarMensaje("No se pudo identificar el producto.");
+      return;
+    }
+
+    if (!disponible) {
+      mostrarMensaje(
+        stockValido
+          ? "Este producto está agotado."
+          : "Consulta la disponibilidad de este producto.",
+      );
+      return;
+    }
+
+    try {
+      const guardado = localStorage.getItem(CLAVE_CARRITO);
+
+      const datos = guardado ? JSON.parse(guardado) : [];
+
+      const carrito = Array.isArray(datos) ? datos : [];
+
+      // Diferenciamos productos y repuestos
+      // para evitar conflictos entre sus IDs.
+      const identificador = `producto-${producto.id}`;
+
+      const indice = carrito.findIndex(
+        (item) =>
+          String(item.carritoId) === identificador ||
+          (item.tipo === "producto" && String(item.id) === String(producto.id)),
+      );
+
+      const carritoActualizado = [...carrito];
+
+      if (indice >= 0) {
+        const existente = carritoActualizado[indice];
+
+        const cantidadActual = Math.max(0, Number(existente.cantidad) || 0);
+
+        if (cantidadActual >= stock) {
+          mostrarMensaje("Ya agregaste todas las unidades disponibles.");
+          return;
+        }
+
+        carritoActualizado[indice] = {
+          ...existente,
+          cantidad: cantidadActual + 1,
+          stock,
+          precio: precioFormateado !== null ? precio : null,
+        };
+      } else {
+        carritoActualizado.push({
+          carritoId: identificador,
+          id: producto.id,
+          tipo: "producto",
+          nombre: producto.nombre,
+          marca: producto.marca || "",
+          categoria: producto.categoria || "",
+          descripcion: producto.descripcion || "",
+          imagen: producto.imagen || imagenFallback,
+          precio: precioFormateado !== null ? precio : null,
+          stock,
+          cantidad: 1,
+        });
+      }
+
+      localStorage.setItem(CLAVE_CARRITO, JSON.stringify(carritoActualizado));
+
+      // Notificar al encabezado para actualizar
+      // el contador sin recargar la página.
+      window.dispatchEvent(new Event("jg-carrito-actualizado"));
+
+      mostrarMensaje("¡Agregado al carrito!", true);
+    } catch (error) {
+      console.error("Error agregando producto al carrito:", error);
+
+      mostrarMensaje("No se pudo agregar el producto. Intenta nuevamente.");
+    }
+  };
 
   return (
     <article
@@ -46,9 +165,9 @@ function TarjetaProducto({ producto }) {
         h-full
       "
     >
-      {/* ======================================== */}
-      {/* IMAGEN DEL PRODUCTO */}
-      {/* ======================================== */}
+      {/* ========================================
+          IMAGEN DEL PRODUCTO
+      ======================================== */}
 
       <div
         className="
@@ -83,6 +202,7 @@ function TarjetaProducto({ producto }) {
         />
 
         {/* CATEGORÍA */}
+
         {producto.categoria && (
           <div className="absolute top-4 left-4 right-4">
             <span
@@ -106,6 +226,7 @@ function TarjetaProducto({ producto }) {
         )}
 
         {/* ESTADO DE STOCK */}
+
         {stockValido && (
           <div className="absolute bottom-4 right-4">
             <span
@@ -142,14 +263,16 @@ function TarjetaProducto({ producto }) {
       </div>
 
       {/* LÍNEA DECORATIVA */}
+
       <div className="h-1 bg-[#009E49] group-hover:bg-[#FF6600] transition-colors duration-300" />
 
-      {/* ======================================== */}
-      {/* INFORMACIÓN DEL PRODUCTO */}
-      {/* ======================================== */}
+      {/* ========================================
+          INFORMACIÓN DEL PRODUCTO
+      ======================================== */}
 
       <div className="p-5 sm:p-6 flex flex-col flex-1">
         {/* MARCA */}
+
         <div className="flex items-center gap-2">
           <span className="w-6 h-[3px] bg-[#FF6600] rounded-full" />
 
@@ -167,6 +290,7 @@ function TarjetaProducto({ producto }) {
         </div>
 
         {/* NOMBRE */}
+
         <h3
           className="
             text-xl
@@ -186,6 +310,7 @@ function TarjetaProducto({ producto }) {
         </h3>
 
         {/* DESCRIPCIÓN */}
+
         <p
           className="
             text-gray-500
@@ -200,11 +325,14 @@ function TarjetaProducto({ producto }) {
         </p>
 
         {/* SEPARADOR */}
+
         <div className="h-px bg-gray-100 my-5" />
 
         {/* PRECIO Y STOCK */}
+
         <div className="flex items-end justify-between gap-3">
           {/* PRECIO */}
+
           <div className="min-w-0">
             <p className="text-xs text-gray-500 font-medium">Precio</p>
 
@@ -219,11 +347,14 @@ function TarjetaProducto({ producto }) {
                 break-words
               "
             >
-              {precioFormateado ? `S/ ${precioFormateado}` : "Consultar"}
+              {precioFormateado !== null
+                ? `S/ ${precioFormateado}`
+                : "Consultar"}
             </p>
           </div>
 
           {/* STOCK */}
+
           <div className="text-right shrink-0">
             <p className="text-xs text-gray-500 font-medium">Stock</p>
 
@@ -247,56 +378,148 @@ function TarjetaProducto({ producto }) {
         </div>
 
         {/* ESPACIO FLEXIBLE */}
+
         <div className="flex-1" />
 
-        {/* ======================================== */}
-        {/* BOTÓN VER DETALLES */}
-        {/* ======================================== */}
+        {/* ========================================
+            BOTONES DE ACCIÓN
+        ======================================== */}
 
-        <Link
-          to={`/producto/${producto.id}`}
-          className="
-            mt-6
-            w-full
-            inline-flex
-            items-center
-            justify-center
-            gap-3
-            bg-[#009E49]
-            hover:bg-[#00843D]
-            text-white
-            py-3.5
-            px-5
-            rounded-xl
-            font-black
-            text-sm
-            shadow-sm
-            hover:shadow-lg
-            transition-all
-            duration-300
-          "
-        >
-          Ver Detalles
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="
-              w-5
-              h-5
-              transition-transform
+        <div className="mt-6 space-y-3">
+          {/* AGREGAR AL CARRITO */}
+
+          <button
+            type="button"
+            onClick={agregarAlCarrito}
+            disabled={!disponible}
+            className={`
+              w-full
+              inline-flex
+              items-center
+              justify-center
+              gap-3
+              py-3.5
+              px-5
+              rounded-xl
+              font-black
+              text-sm
+              shadow-sm
+              transition-all
               duration-300
-              group-hover:translate-x-1
-            "
-            aria-hidden="true"
+              ${
+                !disponible
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : agregado
+                    ? "bg-[#063D2A] text-white"
+                    : "bg-[#FF6600] hover:bg-[#E65C00] text-white hover:shadow-lg"
+              }
+            `}
           >
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-          </svg>
-        </Link>
+            {agregado ? (
+              <>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                ¡Agregado!
+              </>
+            ) : (
+              <>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                  aria-hidden="true"
+                >
+                  <circle cx="9" cy="21" r="1" />
+                  <circle cx="20" cy="21" r="1" />
+                  <path d="M1 1h4l2.5 13h12.7l2-9H6" />
+                </svg>
+
+                {disponible
+                  ? "Agregar al carrito"
+                  : stockValido
+                    ? "Producto agotado"
+                    : "Disponibilidad por consultar"}
+              </>
+            )}
+          </button>
+
+          {/* MENSAJE DE CONFIRMACIÓN */}
+
+          {mensaje && (
+            <p
+              role="status"
+              aria-live="polite"
+              className={`
+                text-center
+                text-xs
+                font-bold
+                ${agregado ? "text-[#009E49]" : "text-red-600"}
+              `}
+            >
+              {mensaje}
+            </p>
+          )}
+
+          {/* VER DETALLES */}
+
+          <Link
+            to={`/producto/${producto.id}`}
+            className="
+              w-full
+              inline-flex
+              items-center
+              justify-center
+              gap-3
+              bg-[#009E49]
+              hover:bg-[#00843D]
+              text-white
+              py-3.5
+              px-5
+              rounded-xl
+              font-black
+              text-sm
+              shadow-sm
+              hover:shadow-lg
+              transition-all
+              duration-300
+            "
+          >
+            Ver Detalles
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="
+                w-5
+                h-5
+                transition-transform
+                duration-300
+                group-hover:translate-x-1
+              "
+              aria-hidden="true"
+            >
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </article>
   );

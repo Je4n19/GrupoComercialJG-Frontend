@@ -9,9 +9,7 @@ import {
 import Footer from "../Components/Footer";
 import TarjetaProducto from "../Components/TarjetaProducto";
 
-// ========================================
-// FUNCIONES AUXILIARES
-// ========================================
+const CLAVE_CARRITO = "jg_carrito";
 
 const nombreCategoria = (categoria) => {
   if (typeof categoria === "string") return categoria;
@@ -23,7 +21,6 @@ const claveCategoria = (categoria) => {
     if (categoria.id != null) return `id:${categoria.id}`;
     return `nombre:${String(categoria.nombre || "").toLowerCase()}`;
   }
-
   return `nombre:${String(categoria || "").toLowerCase()}`;
 };
 
@@ -82,10 +79,6 @@ const obtenerDatosTecnicos = (producto) => {
 const whatsapp = (mensaje) =>
   `https://wa.me/51979501557?text=${encodeURIComponent(mensaje)}`;
 
-// ========================================
-// ICONOS
-// ========================================
-
 function Icono({ tipo, className = "w-5 h-5" }) {
   const iconos = {
     flecha: (
@@ -121,6 +114,13 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="M14 3v5h4M9 13h6M9 17h6" />
       </>
     ),
+    carrito: (
+      <>
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.5 13h12.7l2-9H6" />
+      </>
+    ),
   };
 
   return (
@@ -139,10 +139,6 @@ function Icono({ tipo, className = "w-5 h-5" }) {
   );
 }
 
-// ========================================
-// COMPONENTE PRINCIPAL
-// ========================================
-
 function DetalleProducto() {
   const { id } = useParams();
 
@@ -152,6 +148,9 @@ function DetalleProducto() {
   const [error, setError] = useState("");
   const [imagenActual, setImagenActual] = useState(0);
   const [pestana, setPestana] = useState("descripcion");
+
+  const [agregado, setAgregado] = useState(false);
+  const [mensajeCarrito, setMensajeCarrito] = useState("");
 
   useEffect(() => {
     let activo = true;
@@ -163,6 +162,8 @@ function DetalleProducto() {
       setRelacionados([]);
       setImagenActual(0);
       setPestana("descripcion");
+      setAgregado(false);
+      setMensajeCarrito("");
 
       try {
         const data = await obtenerProductoPorId(id);
@@ -215,20 +216,116 @@ function DetalleProducto() {
   }, [id]);
 
   // ========================================
-  // ESTADO DE CARGA
+  // AGREGAR PRODUCTO AL CARRITO
   // ========================================
+
+  const agregarAlCarrito = () => {
+    if (!producto || producto.id == null) {
+      setMensajeCarrito("No se pudo identificar el producto.");
+      setAgregado(false);
+      return;
+    }
+
+    const stock = Number(producto.stock);
+
+    const stockValido =
+      producto.stock !== null &&
+      producto.stock !== undefined &&
+      producto.stock !== "" &&
+      Number.isFinite(stock) &&
+      stock > 0;
+
+    if (!stockValido) {
+      setMensajeCarrito("Disponibilidad por consultar.");
+      setAgregado(false);
+      return;
+    }
+
+    try {
+      const guardado = localStorage.getItem(CLAVE_CARRITO);
+      const datos = guardado ? JSON.parse(guardado) : [];
+      const carrito = Array.isArray(datos) ? datos : [];
+
+      const carritoId = `producto-${producto.id}`;
+
+      const indice = carrito.findIndex(
+        (item) =>
+          String(item.carritoId) === carritoId ||
+          (item.tipo === "producto" && String(item.id) === String(producto.id)),
+      );
+
+      const precio = Number(producto.precio);
+
+      const precioValido =
+        producto.precio !== null &&
+        producto.precio !== undefined &&
+        producto.precio !== "" &&
+        Number.isFinite(precio) &&
+        precio >= 0;
+
+      const nuevoCarrito = [...carrito];
+
+      if (indice >= 0) {
+        const existente = nuevoCarrito[indice];
+
+        const cantidadActual = Math.max(
+          0,
+          Math.floor(Number(existente.cantidad) || 0),
+        );
+
+        if (cantidadActual >= stock) {
+          setAgregado(false);
+          setMensajeCarrito("Ya agregaste todas las unidades disponibles.");
+          return;
+        }
+
+        nuevoCarrito[indice] = {
+          ...existente,
+          carritoId,
+          tipo: "producto",
+          cantidad: cantidadActual + 1,
+          stock,
+          precio: precioValido ? precio : null,
+        };
+      } else {
+        nuevoCarrito.push({
+          carritoId,
+          id: producto.id,
+          tipo: "producto",
+          nombre: producto.nombre,
+          marca: producto.marca || "",
+          modelo: producto.modelo || "",
+          categoria: nombreCategoria(producto.categoria),
+          descripcion: producto.descripcion || "",
+          imagen: producto.imagen || "",
+          precio: precioValido ? precio : null,
+          stock,
+          cantidad: 1,
+        });
+      }
+
+      localStorage.setItem(CLAVE_CARRITO, JSON.stringify(nuevoCarrito));
+
+      window.dispatchEvent(new Event("jg-carrito-actualizado"));
+
+      setAgregado(true);
+      setMensajeCarrito("¡Producto agregado al carrito!");
+    } catch (err) {
+      console.error("Error agregando al carrito:", err);
+      setAgregado(false);
+      setMensajeCarrito("No se pudo agregar el producto.");
+    }
+  };
 
   if (cargando) {
     return (
       <>
-        <main className="min-h-[70vh] flex flex-col items-center justify-center bg-[#F7FAF8] px-5">
-          <div className="w-14 h-14 border-4 border-[#DCEFE4] border-t-[#009E49] rounded-full animate-spin" />
-
-          <h2 className="text-xl font-black text-[#1A1A1A] mt-6">
+        <main className="flex min-h-[70vh] flex-col items-center justify-center bg-[#F7FAF8] px-5">
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-[#DCEFE4] border-t-[#009E49]" />
+          <h2 className="mt-6 text-xl font-black text-[#1A1A1A]">
             Cargando producto...
           </h2>
-
-          <p className="text-gray-500 mt-2 text-sm">
+          <p className="mt-2 text-sm text-gray-500">
             Estamos preparando la información.
           </p>
         </main>
@@ -237,29 +334,25 @@ function DetalleProducto() {
     );
   }
 
-  // ========================================
-  // ESTADO DE ERROR
-  // ========================================
-
   if (error || !producto) {
     return (
       <>
-        <main className="min-h-[70vh] flex flex-col items-center justify-center bg-[#F7FAF8] px-5 text-center">
-          <div className="w-20 h-20 bg-[#E8F7EE] text-[#009E49] rounded-3xl flex items-center justify-center text-4xl">
+        <main className="flex min-h-[70vh] flex-col items-center justify-center bg-[#F7FAF8] px-5 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[#E8F7EE] text-4xl text-[#009E49]">
             !
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black text-[#1A1A1A] mt-6">
+          <h2 className="mt-6 text-2xl font-black text-[#1A1A1A] sm:text-3xl">
             Producto no disponible
           </h2>
 
-          <p className="text-gray-500 mt-3">
+          <p className="mt-3 text-gray-500">
             {error || "No se encontró el producto solicitado."}
           </p>
 
           <Link
             to="/catalogo"
-            className="inline-flex items-center gap-2 mt-7 bg-[#009E49] hover:bg-[#00843D] text-white px-7 py-4 rounded-xl font-black transition-colors"
+            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#009E49] px-7 py-4 font-black text-white hover:bg-[#00843D]"
           >
             <Icono tipo="atras" />
             Volver al catálogo
@@ -269,10 +362,6 @@ function DetalleProducto() {
       </>
     );
   }
-
-  // ========================================
-  // INFORMACIÓN DEL PRODUCTO
-  // ========================================
 
   const imagenes = obtenerImagenes(producto);
   const datosTecnicos = obtenerDatosTecnicos(producto);
@@ -306,7 +395,8 @@ function DetalleProducto() {
     producto.stock !== null &&
     producto.stock !== undefined &&
     producto.stock !== "" &&
-    Number.isFinite(stockNumero);
+    Number.isFinite(stockNumero) &&
+    stockNumero >= 0;
 
   const disponible = tieneStock && stockNumero > 0;
 
@@ -332,18 +422,16 @@ function DetalleProducto() {
 
   return (
     <>
-      <main className="bg-white min-h-screen">
-        {/* ======================================== */}
+      <main className="min-h-screen overflow-x-hidden bg-white">
         {/* NAVEGACIÓN SUPERIOR */}
-        {/* ======================================== */}
 
-        <div className="bg-[#F7FAF8] border-b border-[#E1EEE6]">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-5">
+        <div className="border-b border-[#E1EEE6] bg-[#F7FAF8]">
+          <div className="mx-auto max-w-7xl px-5 py-5 sm:px-6 lg:px-8">
             <nav
               aria-label="Ruta de navegación"
-              className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500"
+              className="flex flex-wrap items-center gap-2 text-xs text-gray-500 sm:text-sm"
             >
-              <Link to="/" className="hover:text-[#009E49] transition-colors">
+              <Link to="/" className="transition-colors hover:text-[#009E49]">
                 Inicio
               </Link>
 
@@ -351,42 +439,37 @@ function DetalleProducto() {
 
               <Link
                 to="/catalogo"
-                className="hover:text-[#009E49] transition-colors"
+                className="transition-colors hover:text-[#009E49]"
               >
                 Catálogo
               </Link>
 
               <span>/</span>
 
-              <span className="text-[#009E49] font-bold">{categoria}</span>
+              <span className="font-bold text-[#009E49]">{categoria}</span>
             </nav>
 
             <Link
               to="/catalogo"
-              className="inline-flex items-center gap-2 text-sm text-[#009E49] hover:text-[#FF6600] font-black mt-4 transition-colors"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[#009E49] transition-colors hover:text-[#FF6600]"
             >
-              <Icono tipo="atras" className="w-4 h-4" />
+              <Icono tipo="atras" className="h-4 w-4" />
               Volver al catálogo
             </Link>
           </div>
         </div>
 
-        {/* ======================================== */}
         {/* INFORMACIÓN PRINCIPAL */}
-        {/* ======================================== */}
 
-        <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-10 pb-14">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-9 lg:gap-14 items-start">
-            {/* ======================================== */}
-            {/* GALERÍA DE IMÁGENES */}
-            {/* ======================================== */}
+        <section className="mx-auto max-w-7xl px-5 pb-14 pt-10 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 items-start gap-9 lg:grid-cols-2 lg:gap-14">
+            {/* GALERÍA */}
 
             <div className="min-w-0">
-              <div className="border border-gray-100 rounded-[28px] bg-[#F8FAF9] overflow-hidden shadow-sm">
-                <div className="relative h-[310px] sm:h-[420px] lg:h-[490px] flex items-center justify-center p-6 sm:p-8">
-                  {/* ETIQUETA DE CATEGORÍA */}
-                  <div className="absolute top-5 left-5 z-10 max-w-[75%]">
-                    <span className="inline-block bg-[#009E49] text-white px-4 py-2 rounded-full text-xs font-black shadow-md truncate max-w-full">
+              <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-[#F8FAF9] shadow-sm">
+                <div className="relative flex h-[310px] items-center justify-center p-6 sm:h-[420px] sm:p-8 lg:h-[490px]">
+                  <div className="absolute left-5 top-5 z-10 max-w-[75%]">
+                    <span className="inline-block max-w-full truncate rounded-full bg-[#009E49] px-4 py-2 text-xs font-black text-white shadow-md">
                       {categoria}
                     </span>
                   </div>
@@ -397,25 +480,24 @@ function DetalleProducto() {
                       alt={`${producto.nombre} - fotografía ${
                         imagenActual + 1
                       }`}
-                      className="w-full h-full object-contain object-center"
+                      className="h-full w-full object-contain object-center"
                     />
                   ) : (
-                    <div className="text-gray-400 text-center">
-                      <div className="text-5xl mb-4">📷</div>
+                    <div className="text-center text-gray-400">
+                      <div className="mb-4 text-5xl">📷</div>
                       <p className="text-sm font-semibold">
                         Imagen no disponible
                       </p>
                     </div>
                   )}
 
-                  {/* FLECHAS */}
                   {imagenes.length > 1 && (
                     <>
                       <button
                         type="button"
                         onClick={anteriorImagen}
                         aria-label="Fotografía anterior"
-                        className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 bg-white border border-gray-100 shadow-lg w-11 h-11 rounded-full flex items-center justify-center text-3xl text-[#009E49] hover:bg-[#009E49] hover:text-white transition-all duration-300"
+                        className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-100 bg-white text-3xl text-[#009E49] shadow-lg transition hover:bg-[#009E49] hover:text-white sm:left-5"
                       >
                         ‹
                       </button>
@@ -424,7 +506,7 @@ function DetalleProducto() {
                         type="button"
                         onClick={siguienteImagen}
                         aria-label="Fotografía siguiente"
-                        className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 bg-white border border-gray-100 shadow-lg w-11 h-11 rounded-full flex items-center justify-center text-3xl text-[#009E49] hover:bg-[#009E49] hover:text-white transition-all duration-300"
+                        className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-gray-100 bg-white text-3xl text-[#009E49] shadow-lg transition hover:bg-[#009E49] hover:text-white sm:right-5"
                       >
                         ›
                       </button>
@@ -432,9 +514,8 @@ function DetalleProducto() {
                   )}
                 </div>
 
-                {/* MINIATURAS */}
                 {imagenes.length > 1 && (
-                  <div className="flex justify-center flex-wrap gap-3 border-t border-gray-100 bg-white px-4 py-5">
+                  <div className="flex flex-wrap justify-center gap-3 border-t border-gray-100 bg-white px-4 py-5">
                     {imagenes.map((imagen, index) => (
                       <button
                         type="button"
@@ -442,7 +523,7 @@ function DetalleProducto() {
                         onClick={() => setImagenActual(index)}
                         aria-label={`Ver fotografía ${index + 1}`}
                         aria-pressed={imagenActual === index}
-                        className={`w-[76px] h-[76px] p-2 border-2 rounded-xl transition-all duration-300 ${
+                        className={`h-[76px] w-[76px] rounded-xl border-2 p-2 transition ${
                           imagenActual === index
                             ? "border-[#009E49] bg-[#E8F7EE]"
                             : "border-gray-200 hover:border-[#009E49]/50"
@@ -451,7 +532,7 @@ function DetalleProducto() {
                         <img
                           src={imagen}
                           alt={`Miniatura ${index + 1}`}
-                          className="w-full h-full object-contain"
+                          className="h-full w-full object-contain"
                         />
                       </button>
                     ))}
@@ -460,23 +541,23 @@ function DetalleProducto() {
               </div>
 
               {imagenes.length > 1 && (
-                <p className="text-center text-xs text-gray-500 mt-4">
+                <p className="mt-4 text-center text-xs text-gray-500">
                   Fotografía {imagenActual + 1} de {imagenes.length}
                 </p>
               )}
 
-              {/* MENSAJE DE CONFIANZA */}
-              <div className="mt-6 bg-[#E8F7EE] border border-[#D5EEDF] rounded-2xl p-5">
+              <div className="mt-6 rounded-2xl border border-[#D5EEDF] bg-[#E8F7EE] p-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 shrink-0 rounded-xl bg-[#009E49] text-white flex items-center justify-center">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#009E49] text-white">
                     <Icono tipo="check" />
                   </div>
 
                   <div>
-                    <h3 className="font-black text-[#073D27] text-sm">
+                    <h3 className="text-sm font-black text-[#073D27]">
                       Grupo Comercial J&G
                     </h3>
-                    <p className="text-[#397453] text-xs sm:text-sm mt-1">
+
+                    <p className="mt-1 text-xs text-[#397453] sm:text-sm">
                       Maquinaria, repuestos y atención especializada.
                     </p>
                   </div>
@@ -484,49 +565,46 @@ function DetalleProducto() {
               </div>
             </div>
 
-            {/* ======================================== */}
             {/* INFORMACIÓN DEL PRODUCTO */}
-            {/* ======================================== */}
 
             <div className="min-w-0">
-              {/* MARCA Y MODELO */}
-              <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
                 {producto.marca && (
-                  <span className="bg-[#E8F7EE] text-[#00843D] border border-[#D4EBDD] text-xs font-black px-4 py-2 rounded-full uppercase tracking-wide">
+                  <span className="rounded-full border border-[#D4EBDD] bg-[#E8F7EE] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#00843D]">
                     {producto.marca}
                   </span>
                 )}
 
                 {producto.modelo && (
-                  <span className="bg-gray-100 text-gray-600 text-xs font-bold px-4 py-2 rounded-full">
+                  <span className="rounded-full bg-gray-100 px-4 py-2 text-xs font-bold text-gray-600">
                     {producto.modelo}
                   </span>
                 )}
               </div>
 
-              {/* NOMBRE */}
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#1A1A1A] leading-tight tracking-tight">
+              <h1 className="break-words text-3xl font-black leading-tight tracking-tight text-[#1A1A1A] sm:text-4xl lg:text-[42px]">
                 {producto.nombre}
               </h1>
 
-              <div className="flex items-center gap-3 mt-4">
-                <span className="w-9 h-[3px] bg-[#FF6600] rounded-full" />
-                <p className="text-[#009E49] text-sm font-bold">{categoria}</p>
+              <div className="mt-4 flex items-center gap-3">
+                <span className="h-[3px] w-9 rounded-full bg-[#FF6600]" />
+                <p className="text-sm font-bold text-[#009E49]">{categoria}</p>
               </div>
 
               {/* PRECIO Y STOCK */}
-              <div className="mt-8 pb-7 border-b border-gray-200">
-                <p className="text-sm text-gray-500 font-medium">
+
+              <div className="mt-8 border-b border-gray-200 pb-7">
+                <p className="text-sm font-medium text-gray-500">
                   Precio de venta
                 </p>
 
-                <p className="text-4xl sm:text-5xl font-black text-[#FF6600] mt-2 tracking-tight break-words">
+                <p className="mt-2 break-words text-4xl font-black tracking-tight text-[#FF6600] sm:text-5xl">
                   {precioFormateado}
                 </p>
 
                 <div className="mt-5">
                   <span
-                    className={`inline-flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-full ${
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold ${
                       !tieneStock
                         ? "bg-gray-100 text-gray-600"
                         : disponible
@@ -535,7 +613,7 @@ function DetalleProducto() {
                     }`}
                   >
                     <span
-                      className={`w-2 h-2 rounded-full ${
+                      className={`h-2 w-2 rounded-full ${
                         !tieneStock
                           ? "bg-gray-400"
                           : disponible
@@ -548,14 +626,15 @@ function DetalleProducto() {
                       ? "Consultar disponibilidad"
                       : disponible
                         ? `Stock disponible: ${producto.stock}`
-                        : "Consultar disponibilidad"}
+                        : "Sin stock disponible"}
                   </span>
                 </div>
               </div>
 
               {/* INFORMACIÓN BÁSICA */}
+
               <div className="mt-7">
-                <h2 className="text-lg font-black text-[#1A1A1A] mb-5">
+                <h2 className="mb-5 text-lg font-black text-[#1A1A1A]">
                   Información del producto
                 </h2>
 
@@ -563,7 +642,7 @@ function DetalleProducto() {
                   {producto.marca && (
                     <div className="flex justify-between gap-4 border-b border-gray-100 pb-3">
                       <span className="text-gray-500">Marca</span>
-                      <span className="text-[#1A1A1A] font-bold text-right">
+                      <span className="break-words text-right font-bold text-[#1A1A1A]">
                         {producto.marca}
                       </span>
                     </div>
@@ -572,7 +651,7 @@ function DetalleProducto() {
                   {producto.modelo && (
                     <div className="flex justify-between gap-4 border-b border-gray-100 pb-3">
                       <span className="text-gray-500">Modelo</span>
-                      <span className="text-[#1A1A1A] font-bold text-right">
+                      <span className="break-words text-right font-bold text-[#1A1A1A]">
                         {producto.modelo}
                       </span>
                     </div>
@@ -580,35 +659,107 @@ function DetalleProducto() {
 
                   <div className="flex justify-between gap-4 border-b border-gray-100 pb-3">
                     <span className="text-gray-500">Categoría</span>
-                    <span className="text-[#1A1A1A] font-bold text-right">
+                    <span className="break-words text-right font-bold text-[#1A1A1A]">
                       {categoria}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* ======================================== */}
-              {/* COTIZACIÓN */}
-              {/* ======================================== */}
+              {/* ========================================
+                  NUEVA SECCIÓN: CARRITO
+              ======================================== */}
 
-              <div className="mt-8 bg-[#F7FAF8] border border-[#DCEFE4] rounded-[24px] p-6">
+              <div className="mt-8 rounded-[24px] border-2 border-[#DCEFE4] bg-[#F7FAF8] p-5 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8F7EE] text-[#009E49]">
+                    <Icono tipo="carrito" className="h-6 w-6" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="text-xl font-black text-[#073D27]">
+                      Agrega este producto a tu cotización
+                    </h2>
+
+                    <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                      Añádelo a tu carrito junto con otros productos y repuestos
+                      para solicitar una cotización completa por WhatsApp.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={agregarAlCarrito}
+                  disabled={!disponible}
+                  className={`mt-6 flex w-full items-center justify-center gap-3 rounded-xl px-5 py-4 text-sm font-black transition-all duration-300 sm:text-base ${
+                    !disponible
+                      ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                      : agregado
+                        ? "bg-[#063D2A] text-white hover:bg-[#052D20]"
+                        : "bg-[#FF6600] text-white hover:-translate-y-0.5 hover:bg-[#E65C00]"
+                  }`}
+                >
+                  <Icono
+                    tipo={agregado ? "check" : "carrito"}
+                    className="h-5 w-5"
+                  />
+
+                  {!disponible
+                    ? "Disponibilidad por consultar"
+                    : agregado
+                      ? "¡Agregado al carrito!"
+                      : "Agregar al carrito"}
+                </button>
+
+                {mensajeCarrito && (
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    className={`mt-3 text-center text-sm font-bold ${
+                      agregado ? "text-[#009E49]" : "text-red-600"
+                    }`}
+                  >
+                    {mensajeCarrito}
+                  </p>
+                )}
+
+                {agregado && (
+                  <Link
+                    to="/carrito"
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#009E49] bg-white px-5 py-3.5 text-sm font-black text-[#009E49] transition hover:bg-[#E8F7EE]"
+                  >
+                    <Icono tipo="carrito" />
+                    Ver mi carrito
+                    <Icono tipo="flecha" className="h-4 w-4" />
+                  </Link>
+                )}
+
+                <p className="mt-4 text-center text-xs leading-relaxed text-gray-500">
+                  Agregar al carrito no confirma una compra ni reserva el stock.
+                </p>
+              </div>
+
+              {/* COTIZACIÓN POR WHATSAPP */}
+
+              <div className="mt-5 rounded-[24px] border border-[#DCEFE4] bg-white p-5 sm:p-6">
                 <h2 className="text-xl font-black text-[#1A1A1A]">
                   ¿Te interesa este producto?
                 </h2>
 
-                <p className="text-sm text-gray-600 mt-3 leading-relaxed">
-                  Contáctanos para consultar disponibilidad, características y
-                  opciones de envío.
+                <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                  También puedes consultar directamente por WhatsApp sobre
+                  disponibilidad, características y opciones de envío.
                 </p>
 
-                <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-6">
+                <div className="mt-6 flex flex-col flex-wrap gap-3 sm:flex-row">
                   <a
                     href={whatsapp(
                       `Hola, deseo cotizar el producto ${producto.nombre}.`,
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-[#FF6600] hover:bg-[#E65C00] text-white text-sm font-black px-6 py-4 rounded-xl transition-all duration-300 hover:-translate-y-0.5"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF6600] px-6 py-4 text-sm font-black text-white transition hover:bg-[#E65C00]"
                   >
                     Solicitar Cotización
                     <Icono tipo="flecha" />
@@ -620,7 +771,7 @@ function DetalleProducto() {
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-[#009E49] hover:bg-[#00843D] text-white text-sm font-black px-6 py-4 rounded-xl transition-all duration-300 hover:-translate-y-0.5"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#009E49] px-6 py-4 text-sm font-black text-white transition hover:bg-[#00843D]"
                   >
                     <Icono tipo="whatsapp" />
                     WhatsApp
@@ -629,9 +780,10 @@ function DetalleProducto() {
               </div>
 
               {/* BENEFICIOS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
-                <div className="flex items-start gap-3 border border-[#DCEFE4] bg-[#F7FAF8] rounded-2xl p-4">
-                  <div className="w-10 h-10 shrink-0 bg-[#E8F7EE] text-[#009E49] rounded-xl flex items-center justify-center">
+
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="flex items-start gap-3 rounded-2xl border border-[#DCEFE4] bg-[#F7FAF8] p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F7EE] text-[#009E49]">
                     <Icono tipo="camion" />
                   </div>
 
@@ -639,14 +791,14 @@ function DetalleProducto() {
                     <p className="text-sm font-black text-[#1A1A1A]">
                       Envíos nacionales
                     </p>
-                    <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                    <p className="mt-2 text-xs leading-relaxed text-gray-500">
                       Consultas de envío a todo el Perú.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 border border-[#DCEFE4] bg-[#F7FAF8] rounded-2xl p-4">
-                  <div className="w-10 h-10 shrink-0 bg-[#E8F7EE] text-[#009E49] rounded-xl flex items-center justify-center">
+                <div className="flex items-start gap-3 rounded-2xl border border-[#DCEFE4] bg-[#F7FAF8] p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F7EE] text-[#009E49]">
                     <Icono tipo="check" />
                   </div>
 
@@ -654,7 +806,7 @@ function DetalleProducto() {
                     <p className="text-sm font-black text-[#1A1A1A]">
                       Atención especializada
                     </p>
-                    <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                    <p className="mt-2 text-xs leading-relaxed text-gray-500">
                       Te ayudamos a elegir el equipo adecuado.
                     </p>
                   </div>
@@ -663,12 +815,9 @@ function DetalleProducto() {
             </div>
           </div>
 
-          {/* ======================================== */}
           {/* PESTAÑAS DE INFORMACIÓN */}
-          {/* ======================================== */}
 
-          <div className="mt-14 border border-gray-100 rounded-[26px] overflow-hidden bg-white shadow-sm">
-            {/* CABECERA */}
+          <div className="mt-14 overflow-hidden rounded-[26px] border border-gray-100 bg-white shadow-sm">
             <div
               role="tablist"
               aria-label="Información del producto"
@@ -681,9 +830,9 @@ function DetalleProducto() {
                   aria-selected={pestana === tab.id}
                   key={tab.id}
                   onClick={() => setPestana(tab.id)}
-                  className={`px-5 sm:px-8 py-5 text-sm font-black whitespace-nowrap border-b-[3px] transition-colors duration-300 ${
+                  className={`whitespace-nowrap border-b-[3px] px-5 py-5 text-sm font-black transition-colors sm:px-8 ${
                     pestana === tab.id
-                      ? "bg-white border-[#009E49] text-[#009E49]"
+                      ? "border-[#009E49] bg-white text-[#009E49]"
                       : "border-transparent text-gray-500 hover:text-[#009E49]"
                   }`}
                 >
@@ -692,31 +841,28 @@ function DetalleProducto() {
               ))}
             </div>
 
-            {/* CONTENIDO */}
-            <div className="p-6 sm:p-8 lg:p-10 min-h-[180px]">
-              {/* DESCRIPCIÓN */}
+            <div className="min-h-[180px] p-6 sm:p-8 lg:p-10">
               {pestana === "descripcion" && (
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-[#1A1A1A] mb-6">
+                  <h2 className="mb-6 text-xl font-black text-[#1A1A1A] sm:text-2xl">
                     Descripción del producto
                   </h2>
 
-                  <p className="text-sm sm:text-base text-gray-600 leading-8 whitespace-pre-wrap break-words">
+                  <p className="whitespace-pre-wrap break-words text-sm leading-8 text-gray-600 sm:text-base">
                     {producto.descripcion ||
                       "No se ha registrado una descripción para este producto."}
                   </p>
                 </div>
               )}
 
-              {/* DATOS TÉCNICOS */}
               {pestana === "tecnicos" && (
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-[#1A1A1A] mb-6">
+                  <h2 className="mb-6 text-xl font-black text-[#1A1A1A] sm:text-2xl">
                     Especificaciones técnicas
                   </h2>
 
                   {datosTecnicos.length > 0 ? (
-                    <div className="border border-gray-100 rounded-2xl overflow-hidden">
+                    <div className="overflow-hidden rounded-2xl border border-gray-100">
                       {datosTecnicos.map(([nombre, valor], index) => (
                         <div
                           key={`${nombre}-${index}`}
@@ -724,11 +870,11 @@ function DetalleProducto() {
                             index % 2 === 0 ? "bg-[#F7FAF8]" : "bg-white"
                           }`}
                         >
-                          <div className="px-4 sm:px-6 py-4 font-bold text-[#1A1A1A] border-r border-b border-gray-100 break-words">
+                          <div className="break-words border-b border-r border-gray-100 px-4 py-4 font-bold text-[#1A1A1A] sm:px-6">
                             {nombre}
                           </div>
 
-                          <div className="px-4 sm:px-6 py-4 text-gray-600 border-b border-gray-100 break-words">
+                          <div className="break-words border-b border-gray-100 px-4 py-4 text-gray-600 sm:px-6">
                             {String(valor)}
                           </div>
                         </div>
@@ -743,10 +889,9 @@ function DetalleProducto() {
                 </div>
               )}
 
-              {/* DESCARGABLES */}
               {pestana === "descargables" && (
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-[#1A1A1A] mb-6">
+                  <h2 className="mb-6 text-xl font-black text-[#1A1A1A] sm:text-2xl">
                     Manuales y fichas técnicas
                   </h2>
 
@@ -767,17 +912,17 @@ function DetalleProducto() {
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex items-center gap-4 border border-gray-200 rounded-xl p-4 sm:p-5 hover:bg-[#E8F7EE] hover:border-[#009E49]/30 transition-all duration-300"
+                            className="group flex items-center gap-4 rounded-xl border border-gray-200 p-4 transition hover:border-[#009E49]/30 hover:bg-[#E8F7EE] sm:p-5"
                           >
-                            <div className="w-11 h-11 shrink-0 bg-[#E8F7EE] text-[#009E49] rounded-xl flex items-center justify-center">
-                              <Icono tipo="documento" className="w-6 h-6" />
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F7EE] text-[#009E49]">
+                              <Icono tipo="documento" className="h-6 w-6" />
                             </div>
 
-                            <span className="font-bold text-[#1A1A1A] group-hover:text-[#009E49] text-sm sm:text-base break-all">
+                            <span className="break-all text-sm font-bold text-[#1A1A1A] group-hover:text-[#009E49] sm:text-base">
                               {nombre}
                             </span>
 
-                            <span className="ml-auto text-[#009E49] font-black">
+                            <span className="ml-auto font-black text-[#009E49]">
                               ↗
                             </span>
                           </a>
@@ -796,44 +941,40 @@ function DetalleProducto() {
           </div>
         </section>
 
-        {/* ======================================== */}
         {/* PRODUCTOS RELACIONADOS */}
-        {/* ======================================== */}
 
         {relacionados.length > 0 && (
           <section className="bg-[#F7FAF8] py-16 sm:py-20">
-            <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-              <div className="text-center max-w-2xl mx-auto mb-11">
+            <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+              <div className="mx-auto mb-11 max-w-2xl text-center">
                 <div className="flex items-center justify-center gap-3">
-                  <span className="w-9 h-[3px] bg-[#FF6600] rounded-full" />
-
-                  <span className="text-[#009E49] font-black uppercase tracking-[0.16em] text-xs sm:text-sm">
+                  <span className="h-[3px] w-9 rounded-full bg-[#FF6600]" />
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[#009E49] sm:text-sm">
                     Descubre Más
                   </span>
-
-                  <span className="w-9 h-[3px] bg-[#FF6600] rounded-full" />
+                  <span className="h-[3px] w-9 rounded-full bg-[#FF6600]" />
                 </div>
 
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1A1A1A] mt-5 leading-tight">
+                <h2 className="mt-5 text-3xl font-black leading-tight text-[#1A1A1A] sm:text-4xl lg:text-5xl">
                   Productos
                   <span className="text-[#009E49]"> Relacionados</span>
                 </h2>
 
-                <p className="text-gray-600 mt-4 leading-relaxed">
+                <p className="mt-4 leading-relaxed text-gray-600">
                   Otros equipos que podrían interesarte.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
                 {relacionados.map((item) => (
                   <TarjetaProducto key={item.id} producto={item} />
                 ))}
               </div>
 
-              <div className="text-center mt-12">
+              <div className="mt-12 text-center">
                 <Link
                   to="/catalogo"
-                  className="inline-flex items-center justify-center gap-3 bg-[#009E49] hover:bg-[#00843D] text-white px-8 py-4 rounded-xl font-black transition-all duration-300 hover:-translate-y-1"
+                  className="inline-flex items-center justify-center gap-3 rounded-xl bg-[#009E49] px-8 py-4 font-black text-white transition hover:-translate-y-1 hover:bg-[#00843D]"
                 >
                   Ver Todo el Catálogo
                   <Icono tipo="flecha" />
@@ -843,24 +984,22 @@ function DetalleProducto() {
           </section>
         )}
 
-        {/* ======================================== */}
         {/* CTA FINAL */}
-        {/* ======================================== */}
 
-        <section className="relative bg-[#073D27] text-white py-16 sm:py-20 overflow-hidden">
-          <div className="pointer-events-none absolute -right-32 -top-32 w-80 h-80 rounded-full bg-[#009E49]/25 blur-3xl" />
+        <section className="relative overflow-hidden bg-[#073D27] py-16 text-white sm:py-20">
+          <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-[#009E49]/25 blur-3xl" />
 
-          <div className="relative max-w-4xl mx-auto px-5 sm:px-6 text-center">
-            <span className="text-[#FFB17A] font-black uppercase tracking-[0.16em] text-xs sm:text-sm">
+          <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-6">
+            <span className="text-xs font-black uppercase tracking-[0.16em] text-[#FFB17A] sm:text-sm">
               Grupo Comercial J&G
             </span>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-5 leading-tight">
+            <h2 className="mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
               ¿Tienes dudas sobre
               <span className="block text-[#75E4A4]">este producto?</span>
             </h2>
 
-            <p className="text-green-50/80 mt-6 text-base sm:text-lg leading-relaxed">
+            <p className="mt-6 text-base leading-relaxed text-green-50/80 sm:text-lg">
               Contáctanos para conocer más detalles y recibir orientación antes
               de realizar tu compra.
             </p>
@@ -871,9 +1010,9 @@ function DetalleProducto() {
               )}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-3 mt-9 bg-[#FF6600] hover:bg-[#E65C00] text-white px-8 py-4 rounded-xl font-black shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className="mt-9 inline-flex items-center justify-center gap-3 rounded-xl bg-[#FF6600] px-8 py-4 font-black text-white shadow-lg transition hover:-translate-y-1 hover:bg-[#E65C00]"
             >
-              <Icono tipo="whatsapp" className="w-6 h-6" />
+              <Icono tipo="whatsapp" className="h-6 w-6" />
               Solicitar Asesoría
             </a>
           </div>
