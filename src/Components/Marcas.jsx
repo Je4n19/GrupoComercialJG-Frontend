@@ -1,38 +1,92 @@
 import stihlLogo from "../assets/Marcas/stihl.png";
 import hondaLogo from "../assets/Marcas/honda.png";
-import husqvarnaLogo from "../assets/Marcas/Husqvarna.png";
 import mebaLogo from "../assets/Marcas/meba.png";
-import ptkLogo from "../assets/Marcas/PTK.png";
 import truperLogo from "../assets/Marcas/truper.png";
 
-function Marcas() {
-  const marcas = [
-    {
-      nombre: "STIHL",
-      logo: stihlLogo,
-    },
-    {
-      nombre: "Honda",
-      logo: hondaLogo,
-    },
-    {
-      nombre: "Husqvarna",
-      logo: husqvarnaLogo,
-    },
-    {
-      nombre: "Meba",
-      logo: mebaLogo,
-    },
-    {
-      nombre: "PTK",
-      logo: ptkLogo,
-    },
-    {
-      nombre: "Truper",
-      logo: truperLogo,
-    },
-  ];
+import bellotaLogo from "../assets/Marcas/BELLOTA_NEGRO.png";
+import blackDeckerLogo from "../assets/Marcas/BLACK_DECKER.PNG";
+import fertonLogo from "../assets/Marcas/FERTON.png";
+import jactoLogo from "../assets/Marcas/JACTO.png";
+import jopcoLogo from "../assets/Marcas/JOPCO.png";
+import leoLogo from "../assets/Marcas/LEO.png";
+import oregonLogo from "../assets/Marcas/OREGON.png";
+import shindaiwaLogo from "../assets/Marcas/SHINDAIWA.png";
+import toyamaLogo from "../assets/Marcas/TOYAMA.png";
+import uyustoolsLogo from "../assets/Marcas/UYUSTOOLS.png";
+import vistonyLogo from "../assets/Marcas/VISTONY.png";
 
+// ========================================
+// LISTA DE MARCAS
+// ========================================
+
+const marcas = [
+  {
+    nombre: "STIHL",
+    logo: stihlLogo,
+  },
+  {
+    nombre: "Honda",
+    logo: hondaLogo,
+  },
+  {
+    nombre: "Meba",
+    logo: mebaLogo,
+  },
+  {
+    nombre: "Truper",
+    logo: truperLogo,
+  },
+  {
+    nombre: "Bellota",
+    logo: bellotaLogo,
+  },
+  {
+    nombre: "Black & Decker",
+    logo: blackDeckerLogo,
+  },
+  {
+    nombre: "Ferton",
+    logo: fertonLogo,
+  },
+  {
+    nombre: "Jacto",
+    logo: jactoLogo,
+  },
+  {
+    nombre: "Jopco",
+    logo: jopcoLogo,
+  },
+  {
+    nombre: "LEO",
+    logo: leoLogo,
+  },
+  {
+    nombre: "Oregon",
+    logo: oregonLogo,
+  },
+  {
+    nombre: "Shindaiwa",
+    logo: shindaiwaLogo,
+  },
+  {
+    nombre: "Toyama",
+    logo: toyamaLogo,
+  },
+  {
+    nombre: "Uyustools",
+    logo: uyustoolsLogo,
+  },
+  {
+    nombre: "Vistony",
+    logo: vistonyLogo,
+  },
+];
+
+// ========================================
+// COMPONENTE MARCAS
+// ========================================
+
+function Marcas() {
   return (
     <section
       id="marcas"
@@ -45,9 +99,7 @@ function Marcas() {
         overflow-hidden
       "
     >
-      {/* ================================= */}
       {/* DECORACIÓN DE FONDO */}
-      {/* ================================= */}
 
       <div
         className="
@@ -77,12 +129,11 @@ function Marcas() {
         "
       />
 
-      {/* ================================= */}
-      {/* CONTENIDO */}
-      {/* ================================= */}
+      {/* CONTENIDO PRINCIPAL */}
 
       <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         {/* ENCABEZADO */}
+
         <div
           className="
             grid
@@ -146,6 +197,7 @@ function Marcas() {
           </div>
 
           {/* DESCRIPCIÓN */}
+
           <div className="lg:pb-2">
             <p
               className="
@@ -165,7 +217,7 @@ function Marcas() {
         </div>
 
         {/* ================================= */}
-        {/* TARJETAS DE MARCAS */}
+        {/* TARJETAS DE LAS MARCAS */}
         {/* ================================= */}
 
         <div
@@ -173,7 +225,7 @@ function Marcas() {
             grid
             grid-cols-2
             sm:grid-cols-3
-            lg:grid-cols-6
+            lg:grid-cols-5
             gap-4
             sm:gap-5
           "
@@ -200,6 +252,7 @@ function Marcas() {
               "
             >
               {/* LÍNEA SUPERIOR */}
+
               <div
                 className="
                   absolute
@@ -217,6 +270,7 @@ function Marcas() {
               />
 
               {/* LOGO Y NOMBRE */}
+
               <div
                 className="
                   h-full
@@ -229,6 +283,8 @@ function Marcas() {
                   py-7
                 "
               >
+                {/* LOGO */}
+
                 <div
                   className="
                     w-full
@@ -254,6 +310,8 @@ function Marcas() {
                   />
                 </div>
 
+                {/* NOMBRE */}
+
                 <span
                   className="
                     text-gray-500
@@ -269,7 +327,8 @@ function Marcas() {
                 </span>
               </div>
 
-              {/* BORDE INFERIOR AL PASAR CURSOR */}
+              {/* BORDE INFERIOR */}
+
               <div
                 className="
                   absolute
@@ -306,6 +365,7 @@ function Marcas() {
           "
         >
           {/* ICONO */}
+
           <div
             className="
               w-12
@@ -334,6 +394,7 @@ function Marcas() {
           </div>
 
           {/* TEXTO */}
+
           <p
             className="
               text-gray-600
@@ -350,6 +411,7 @@ function Marcas() {
         </div>
 
         {/* ACENTO DECORATIVO */}
+
         <div
           className="
             w-20
