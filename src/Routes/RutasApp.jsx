@@ -1,6 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 
-/* Pages */
+/* ========================================
+   PÁGINAS WEB
+======================================== */
+
 import Inicio from "../Pages/Inicio";
 import Catalogo from "../Pages/Catalogo";
 import Repuestos from "../Pages/Repuestos";
@@ -9,10 +12,19 @@ import DetalleProducto from "../Pages/DetalleProducto";
 import Login from "../Pages/Login";
 import NoEncontrado from "../Pages/NoEncontrado";
 
-/* Seguridad */
+// NUEVA PÁGINA: RASTREAR PEDIDO
+import RastrearPedido from "../Pages/RastrearPedido";
+
+/* ========================================
+   SEGURIDAD
+======================================== */
+
 import RutaProtegida from "./RutaProtegida";
 
-/* Admin */
+/* ========================================
+   ADMINISTRACIÓN
+======================================== */
+
 import PanelControl from "../Admin/PanelControl";
 import Productos from "../Admin/Productos";
 import FormularioCategoria from "../Admin/FormularioCategoria";
@@ -25,27 +37,46 @@ import FormularioCategoriaRepuesto from "../Admin/FormularioCategoriaRepuesto";
 import Inventario from "../Admin/Inventario";
 import Configuracion from "../Admin/Configuracion";
 
+/* ========================================
+   COMPONENTE DE RUTAS
+======================================== */
+
 function RutasApp() {
   return (
     <Routes>
-      {/* WEB */}
+      {/* ========================================
+          PÁGINAS PÚBLICAS
+      ======================================== */}
 
+      {/* INICIO */}
       <Route path="/" element={<Inicio />} />
 
+      {/* CATÁLOGO */}
       <Route path="/catalogo" element={<Catalogo />} />
 
+      {/* REPUESTOS */}
       <Route path="/repuestos" element={<Repuestos />} />
 
+      {/* CONTACTO */}
       <Route path="/contacto" element={<Contacto />} />
 
+      {/* DETALLE DE PRODUCTO */}
       <Route path="/producto/:id" element={<DetalleProducto />} />
 
-      {/* LOGIN */}
+      {/* RASTREAR PEDIDO - NUEVA RUTA */}
+      <Route path="/rastrear-pedido" element={<RastrearPedido />} />
+
+      {/* ========================================
+          LOGIN ADMINISTRATIVO
+      ======================================== */}
 
       <Route path="/login" element={<Login />} />
 
-      {/* ADMIN PROTEGIDO */}
+      {/* ========================================
+          PANEL ADMINISTRATIVO PROTEGIDO
+      ======================================== */}
 
+      {/* DASHBOARD */}
       <Route
         path="/admin"
         element={
@@ -55,6 +86,7 @@ function RutasApp() {
         }
       />
 
+      {/* PRODUCTOS */}
       <Route
         path="/admin/productos"
         element={
@@ -64,6 +96,7 @@ function RutasApp() {
         }
       />
 
+      {/* NUEVO PRODUCTO */}
       <Route
         path="/admin/productos/nuevo"
         element={
@@ -73,6 +106,7 @@ function RutasApp() {
         }
       />
 
+      {/* EDITAR PRODUCTO */}
       <Route
         path="/admin/productos/editar/:id"
         element={
@@ -82,6 +116,7 @@ function RutasApp() {
         }
       />
 
+      {/* REPUESTOS ADMIN */}
       <Route
         path="/admin/repuestos"
         element={
@@ -91,6 +126,7 @@ function RutasApp() {
         }
       />
 
+      {/* NUEVO REPUESTO */}
       <Route
         path="/admin/repuestos/nuevo"
         element={
@@ -100,6 +136,7 @@ function RutasApp() {
         }
       />
 
+      {/* EDITAR REPUESTO */}
       <Route
         path="/admin/repuestos/editar/:id"
         element={
@@ -109,6 +146,7 @@ function RutasApp() {
         }
       />
 
+      {/* CATEGORÍAS */}
       <Route
         path="/admin/categorias"
         element={
@@ -118,6 +156,7 @@ function RutasApp() {
         }
       />
 
+      {/* NUEVA CATEGORÍA */}
       <Route
         path="/admin/categorias/nuevo"
         element={
@@ -127,6 +166,7 @@ function RutasApp() {
         }
       />
 
+      {/* EDITAR CATEGORÍA */}
       <Route
         path="/admin/categorias/editar/:id"
         element={
@@ -136,6 +176,7 @@ function RutasApp() {
         }
       />
 
+      {/* CATEGORÍAS DE REPUESTOS */}
       <Route
         path="/admin/categorias-repuesto"
         element={
@@ -145,6 +186,7 @@ function RutasApp() {
         }
       />
 
+      {/* NUEVA CATEGORÍA DE REPUESTO */}
       <Route
         path="/admin/categorias-repuesto/nuevo"
         element={
@@ -154,6 +196,7 @@ function RutasApp() {
         }
       />
 
+      {/* EDITAR CATEGORÍA DE REPUESTO */}
       <Route
         path="/admin/categorias-repuesto/editar/:id"
         element={
@@ -163,6 +206,7 @@ function RutasApp() {
         }
       />
 
+      {/* INVENTARIO */}
       <Route
         path="/admin/inventario"
         element={
@@ -172,6 +216,7 @@ function RutasApp() {
         }
       />
 
+      {/* CONFIGURACIÓN */}
       <Route
         path="/admin/configuracion"
         element={
@@ -181,7 +226,9 @@ function RutasApp() {
         }
       />
 
-      {/* 404 */}
+      {/* ========================================
+          ERROR 404
+      ======================================== */}
 
       <Route path="*" element={<NoEncontrado />} />
     </Routes>

@@ -18,7 +18,7 @@ function Hero() {
       "
     >
       {/* ================================= */}
-      {/* IMAGEN PRINCIPAL */}
+      {/* IMAGEN PRINCIPAL MÁS VISIBLE */}
       {/* ================================= */}
 
       <img
@@ -31,44 +31,40 @@ function Hero() {
           object-[65%_center]
           sm:object-center
           lg:object-[center_right]
+          brightness-[1.12]
+          contrast-[1.05]
+          saturate-[1.12]
         "
       />
 
-      {/* OVERLAY OSCURO */}
+      {/* ================================= */}
+      {/* DEGRADADO SUAVE PARA EL TEXTO */}
+      {/* ================================= */}
+
       <div
         className="
           absolute inset-0
-          bg-black/55
-          sm:bg-black/45
-          lg:bg-gradient-to-r
-          lg:from-[#081B10]/95
-          lg:via-[#10291A]/70
-          lg:to-black/15
+          bg-gradient-to-r
+          from-black/75
+          via-black/35
+          to-black/5
+          sm:from-black/70
+          sm:via-black/25
+          sm:to-transparent
+          lg:from-[#07170F]/80
+          lg:via-[#07170F]/25
+          lg:to-transparent
         "
       />
 
-      {/* DEGRADADO INFERIOR */}
+      {/* SOMBRA INFERIOR MUY SUAVE */}
       <div
         className="
           absolute inset-0
           bg-gradient-to-t
-          from-black/75
+          from-black/35
           via-transparent
-          to-black/10
-        "
-      />
-
-      {/* EFECTO VERDE DECORATIVO */}
-      <div
-        className="
-          absolute
-          -left-32
-          bottom-0
-          w-[450px]
-          h-[450px]
-          bg-[#009E49]/15
-          blur-3xl
-          rounded-full
+          to-transparent
           pointer-events-none
         "
       />
@@ -94,9 +90,9 @@ function Hero() {
               inline-flex
               items-center
               gap-3
-              bg-white/10
+              bg-black/30
               backdrop-blur-md
-              border border-white/20
+              border border-white/30
               px-4 py-2
               rounded-full
               shadow-lg
@@ -145,6 +141,7 @@ function Hero() {
               leading-[1.04]
               tracking-tight
               mt-7
+              drop-shadow-lg
             "
           >
             Potencia y
@@ -155,6 +152,7 @@ function Hero() {
                 block
                 text-[#FF6600]
                 mt-3
+                drop-shadow-lg
               "
             >
               para el Campo e Industria
@@ -166,10 +164,11 @@ function Hero() {
             className="
               text-base
               sm:text-lg
-              text-gray-100
+              text-white
               mt-7
               leading-relaxed
               max-w-xl
+              drop-shadow-md
             "
           >
             Maquinaria agrícola, forestal e industrial, repuestos y atención
@@ -238,10 +237,10 @@ function Hero() {
                 items-center
                 justify-center
                 gap-2
-                bg-white/10
+                bg-black/35
                 hover:bg-[#009E49]
                 text-white
-                border border-white/30
+                border border-white/40
                 hover:border-[#009E49]
                 backdrop-blur-sm
                 px-7 sm:px-8
@@ -274,7 +273,7 @@ function Hero() {
               pt-6
               sm:pt-8
               border-t
-              border-white/20
+              border-white/30
             "
           >
             {/* ATENCIÓN */}
@@ -282,7 +281,7 @@ function Hero() {
               className="
                 py-3 sm:py-0
                 border-b sm:border-b-0
-                border-white/10
+                border-white/20
               "
             >
               <span
@@ -304,6 +303,7 @@ function Hero() {
                   text-sm sm:text-base
                   font-black
                   mt-1
+                  drop-shadow-md
                 "
               >
                 +51 979 501 557
@@ -315,7 +315,7 @@ function Hero() {
               className="
                 py-3 sm:py-0
                 border-b sm:border-b-0
-                border-white/10
+                border-white/20
               "
             >
               <span
@@ -337,6 +337,7 @@ function Hero() {
                   text-sm sm:text-base
                   font-black
                   mt-1
+                  drop-shadow-md
                 "
               >
                 Todo el Perú
@@ -364,6 +365,7 @@ function Hero() {
                   text-sm sm:text-base
                   font-black
                   mt-1
+                  drop-shadow-md
                 "
               >
                 Atención Especializada

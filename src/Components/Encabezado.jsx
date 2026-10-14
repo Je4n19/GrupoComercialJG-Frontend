@@ -5,7 +5,10 @@ import logo from "../assets/logoJ&G.png";
 import { obtenerCategorias } from "../Services/categoriaService";
 import Buscador from "./Buscador";
 
+// ========================================
 // DATOS DE CONTACTO
+// ========================================
+
 const TELEFONO = "979501557";
 const CORREO = "grupo.comercial@yahoo.es";
 
@@ -14,7 +17,10 @@ const FACEBOOK_URL =
 
 const INSTAGRAM_URL = "https://www.instagram.com/grupocomercialjg/";
 
+// ========================================
 // ICONOS
+// ========================================
+
 function Icono({ tipo, className = "w-5 h-5" }) {
   const iconos = {
     telefono: (
@@ -51,6 +57,22 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="m6 6 12 12" />
       </>
     ),
+
+    paquete: (
+      <>
+        <path d="m12 2 9 5-9 5-9-5 9-5Z" />
+        <path d="M3 7v10l9 5 9-5V7" />
+        <path d="M12 12v10" />
+        <path d="m7.5 4.5 9 5" />
+      </>
+    ),
+
+    flechaDerecha: (
+      <>
+        <path d="M5 12h14" />
+        <path d="m12 5 7 7-7 7" />
+      </>
+    ),
   };
 
   return (
@@ -69,7 +91,10 @@ function Icono({ tipo, className = "w-5 h-5" }) {
   );
 }
 
+// ========================================
 // FACEBOOK
+// ========================================
+
 function FacebookIcon() {
   return (
     <svg
@@ -82,7 +107,10 @@ function FacebookIcon() {
   );
 }
 
+// ========================================
 // INSTAGRAM
+// ========================================
+
 function InstagramIcon() {
   return (
     <svg
@@ -95,7 +123,10 @@ function InstagramIcon() {
   );
 }
 
+// ========================================
 // REDES SOCIALES
+// ========================================
+
 function RedesSociales({ oscuro = false }) {
   const estilo = oscuro
     ? "text-[#1A1A1A] hover:text-[#009E49]"
@@ -126,6 +157,48 @@ function RedesSociales({ oscuro = false }) {
   );
 }
 
+// ========================================
+// BOTÓN RASTREAR PEDIDO
+// ========================================
+
+function BotonRastrear({ onClick, className = "" }) {
+  return (
+    <Link
+      to="/rastrear-pedido"
+      onClick={onClick}
+      className={`
+        inline-flex
+        items-center
+        justify-center
+        gap-2
+        bg-[#FF6600]
+        hover:bg-[#E65C00]
+        text-white
+        px-4
+        py-2.5
+        rounded-lg
+        font-black
+        text-xs
+        sm:text-sm
+        whitespace-nowrap
+        shadow-md
+        hover:shadow-lg
+        transition-all
+        duration-300
+        ${className}
+      `}
+    >
+      <Icono tipo="paquete" className="w-4 h-4" />
+      Rastrear pedido
+      <Icono tipo="flechaDerecha" className="w-4 h-4" />
+    </Link>
+  );
+}
+
+// ========================================
+// COMPONENTE PRINCIPAL
+// ========================================
+
 function Encabezado() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -136,7 +209,10 @@ function Encabezado() {
   const [categorias, setCategorias] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
+  // ========================================
   // CARGAR CATEGORÍAS DESDE EL BACKEND
+  // ========================================
+
   useEffect(() => {
     let activo = true;
 
@@ -159,7 +235,10 @@ function Encabezado() {
     };
   }, []);
 
+  // ========================================
   // SINCRONIZAR BÚSQUEDA CON LA URL
+  // ========================================
+
   useEffect(() => {
     const parametros = new URLSearchParams(location.search);
 
@@ -168,12 +247,19 @@ function Encabezado() {
     setCategoriasAbiertas(false);
   }, [location.pathname, location.search]);
 
+  // ========================================
+  // CERRAR MENÚ
+  // ========================================
+
   const cerrarMenu = () => {
     setMenuAbierto(false);
     setCategoriasAbiertas(false);
   };
 
+  // ========================================
   // BUSCADOR GLOBAL
+  // ========================================
+
   const buscar = (texto) => {
     const consulta = String(texto || "").trim();
 
@@ -197,7 +283,10 @@ function Encabezado() {
     navigate(`${destino}?${parametros.toString()}`);
   };
 
-  // ORGANIZAR CATEGORÍAS DINÁMICAMENTE
+  // ========================================
+  // ORGANIZAR CATEGORÍAS
+  // ========================================
+
   const gruposOrdenados = useMemo(() => {
     const grupos = categorias.reduce((resultado, categoria) => {
       if (!categoria?.grupo || !categoria?.nombre) {
@@ -226,7 +315,10 @@ function Encabezado() {
   const enlaceCategoria = (nombre) =>
     `/catalogo?categoria=${encodeURIComponent(nombre)}`;
 
-  // ESTILO DE ENLACES DE NAVEGACIÓN
+  // ========================================
+  // ESTILO DE ENLACES
+  // ========================================
+
   const estiloEnlace = (ruta) => {
     const activo = location.pathname === ruta;
 
@@ -237,21 +329,25 @@ function Encabezado() {
 
   return (
     <>
-      {/* ===================================== */}
+      {/* ======================================== */}
       {/* BARRA SUPERIOR VERDE */}
-      {/* ===================================== */}
+      {/* ======================================== */}
 
       <div className="bg-[#009E49] text-white">
         <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10">
+          {/* ======================================== */}
           {/* ESCRITORIO */}
-          <div className="hidden xl:flex items-center justify-between gap-5 py-3">
-            <div className="flex items-center gap-5 2xl:gap-8 min-w-0">
+          {/* ======================================== */}
+
+          <div className="hidden xl:flex items-center justify-between gap-4 py-3">
+            {/* INFORMACIÓN DE CONTACTO */}
+            <div className="flex items-center gap-4 2xl:gap-6 min-w-0">
               {/* TELÉFONO */}
               <a
                 href={`tel:+51${TELEFONO}`}
-                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-green-100 transition"
+                className="flex items-center gap-2 whitespace-nowrap text-[12px] 2xl:text-sm hover:text-green-100 transition"
               >
-                <Icono tipo="telefono" className="w-5 h-5 shrink-0" />
+                <Icono tipo="telefono" className="w-4 h-4 shrink-0" />
 
                 <span className="font-bold">¡Llámanos!</span>
 
@@ -259,14 +355,14 @@ function Encabezado() {
               </a>
 
               {/* SEPARADOR */}
-              <div className="w-px h-8 bg-white/40 shrink-0" />
+              <div className="w-px h-7 bg-white/40 shrink-0" />
 
               {/* CORREO */}
               <a
                 href={`mailto:${CORREO}`}
-                className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm hover:text-green-100 transition"
+                className="flex items-center gap-2 whitespace-nowrap text-[12px] 2xl:text-sm hover:text-green-100 transition"
               >
-                <Icono tipo="correo" className="w-5 h-5 shrink-0" />
+                <Icono tipo="correo" className="w-4 h-4 shrink-0" />
 
                 <span className="font-bold">¡Escríbenos!</span>
 
@@ -274,29 +370,44 @@ function Encabezado() {
               </a>
 
               {/* SEPARADOR */}
-              <div className="w-px h-8 bg-white/40 shrink-0" />
+              <div className="w-px h-7 bg-white/40 shrink-0" />
 
               {/* HORARIO */}
-              <div className="flex items-center gap-2 whitespace-nowrap text-[13px] 2xl:text-sm font-semibold">
-                <Icono tipo="reloj" className="w-5 h-5 shrink-0" />
+              <div className="flex items-center gap-2 whitespace-nowrap text-[12px] 2xl:text-sm font-semibold">
+                <Icono tipo="reloj" className="w-4 h-4 shrink-0" />
 
                 <span>Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00</span>
               </div>
             </div>
 
-            {/* REDES SOCIALES A LA DERECHA */}
-            <div className="flex items-center gap-4 shrink-0 ml-auto">
-              <span className="text-[13px] 2xl:text-sm font-semibold whitespace-nowrap">
-                Síguenos en nuestras redes:
-              </span>
+            {/* ======================================== */}
+            {/* LADO DERECHO: RASTREO Y REDES */}
+            {/* ======================================== */}
 
-              <RedesSociales />
+            <div className="flex items-center gap-4 shrink-0 ml-auto">
+              {/* NUEVO BOTÓN */}
+              <BotonRastrear />
+
+              {/* SEPARADOR */}
+              <div className="w-px h-7 bg-white/40" />
+
+              {/* REDES SOCIALES */}
+              <div className="flex items-center gap-3">
+                <span className="hidden 2xl:inline text-sm font-semibold whitespace-nowrap">
+                  Síguenos en nuestras redes:
+                </span>
+
+                <RedesSociales />
+              </div>
             </div>
           </div>
 
+          {/* ======================================== */}
           {/* TABLETS Y CELULARES */}
+          {/* ======================================== */}
+
           <div className="xl:hidden py-3">
-            <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
               {/* TELÉFONO */}
               <a
                 href={`tel:+51${TELEFONO}`}
@@ -312,24 +423,27 @@ function Encabezado() {
               {/* CORREO */}
               <a
                 href={`mailto:${CORREO}`}
-                className="flex items-center gap-2 text-xs sm:text-sm hover:text-green-100 transition"
+                className="hidden sm:flex items-center gap-2 text-xs sm:text-sm hover:text-green-100 transition"
               >
                 <Icono tipo="correo" className="w-4 h-4 shrink-0" />
 
                 <span className="font-bold">¡Escríbenos!</span>
 
-                <span className="font-semibold break-all">{CORREO}</span>
+                <span className="font-semibold">{CORREO}</span>
               </a>
 
+              {/* NUEVO BOTÓN RASTREO */}
+              <BotonRastrear className="ml-auto" />
+
               {/* HORARIO */}
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
+              <div className="hidden md:flex items-center gap-2 text-xs sm:text-sm font-semibold">
                 <Icono tipo="reloj" className="w-4 h-4 shrink-0" />
 
                 <span>Lun - Vie: 8:45 - 18:00 / Sab. 8:45 - 13:00</span>
               </div>
 
               {/* REDES SOCIALES */}
-              <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3">
                 <span className="text-xs sm:text-sm font-semibold">
                   Síguenos:
                 </span>
@@ -341,9 +455,9 @@ function Encabezado() {
         </div>
       </div>
 
-      {/* ===================================== */}
+      {/* ======================================== */}
       {/* ENCABEZADO PRINCIPAL BLANCO */}
-      {/* ===================================== */}
+      {/* ======================================== */}
 
       <header className="bg-white shadow-md sticky top-0 z-50 border-b border-gray-200">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -373,7 +487,10 @@ function Encabezado() {
               </div>
             </Link>
 
+            {/* ======================================== */}
             {/* BUSCADOR GLOBAL - ESCRITORIO */}
+            {/* ======================================== */}
+
             <div className="hidden md:block flex-1 min-w-0 max-w-[480px] mx-auto relative z-[60]">
               <Buscador
                 valor={busqueda}
@@ -383,7 +500,10 @@ function Encabezado() {
               />
             </div>
 
+            {/* ======================================== */}
             {/* NAVEGACIÓN ESCRITORIO */}
+            {/* ======================================== */}
+
             <nav className="hidden xl:flex items-center justify-end gap-4 2xl:gap-6 h-16 shrink-0">
               <Link to="/" className={estiloEnlace("/")}>
                 Inicio
@@ -402,8 +522,12 @@ function Encabezado() {
                   />
                 </button>
 
+                {/* ======================================== */}
                 {/* MEGA MENÚ */}
-                <div className="invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 absolute top-full right-0 w-[min(1050px,92vw)] bg-white text-gray-800 shadow-2xl rounded-b-3xl border border-gray-100 transition-all duration-200 z-[100]">
+                {/* ======================================== */}
+
+                <div className="invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0 absolute top-full right-0 w-[min(1050px,92vw)] bg-white text-gray-800 shadow-2xl rounded-b-3xl border border-gray-100 transition-all duration-200 z-[100]">
+                  {/* CABECERA DEL MEGA MENÚ */}
                   <div className="flex justify-between items-center gap-4 px-7 py-5 border-b border-gray-100">
                     <div>
                       <p className="text-xs font-black text-[#009E49] uppercase">
@@ -423,6 +547,7 @@ function Encabezado() {
                     </Link>
                   </div>
 
+                  {/* LISTADO DE CATEGORÍAS */}
                   <div className="p-7 max-h-[65vh] overflow-y-auto">
                     {gruposOrdenados.length > 0 ? (
                       <div className="grid grid-cols-3 gap-7">
@@ -453,6 +578,7 @@ function Encabezado() {
                     )}
                   </div>
 
+                  {/* PIE DEL MEGA MENÚ */}
                   <div className="bg-[#F4FAF6] px-7 py-4 rounded-b-3xl flex justify-between gap-4">
                     <span className="text-sm text-gray-500">
                       Encuentra maquinaria para cada trabajo.
@@ -470,16 +596,21 @@ function Encabezado() {
                 </div>
               </div>
 
+              {/* REPUESTOS */}
               <Link to="/repuestos" className={estiloEnlace("/repuestos")}>
                 Repuestos
               </Link>
 
+              {/* CONTACTO */}
               <Link to="/contacto" className={estiloEnlace("/contacto")}>
                 Contacto
               </Link>
             </nav>
 
+            {/* ======================================== */}
             {/* BOTÓN MENÚ MÓVIL */}
+            {/* ======================================== */}
+
             <button
               type="button"
               onClick={() => setMenuAbierto(!menuAbierto)}
@@ -494,7 +625,10 @@ function Encabezado() {
             </button>
           </div>
 
+          {/* ======================================== */}
           {/* BUSCADOR GLOBAL - CELULARES */}
+          {/* ======================================== */}
+
           <div className="md:hidden pb-4 relative z-[60]">
             <Buscador
               valor={busqueda}
@@ -504,11 +638,15 @@ function Encabezado() {
             />
           </div>
 
+          {/* ======================================== */}
           {/* MENÚ RESPONSIVE */}
+          {/* ======================================== */}
+
           {menuAbierto && (
             <div className="xl:hidden pb-5">
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-h-[75vh] overflow-y-auto p-3">
                 <nav className="flex flex-col">
+                  {/* INICIO */}
                   <Link
                     to="/"
                     onClick={cerrarMenu}
@@ -517,6 +655,7 @@ function Encabezado() {
                     Inicio
                   </Link>
 
+                  {/* CATEGORÍAS */}
                   <button
                     type="button"
                     onClick={() => setCategoriasAbiertas(!categoriasAbiertas)}
@@ -531,6 +670,7 @@ function Encabezado() {
                     />
                   </button>
 
+                  {/* CATEGORÍAS DESPLEGADAS */}
                   {categoriasAbiertas && (
                     <div className="bg-[#F4FAF6] rounded-xl p-4 mx-2">
                       <Link
@@ -562,6 +702,7 @@ function Encabezado() {
                     </div>
                   )}
 
+                  {/* REPUESTOS */}
                   <Link
                     to="/repuestos"
                     onClick={cerrarMenu}
@@ -570,6 +711,7 @@ function Encabezado() {
                     Repuestos
                   </Link>
 
+                  {/* CONTACTO */}
                   <Link
                     to="/contacto"
                     onClick={cerrarMenu}
@@ -577,8 +719,20 @@ function Encabezado() {
                   >
                     Contacto
                   </Link>
+
+                  {/* RASTREAR PEDIDO */}
+                  <Link
+                    to="/rastrear-pedido"
+                    onClick={cerrarMenu}
+                    className="flex items-center gap-3 px-5 py-4 mt-2 bg-[#FFF2E8] text-[#E65C00] hover:bg-[#FFE4D1] rounded-xl font-black transition"
+                  >
+                    <Icono tipo="paquete" />
+                    Rastrear pedido
+                    <Icono tipo="flechaDerecha" className="w-4 h-4 ml-auto" />
+                  </Link>
                 </nav>
 
+                {/* REDES SOCIALES */}
                 <div className="border-t border-gray-100 mt-3 pt-4 px-4 flex justify-between items-center">
                   <span className="text-sm text-gray-500">Síguenos:</span>
 
