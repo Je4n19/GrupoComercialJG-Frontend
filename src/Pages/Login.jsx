@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logoJ from "../assets/logoJ&G.png";
 
+// URL DEL BACKEND SPRING BOOT
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 // ========================================
 // ICONOS
 // ========================================
@@ -87,6 +90,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   const funciones = [
     "Gestión de Productos",
@@ -96,10 +100,10 @@ function Login() {
   ];
 
   // ========================================
-  // INICIAR SESIÓN
+  // INICIAR SESIÓN CON SPRING BOOT
   // ========================================
 
-  const ingresar = (e) => {
+  const ingresar = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -108,14 +112,81 @@ function Login() {
       return;
     }
 
-    // Autenticación provisional: sustituir por backend seguro
-    if (usuario.trim() === "admin" && password === "123456") {
-      localStorage.setItem("auth", "true");
+    setCargando(true);
+
+    try {
+      // PASO 1: OBTENER TOKEN CSRF
+      const respuestaCsrf = await fetch(`${API_URL}/api/auth/csrf`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!respuestaCsrf.ok) {
+        throw new Error("No se pudo obtener la protección de seguridad.");
+      }
+
+      const csrf = await respuestaCsrf.json();
+
+      if (!csrf.token || !csrf.headerName) {
+        throw new Error(
+          "El servidor no devolvió un token de seguridad válido.",
+        );
+      }
+
+      // PASO 2: ENVIAR CREDENCIALES AL BACKEND
+      const respuestaLogin = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          [csrf.headerName]: csrf.token,
+        },
+        body: JSON.stringify({
+          username: usuario.trim(),
+          password: password,
+        }),
+      });
+
+      if (!respuestaLogin.ok) {
+        if (respuestaLogin.status === 401) {
+          setError("Usuario o contraseña incorrectos.");
+        } else if (respuestaLogin.status === 403) {
+          setError(
+            "No se pudo validar la sesión de seguridad. Revisa la configuración de cookies y CSRF.",
+          );
+        } else {
+          setError("No se pudo iniciar sesión. Inténtalo nuevamente.");
+        }
+        return;
+      }
+
+      // PASO 3: COMPROBAR RESPUESTA
+      const datos = await respuestaLogin.json();
+
+      if (datos.rol !== "ADMIN") {
+        setError("Tu cuenta no tiene permisos de administrador.");
+        return;
+      }
+
+      // NO GUARDAMOS CONTRASEÑAS NI AUTH EN LOCALSTORAGE
+      setPassword("");
+
+      // PASO 4: REDIRIGIR AL PANEL
       navigate("/admin", { replace: true });
-    } else {
-      setError("Usuario o contraseña incorrectos.");
+    } catch (err) {
+      console.error("Error de autenticación:", err);
+
+      setError(
+        "No se pudo conectar con el servidor. Comprueba que Spring Boot esté encendido.",
+      );
+    } finally {
+      setCargando(false);
     }
   };
+
+  // ========================================
+  // DISEÑO DEL LOGIN
+  // ========================================
 
   return (
     <main className="relative min-h-screen bg-[#F1F6F3] flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 overflow-hidden">
@@ -126,12 +197,11 @@ function Login() {
 
       {/* CONTENEDOR PRINCIPAL */}
       <div className="relative z-10 max-w-6xl w-full bg-white rounded-[24px] sm:rounded-[32px] lg:rounded-[36px] overflow-hidden shadow-2xl border border-gray-100 grid lg:grid-cols-2">
-        {/* ======================================== */}
-        {/* LADO IZQUIERDO */}
-        {/* ======================================== */}
+        {/* ========================================
+            LADO IZQUIERDO
+        ======================================== */}
 
         <section className="relative bg-[#073D27] text-white p-7 sm:p-10 lg:p-12 xl:p-14 flex flex-col justify-center overflow-hidden">
-          {/* DECORACIONES */}
           <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 bg-[#009E49]/25 rounded-full blur-3xl" />
 
           <div className="pointer-events-none absolute -bottom-32 -left-32 w-80 h-80 bg-[#FF6600]/10 rounded-full blur-3xl" />
@@ -199,6 +269,7 @@ function Login() {
 
               <div>
                 <p className="text-sm font-black">Acceso administrativo</p>
+
                 <p className="text-xs text-green-50/60 mt-1">
                   Exclusivo para personal autorizado
                 </p>
@@ -207,9 +278,9 @@ function Login() {
           </div>
         </section>
 
-        {/* ======================================== */}
-        {/* LADO DERECHO - FORMULARIO */}
-        {/* ======================================== */}
+        {/* ========================================
+            LADO DERECHO - FORMULARIO
+        ======================================== */}
 
         <section className="p-7 sm:p-10 lg:p-12 xl:p-14 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto">
@@ -242,9 +313,9 @@ function Login() {
               </p>
             </div>
 
-            {/* ======================================== */}
-            {/* FORMULARIO */}
-            {/* ======================================== */}
+            {/* ========================================
+                FORMULARIO
+            ======================================== */}
 
             <form onSubmit={ingresar} className="mt-9 space-y-6">
               {/* USUARIO */}
@@ -271,7 +342,8 @@ function Login() {
                       setUsuario(e.target.value);
                       if (error) setError("");
                     }}
-                    className="w-full bg-[#F8FAF9] border-2 border-gray-200 rounded-xl pl-12 pr-4 py-4 text-[#1A1A1A] placeholder:text-gray-400 outline-none focus:border-[#009E49] focus:bg-white focus:ring-4 focus:ring-[#009E49]/10 transition-all duration-200"
+                    disabled={cargando}
+                    className="w-full bg-[#F8FAF9] border-2 border-gray-200 rounded-xl pl-12 pr-4 py-4 text-[#1A1A1A] placeholder:text-gray-400 outline-none focus:border-[#009E49] focus:bg-white focus:ring-4 focus:ring-[#009E49]/10 transition-all duration-200 disabled:opacity-60"
                     required
                   />
                 </div>
@@ -301,7 +373,8 @@ function Login() {
                       setPassword(e.target.value);
                       if (error) setError("");
                     }}
-                    className="w-full bg-[#F8FAF9] border-2 border-gray-200 rounded-xl pl-12 pr-12 py-4 text-[#1A1A1A] placeholder:text-gray-400 outline-none focus:border-[#009E49] focus:bg-white focus:ring-4 focus:ring-[#009E49]/10 transition-all duration-200"
+                    disabled={cargando}
+                    className="w-full bg-[#F8FAF9] border-2 border-gray-200 rounded-xl pl-12 pr-12 py-4 text-[#1A1A1A] placeholder:text-gray-400 outline-none focus:border-[#009E49] focus:bg-white focus:ring-4 focus:ring-[#009E49]/10 transition-all duration-200 disabled:opacity-60"
                     required
                   />
 
@@ -341,10 +414,14 @@ function Login() {
               {/* BOTÓN INGRESAR */}
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center gap-3 bg-[#009E49] hover:bg-[#00843D] text-white py-4 sm:py-5 px-5 rounded-xl font-black text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                disabled={cargando}
+                className="w-full inline-flex items-center justify-center gap-3 bg-[#009E49] hover:bg-[#00843D] text-white py-4 sm:py-5 px-5 rounded-xl font-black text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
-                Ingresar al Sistema
-                <IconoLogin tipo="flecha" className="w-5 h-5" />
+                {cargando
+                  ? "Verificando credenciales..."
+                  : "Ingresar al Sistema"}
+
+                {!cargando && <IconoLogin tipo="flecha" className="w-5 h-5" />}
               </button>
             </form>
 

@@ -1,5 +1,12 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/logoJ&G.png";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+// ========================================
+// ICONOS DEL MENU
+// ========================================
 
 function Icono({ tipo, className = "w-5 h-5" }) {
   const iconos = {
@@ -19,14 +26,10 @@ function Icono({ tipo, className = "w-5 h-5" }) {
       </>
     ),
     repuestos: (
-      <>
-        <path d="M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18a2.1 2.1 0 0 0 3 3l5.3-5.3a5 5 0 0 0 6.4-6.4L14 13l-3-3 3.7-3.7Z" />
-      </>
+      <path d="M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18a2.1 2.1 0 0 0 3 3l5.3-5.3a5 5 0 0 0 6.4-6.4L14 13l-3-3 3.7-3.7Z" />
     ),
     categorias: (
-      <>
-        <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
-      </>
+      <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
     ),
     etiquetas: (
       <>
@@ -42,8 +45,8 @@ function Icono({ tipo, className = "w-5 h-5" }) {
     ),
     configuracion: (
       <>
-        <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
-        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1.1 1.6V21h-4v-.1A1.7 1.7 0 0 0 8.8 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06L4 16.84l.06-.06A1.7 1.7 0 0 0 4.4 14.9 1.7 1.7 0 0 0 2.8 13.8H2v-4h.8A1.7 1.7 0 0 0 4.4 8.7a1.7 1.7 0 0 0-.34-1.88L4 6.76 6.86 3.9l.06.06A1.7 1.7 0 0 0 8.8 4.3 1.7 1.7 0 0 0 9.9 2.7V2h4v.7A1.7 1.7 0 0 0 15 4.3a1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 6.76l-.06.06A1.7 1.7 0 0 0 19.4 8.7 1.7 1.7 0 0 0 21 9.8h1v4h-1a1.7 1.7 0 0 0-1.6 1.2Z" />
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1.1 1.6V21h-4v-.1A1.7 1.7 0 0 0 8.8 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06L4 16.84l.06-.06A1.7 1.7 0 0 0 4.4 14.9 1.7 1.7 0 0 0-1.6-1.1H2v-4h.8A1.7 1.7 0 0 0 4.4 8.7a1.7 1.7 0 0 0-.34-1.88L4 6.76 6.86 3.9l.06.06A1.7 1.7 0 0 0 8.8 4.3a1.7 1.7 0 0 0 1.1-1.6V2h4v.7A1.7 1.7 0 0 0 15 4.3a1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 6.76l-.06.06A1.7 1.7 0 0 0 19.4 8.7a1.7 1.7 0 0 0 1.6 1.1h1v4h-1a1.7 1.7 0 0 0-1.6 1.2Z" />
       </>
     ),
     salir: (
@@ -77,13 +80,69 @@ function Icono({ tipo, className = "w-5 h-5" }) {
   );
 }
 
+// ========================================
+// MENU ADMINISTRATIVO
+// ========================================
+
 function MenuAdmin() {
   const location = useLocation();
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
+  const [errorSesion, setErrorSesion] = useState("");
 
-  const cerrarSesion = () => {
-    localStorage.removeItem("auth");
-    window.location.href = "/login";
+  // ========================================
+  // CERRAR SESION EN SPRING BOOT
+  // ========================================
+
+  const cerrarSesion = async () => {
+    if (cerrandoSesion) return;
+
+    setCerrandoSesion(true);
+    setErrorSesion("");
+
+    try {
+      // Obtener token CSRF
+      const respuestaCsrf = await fetch(`${API_URL}/api/auth/csrf`, {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (!respuestaCsrf.ok) {
+        throw new Error("No se pudo obtener el token CSRF");
+      }
+
+      const csrf = await respuestaCsrf.json();
+
+      // Invalidar la sesion en Spring Boot
+      const respuestaLogout = await fetch(`${API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          [csrf.headerName]: csrf.token,
+        },
+      });
+
+      if (!respuestaLogout.ok) {
+        throw new Error(`Error HTTP ${respuestaLogout.status}`);
+      }
+
+      // Eliminar autenticacion antigua
+      localStorage.removeItem("auth");
+
+      // Regresar al login
+      window.location.replace("/login");
+    } catch (error) {
+      console.error("Error al cerrar sesion:", error);
+
+      setErrorSesion("No se pudo cerrar la sesión. Inténtalo nuevamente.");
+
+      setCerrandoSesion(false);
+    }
   };
+
+  // ========================================
+  // OPCIONES DEL MENU
+  // ========================================
 
   const menus = [
     {
@@ -151,7 +210,10 @@ function MenuAdmin() {
         shadow-2xl
       "
     >
-      {/* CABECERA */}
+      {/* ========================================
+          CABECERA
+      ======================================== */}
+
       <div className="px-5 py-5 lg:px-6 lg:py-7 border-b border-white/10">
         <Link to="/admin" className="flex items-center gap-3 group">
           <div
@@ -184,6 +246,7 @@ function MenuAdmin() {
         </Link>
 
         {/* INDICADOR */}
+
         <div
           className="
             mt-5
@@ -206,7 +269,10 @@ function MenuAdmin() {
         </div>
       </div>
 
-      {/* NAVEGACIÓN */}
+      {/* ========================================
+          NAVEGACION
+      ======================================== */}
+
       <nav className="flex-1 min-w-0 p-3 lg:p-4">
         <p
           className="
@@ -265,7 +331,8 @@ function MenuAdmin() {
                     }
                   `}
                 >
-                  {/* BARRA NARANJA DEL ACTIVO */}
+                  {/* BARRA NARANJA */}
+
                   {activo && (
                     <span
                       className="
@@ -281,6 +348,7 @@ function MenuAdmin() {
                   )}
 
                   {/* ICONO */}
+
                   <span
                     className={`
                       shrink-0
@@ -296,9 +364,11 @@ function MenuAdmin() {
                   </span>
 
                   {/* TEXTO */}
+
                   <span className="flex-1">{item.nombre}</span>
 
                   {/* FLECHA */}
+
                   <span
                     className={`
                       hidden
@@ -320,9 +390,11 @@ function MenuAdmin() {
         </ul>
       </nav>
 
-      {/* PERFIL Y CERRAR SESIÓN */}
+      {/* ========================================
+          PERFIL ADMINISTRADOR
+      ======================================== */}
+
       <div className="p-4 lg:p-5 border-t border-white/10">
-        {/* TARJETA ADMINISTRADOR */}
         <div
           className="
             bg-white/5
@@ -334,6 +406,7 @@ function MenuAdmin() {
         >
           <div className="flex items-center gap-3">
             {/* AVATAR */}
+
             <div
               className="
                 w-11
@@ -354,7 +427,8 @@ function MenuAdmin() {
               A
             </div>
 
-            {/* INFORMACIÓN */}
+            {/* INFORMACION */}
+
             <div className="min-w-0">
               <h3 className="font-bold text-white text-sm">Administrador</h3>
 
@@ -365,10 +439,14 @@ function MenuAdmin() {
           </div>
         </div>
 
-        {/* CERRAR SESIÓN */}
+        {/* ========================================
+            BOTON CERRAR SESION
+        ======================================== */}
+
         <button
           type="button"
           onClick={cerrarSesion}
+          disabled={cerrandoSesion}
           className="
             w-full
             mt-4
@@ -378,6 +456,8 @@ function MenuAdmin() {
             gap-3
             bg-[#FF6600]
             hover:bg-[#E65C00]
+            disabled:opacity-60
+            disabled:cursor-not-allowed
             text-white
             px-4
             py-3.5
@@ -392,8 +472,15 @@ function MenuAdmin() {
           "
         >
           <Icono tipo="salir" />
-          Cerrar Sesión
+
+          {cerrandoSesion ? "Cerrando sesión..." : "Cerrar Sesión"}
         </button>
+
+        {/* MENSAJE DE ERROR */}
+
+        {errorSesion && (
+          <p className="mt-3 text-sm text-red-300 text-center">{errorSesion}</p>
+        )}
       </div>
     </aside>
   );
