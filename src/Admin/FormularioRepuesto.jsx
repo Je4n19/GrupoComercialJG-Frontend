@@ -23,10 +23,14 @@ const REPUESTO_INICIAL = {
 };
 
 const inputClass =
-  "w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 " +
-  "bg-white text-gray-800 outline-none transition " +
-  "focus:border-[#009E49] focus:ring-4 focus:ring-green-100 " +
+  "block w-full min-w-0 max-w-full border-2 border-gray-200 " +
+  "rounded-xl px-4 py-3.5 text-base bg-white text-gray-800 " +
+  "outline-none transition focus:border-[#009E49] " +
+  "focus:ring-4 focus:ring-green-100 " +
   "disabled:bg-gray-100 disabled:cursor-not-allowed";
+
+const labelClass =
+  "block font-bold text-[#063D2A] mb-2 sm:mb-3 text-sm sm:text-base";
 
 function FormularioRepuesto() {
   const navigate = useNavigate();
@@ -39,13 +43,18 @@ function FormularioRepuesto() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [errorCategorias, setErrorCategorias] = useState("");
+  const [errorCarga, setErrorCarga] = useState(false);
 
+  const esEdicion = Boolean(id);
+
+  // CARGAR CATEGORÍAS Y REPUESTO
   useEffect(() => {
     let activo = true;
 
     const cargarDatos = async () => {
       setError("");
       setErrorCategorias("");
+      setErrorCarga(false);
       setCargando(true);
 
       try {
@@ -59,7 +68,6 @@ function FormularioRepuesto() {
 
         if (resultadoCategorias.status === "fulfilled") {
           const data = resultadoCategorias.value;
-
           setCategorias(Array.isArray(data) ? data : []);
         } else {
           console.error(
@@ -78,11 +86,17 @@ function FormularioRepuesto() {
 
             if (!data) {
               setError("No se encontró el repuesto solicitado.");
+              setErrorCarga(true);
             } else {
               setRepuesto({
                 ...REPUESTO_INICIAL,
                 ...data,
+                nombre: data.nombre ?? "",
+                categoria: data.categoria ?? "",
+                precio: data.precio ?? "",
+                stock: data.stock ?? "",
                 descripcion: data.descripcion ?? "",
+                imagen: data.imagen ?? "",
               });
             }
           } else {
@@ -91,6 +105,7 @@ function FormularioRepuesto() {
             setError(
               "No se pudo cargar el repuesto. Verifica la conexión con el servidor.",
             );
+            setErrorCarga(true);
           }
         } else {
           setRepuesto(REPUESTO_INICIAL);
@@ -109,6 +124,7 @@ function FormularioRepuesto() {
     };
   }, [id]);
 
+  // ACTUALIZAR CAMPOS
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -120,14 +136,11 @@ function FormularioRepuesto() {
     setError("");
   };
 
+  // GUARDAR O ACTUALIZAR
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (guardando || cargando) return;
-
-    if (id && error) {
-      return;
-    }
+    if (guardando || cargando || errorCarga) return;
 
     const descripcion = repuesto.descripcion ?? "";
 
@@ -136,7 +149,7 @@ function FormularioRepuesto() {
       return;
     }
 
-    if (!repuesto.nombre?.trim()) {
+    if (!String(repuesto.nombre ?? "").trim()) {
       setError("Debes ingresar el nombre del repuesto.");
       return;
     }
@@ -173,14 +186,12 @@ function FormularioRepuesto() {
       setGuardando(true);
       setError("");
 
-      if (id) {
+      if (esEdicion) {
         await actualizarRepuesto(id, datosEnviar);
-
-        alert("Repuesto actualizado correctamente.");
+        window.alert("Repuesto actualizado correctamente.");
       } else {
         await guardarRepuesto(datosEnviar);
-
-        alert("Repuesto registrado correctamente.");
+        window.alert("Repuesto registrado correctamente.");
       }
 
       navigate("/admin/repuestos");
@@ -193,7 +204,7 @@ function FormularioRepuesto() {
         setError("Tu sesión ha expirado. Inicia sesión nuevamente.");
       } else if (estado === 403) {
         setError(
-          "Error 403: el servidor rechazó la solicitud. Debemos revisar el envío de la sesión y el token CSRF en repuestoService.js.",
+          "Error 403: el servidor rechazó la solicitud. Revisa la sesión y el token CSRF en repuestoService.js.",
         );
       } else if (estado === 400) {
         setError(
@@ -212,6 +223,7 @@ function FormularioRepuesto() {
     }
   };
 
+  // CONTADOR DE DESCRIPCIÓN
   const caracteres = (repuesto.descripcion ?? "").length;
 
   const porcentajeDescripcion = Math.min(
@@ -224,23 +236,24 @@ function FormularioRepuesto() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#F4F7F5]">
+    <div className="flex flex-col lg:flex-row min-h-screen w-full min-w-0 max-w-full bg-[#F4F7F5]">
+      {/* MENÚ ADMINISTRATIVO */}
       <MenuAdmin />
 
-      <main className="flex-1 min-w-0 min-h-screen">
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="flex-1 min-w-0 w-full lg:w-auto min-h-screen overflow-x-hidden">
         {/* ENCABEZADO */}
-
         <header className="bg-gradient-to-r from-[#063D2A] via-[#006B3C] to-[#009E49] text-white shadow-lg">
-          <div className="px-5 sm:px-8 lg:px-10 py-10">
-            <p className="uppercase tracking-[0.2em] text-green-100 text-xs font-bold">
+          <div className="px-4 sm:px-8 lg:px-10 py-7 sm:py-10">
+            <p className="uppercase tracking-[0.2em] text-green-100 text-[10px] sm:text-xs font-bold">
               Grupo Comercial J&G
             </p>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-3">
-              {id ? "Editar Repuesto" : "Registrar Repuesto"}
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black mt-3 leading-tight break-words">
+              {esEdicion ? "Editar Repuesto" : "Registrar Repuesto"}
             </h1>
 
-            <p className="text-green-100 mt-3 text-sm sm:text-lg">
+            <p className="text-green-100 mt-3 text-sm sm:text-lg leading-relaxed">
               Gestión de repuestos, precios e inventario.
             </p>
 
@@ -248,32 +261,34 @@ function FormularioRepuesto() {
           </div>
         </header>
 
-        <div className="p-5 sm:p-8 lg:p-10">
+        {/* CONTENIDO */}
+        <div className="w-full min-w-0 p-3 sm:p-6 lg:p-8 xl:p-10">
           {/* FORMULARIO */}
-
-          <div className="max-w-5xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="bg-[#063D2A] text-white px-6 sm:px-8 py-6">
-              <h2 className="text-xl sm:text-2xl font-bold">
+          <section className="w-full min-w-0 max-w-5xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-[#063D2A] text-white px-4 sm:px-8 py-5 sm:py-6">
+              <h2 className="text-xl sm:text-2xl font-bold break-words">
                 Información del Repuesto
               </h2>
 
-              <p className="text-green-100 mt-2 text-sm">
+              <p className="text-green-100 mt-2 text-sm leading-relaxed">
                 Completa los datos para registrar o actualizar el repuesto.
               </p>
             </div>
 
             {cargando ? (
-              <div className="p-12 text-center text-gray-500">
+              <div className="p-6 sm:p-12 text-center text-gray-500">
                 Cargando información del repuesto...
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="p-5 sm:p-8">
+              <form
+                onSubmit={handleSubmit}
+                className="w-full min-w-0 p-4 sm:p-6 lg:p-8"
+              >
                 {/* ERRORES */}
-
                 {error && (
                   <div
                     role="alert"
-                    className="mb-7 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl font-medium"
+                    className="mb-6 sm:mb-7 bg-red-50 border border-red-200 text-red-700 px-4 sm:px-5 py-4 rounded-xl font-medium text-sm sm:text-base break-words"
                   >
                     {error}
                   </div>
@@ -282,20 +297,17 @@ function FormularioRepuesto() {
                 {errorCategorias && (
                   <div
                     role="alert"
-                    className="mb-7 bg-orange-50 border border-orange-200 text-orange-800 px-5 py-4 rounded-xl font-medium"
+                    className="mb-6 sm:mb-7 bg-orange-50 border border-orange-200 text-orange-800 px-4 sm:px-5 py-4 rounded-xl font-medium text-sm sm:text-base break-words"
                   >
                     {errorCategorias}
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* CAMPOS PRINCIPALES */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                   {/* NOMBRE */}
-
-                  <div>
-                    <label
-                      htmlFor="nombre"
-                      className="block font-bold text-[#063D2A] mb-3"
-                    >
+                  <div className="min-w-0">
+                    <label htmlFor="nombre" className={labelClass}>
                       Nombre del Repuesto
                     </label>
 
@@ -307,18 +319,14 @@ function FormularioRepuesto() {
                       onChange={handleChange}
                       placeholder="Ej. Pistón STIHL MS 250"
                       required
-                      disabled={guardando}
+                      disabled={guardando || errorCarga}
                       className={inputClass}
                     />
                   </div>
 
                   {/* CATEGORÍA */}
-
-                  <div>
-                    <label
-                      htmlFor="categoria"
-                      className="block font-bold text-[#063D2A] mb-3"
-                    >
+                  <div className="min-w-0">
+                    <label htmlFor="categoria" className={labelClass}>
                       Categoría
                     </label>
 
@@ -328,7 +336,7 @@ function FormularioRepuesto() {
                       value={repuesto.categoria ?? ""}
                       onChange={handleChange}
                       required
-                      disabled={guardando}
+                      disabled={guardando || errorCarga}
                       className={inputClass}
                     >
                       <option value="">Seleccione una categoría</option>
@@ -346,18 +354,14 @@ function FormularioRepuesto() {
                       ))}
                     </select>
 
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2 leading-relaxed">
                       Selecciona la categoría correspondiente al repuesto.
                     </p>
                   </div>
 
                   {/* PRECIO */}
-
-                  <div>
-                    <label
-                      htmlFor="precio"
-                      className="block font-bold text-[#063D2A] mb-3"
-                    >
+                  <div className="min-w-0">
+                    <label htmlFor="precio" className={labelClass}>
                       Precio (S/)
                     </label>
 
@@ -370,19 +374,16 @@ function FormularioRepuesto() {
                       placeholder="0.00"
                       min="0"
                       step="0.01"
+                      inputMode="decimal"
                       required
-                      disabled={guardando}
+                      disabled={guardando || errorCarga}
                       className={inputClass}
                     />
                   </div>
 
                   {/* STOCK */}
-
-                  <div>
-                    <label
-                      htmlFor="stock"
-                      className="block font-bold text-[#063D2A] mb-3"
-                    >
+                  <div className="min-w-0">
+                    <label htmlFor="stock" className={labelClass}>
                       Stock
                     </label>
 
@@ -395,19 +396,16 @@ function FormularioRepuesto() {
                       placeholder="0"
                       min="0"
                       step="1"
+                      inputMode="numeric"
                       required
-                      disabled={guardando}
+                      disabled={guardando || errorCarga}
                       className={inputClass}
                     />
                   </div>
 
                   {/* IMAGEN */}
-
-                  <div className="md:col-span-2">
-                    <label
-                      htmlFor="imagen"
-                      className="block font-bold text-[#063D2A] mb-3"
-                    >
+                  <div className="min-w-0 md:col-span-2">
+                    <label htmlFor="imagen" className={labelClass}>
                       URL de Imagen
                     </label>
 
@@ -418,45 +416,47 @@ function FormularioRepuesto() {
                       value={repuesto.imagen ?? ""}
                       onChange={handleChange}
                       placeholder="https://..."
-                      disabled={guardando}
+                      disabled={guardando || errorCarga}
                       className={inputClass}
                     />
 
                     {repuesto.imagen && (
-                      <div className="mt-5 bg-[#F4F7F5] border border-gray-100 rounded-xl p-4">
+                      <div className="mt-5 min-w-0 bg-[#F4F7F5] border border-gray-100 rounded-xl p-3 sm:p-4">
                         <p className="text-sm font-semibold text-[#063D2A] mb-3">
                           Vista previa de la imagen
                         </p>
 
-                        <img
-                          src={repuesto.imagen}
-                          alt={repuesto.nombre || "Imagen del repuesto"}
-                          className="w-full max-w-xs h-48 object-contain bg-white rounded-lg border border-gray-200"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
+                        <div className="w-full min-w-0 max-w-sm h-44 sm:h-52 flex items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white p-3">
+                          <img
+                            key={repuesto.imagen}
+                            src={repuesto.imagen}
+                            alt={repuesto.nombre || "Imagen del repuesto"}
+                            className="w-full h-full max-w-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
 
                   {/* DESCRIPCIÓN */}
-
-                  <div className="md:col-span-2">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                  <div className="min-w-0 md:col-span-2">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 mb-3">
                       <label
                         htmlFor="descripcion-repuesto"
-                        className="block font-bold text-[#063D2A] text-lg"
+                        className="block font-bold text-[#063D2A] text-base sm:text-lg"
                       >
                         Descripción del Repuesto
                       </label>
 
-                      <span className="text-xs font-bold text-[#FF6600] bg-orange-50 px-3 py-2 rounded-full">
+                      <span className="self-start text-xs font-bold text-[#FF6600] bg-orange-50 px-3 py-2 rounded-full">
                         Hasta 5,000 caracteres
                       </span>
                     </div>
 
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-gray-500 mb-4 leading-relaxed">
                       Agrega información sobre compatibilidad, materiales,
                       características técnicas, instalación y recomendaciones.
                     </p>
@@ -468,7 +468,7 @@ function FormularioRepuesto() {
                       onChange={handleChange}
                       maxLength={LIMITE_DESCRIPCION}
                       rows={12}
-                      disabled={guardando}
+                      disabled={guardando || errorCarga}
                       placeholder={`Escribe aquí la descripción completa...
 
 Características del repuesto:
@@ -485,11 +485,11 @@ Especificaciones técnicas:
 
 Recomendaciones:
 -`}
-                      className={`${inputClass} min-h-[300px] resize-y leading-relaxed`}
+                      className={`${inputClass} min-h-[230px] sm:min-h-[300px] resize-y leading-relaxed`}
                     />
 
-                    <div className="flex flex-wrap justify-between items-center gap-2 mt-3">
-                      <p className="text-xs text-gray-500">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mt-3">
+                      <p className="text-xs text-gray-500 leading-relaxed">
                         Puedes escribir párrafos, listas y especificaciones en
                         diferentes líneas.
                       </p>
@@ -519,18 +519,17 @@ Recomendaciones:
                 </div>
 
                 {/* VISTA PREVIA */}
-
-                <div className="mt-9 bg-[#F0F9F3] border border-green-200 rounded-2xl p-6">
+                <section className="mt-8 sm:mt-9 min-w-0 bg-[#F0F9F3] border border-green-200 rounded-2xl p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-2 h-8 bg-[#FF6600] rounded-full" />
+                    <div className="shrink-0 w-2 h-8 bg-[#FF6600] rounded-full" />
 
-                    <h3 className="font-bold text-xl text-[#063D2A]">
+                    <h3 className="font-bold text-lg sm:text-xl text-[#063D2A]">
                       Vista Previa
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                    <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 text-sm">
+                    <div className="min-w-0 space-y-3 break-words">
                       <p>
                         <strong className="text-[#063D2A]">Repuesto:</strong>{" "}
                         {repuesto.nombre || "-"}
@@ -542,7 +541,7 @@ Recomendaciones:
                       </p>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="min-w-0 space-y-3 break-words">
                       <p>
                         <strong className="text-[#063D2A]">Precio:</strong> S/{" "}
                         {repuesto.precio === "" ? "0" : repuesto.precio}
@@ -556,7 +555,7 @@ Recomendaciones:
                   </div>
 
                   {repuesto.descripcion && (
-                    <div className="mt-5 pt-5 border-t border-green-200">
+                    <div className="mt-5 pt-5 border-t border-green-200 min-w-0">
                       <h4 className="font-bold text-[#063D2A] mb-2">
                         Descripción:
                       </h4>
@@ -566,53 +565,57 @@ Recomendaciones:
                       </p>
                     </div>
                   )}
-                </div>
+                </section>
 
                 {/* BOTONES */}
-
-                <div className="flex flex-col sm:flex-row gap-4 mt-10">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8 sm:mt-10">
                   <button
                     type="submit"
-                    disabled={guardando || Boolean(id && error)}
-                    className="bg-[#009E49] hover:bg-[#007A39] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold shadow-md transition"
+                    disabled={guardando || errorCarga}
+                    className="inline-flex w-full sm:w-auto items-center justify-center bg-[#009E49] hover:bg-[#007A39] disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-4 rounded-xl font-bold shadow-md transition text-sm sm:text-base"
                   >
                     {guardando
                       ? "Guardando..."
-                      : id
+                      : esEdicion
                         ? "Actualizar Repuesto"
                         : "Guardar Repuesto"}
                   </button>
 
                   <Link
                     to="/admin/repuestos"
-                    className="inline-flex items-center justify-center bg-[#FF6600] hover:bg-[#E85C00] text-white px-8 py-4 rounded-xl font-bold transition"
+                    aria-disabled={guardando}
+                    onClick={(e) => {
+                      if (guardando) e.preventDefault();
+                    }}
+                    className={`inline-flex w-full sm:w-auto items-center justify-center bg-[#FF6600] hover:bg-[#E85C00] text-white px-6 sm:px-8 py-4 rounded-xl font-bold transition text-sm sm:text-base ${
+                      guardando ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                   >
                     Cancelar
                   </Link>
                 </div>
               </form>
             )}
-          </div>
+          </section>
 
           {/* CONSEJO DE GESTIÓN */}
-
-          <div className="max-w-5xl mx-auto mt-8">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+          <section className="w-full min-w-0 max-w-5xl mx-auto mt-6 sm:mt-8">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 lg:p-8">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+                <div className="shrink-0 w-2 h-9 bg-[#FF6600] rounded-full" />
 
-                <h3 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
+                <h3 className="text-xl sm:text-2xl font-bold text-[#063D2A] break-words">
                   Consejo de Gestión
                 </h3>
               </div>
 
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
                 Mantén actualizado el stock de repuestos para evitar quiebres de
                 inventario y mejorar la atención a los clientes de Grupo
                 Comercial J&G.
               </p>
             </div>
-          </div>
+          </section>
         </div>
       </main>
     </div>

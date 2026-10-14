@@ -9,25 +9,41 @@ import {
   obtenerCategoriaRepuestoPorId,
 } from "../Services/categoriaRepuestoService";
 
+/* ==========================================
+   DATOS INICIALES
+========================================== */
+
 const CATEGORIA_INICIAL = {
   nombre: "",
   descripcion: "",
 };
 
 const inputClass =
-  "w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 " +
-  "bg-white text-gray-800 outline-none transition " +
-  "focus:border-[#009E49] focus:ring-4 focus:ring-green-100 " +
+  "block w-full min-w-0 max-w-full border-2 border-gray-200 " +
+  "rounded-xl px-4 py-3.5 text-base bg-white text-gray-800 " +
+  "outline-none transition focus:border-[#009E49] " +
+  "focus:ring-4 focus:ring-green-100 " +
   "disabled:bg-gray-100 disabled:cursor-not-allowed";
+
+/* ==========================================
+   COMPONENTE PRINCIPAL
+========================================== */
 
 function FormularioCategoriaRepuesto() {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const [categoria, setCategoria] = useState(CATEGORIA_INICIAL);
+
   const [cargando, setCargando] = useState(Boolean(id));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
+
+  const esEdicion = Boolean(id);
+
+  /* ==========================================
+     CARGAR CATEGORÍA PARA EDICIÓN
+  ========================================== */
 
   useEffect(() => {
     let activo = true;
@@ -36,6 +52,7 @@ function FormularioCategoriaRepuesto() {
       if (!id) {
         setCategoria(CATEGORIA_INICIAL);
         setCargando(false);
+        setError("");
         return;
       }
 
@@ -73,6 +90,10 @@ function FormularioCategoriaRepuesto() {
     };
   }, [id]);
 
+  /* ==========================================
+     ACTUALIZAR CAMPOS
+  ========================================== */
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -83,6 +104,10 @@ function FormularioCategoriaRepuesto() {
 
     setError("");
   };
+
+  /* ==========================================
+     GUARDAR O ACTUALIZAR CATEGORÍA
+  ========================================== */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,14 +128,14 @@ function FormularioCategoriaRepuesto() {
       setGuardando(true);
       setError("");
 
-      if (id) {
+      if (esEdicion) {
         await actualizarCategoriaRepuesto(id, datosEnviar);
 
-        alert("Categoría de repuesto actualizada correctamente.");
+        window.alert("Categoría de repuesto actualizada correctamente.");
       } else {
         await crearCategoriaRepuesto(datosEnviar);
 
-        alert("Categoría de repuesto registrada correctamente.");
+        window.alert("Categoría de repuesto registrada correctamente.");
       }
 
       navigate("/admin/categorias-repuesto");
@@ -140,26 +165,34 @@ function FormularioCategoriaRepuesto() {
     }
   };
 
+  /* ==========================================
+     INTERFAZ RESPONSIVE
+  ========================================== */
+
   return (
-    <div className="flex min-h-screen bg-[#F4F7F5]">
+    <div className="flex flex-col lg:flex-row min-h-screen w-full min-w-0 max-w-full bg-[#F4F7F5]">
+      {/* MENÚ ADMINISTRATIVO */}
+
       <MenuAdmin />
 
-      <main className="flex-1 min-w-0 min-h-screen">
+      {/* CONTENIDO PRINCIPAL */}
+
+      <main className="flex-1 min-w-0 w-full lg:w-auto min-h-screen overflow-x-hidden">
         {/* ENCABEZADO */}
 
         <header className="bg-gradient-to-r from-[#063D2A] via-[#006B3C] to-[#009E49] text-white shadow-lg">
-          <div className="px-5 sm:px-8 lg:px-10 py-10">
-            <p className="uppercase tracking-[0.2em] text-green-100 text-xs font-bold">
+          <div className="px-4 sm:px-8 lg:px-10 py-7 sm:py-10">
+            <p className="uppercase tracking-[0.2em] text-green-100 text-[10px] sm:text-xs font-bold">
               Grupo Comercial J&G
             </p>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mt-3">
-              {id
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black mt-3 leading-tight break-words">
+              {esEdicion
                 ? "Editar Categoría de Repuesto"
                 : "Nueva Categoría de Repuesto"}
             </h1>
 
-            <p className="text-green-100 mt-3 text-sm sm:text-lg">
+            <p className="text-green-100 mt-3 text-sm sm:text-lg leading-relaxed">
               Organización y gestión de categorías para repuestos.
             </p>
 
@@ -169,16 +202,18 @@ function FormularioCategoriaRepuesto() {
 
         {/* CONTENIDO */}
 
-        <div className="p-5 sm:p-8 lg:p-10">
-          <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            {/* TÍTULO DEL FORMULARIO */}
+        <div className="w-full min-w-0 p-3 sm:p-6 lg:p-8 xl:p-10">
+          {/* CONTENEDOR DEL FORMULARIO */}
 
-            <div className="bg-[#063D2A] text-white px-6 sm:px-8 py-6">
-              <h2 className="text-xl sm:text-2xl font-bold">
+          <section className="w-full min-w-0 max-w-4xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* TÍTULO */}
+
+            <div className="bg-[#063D2A] text-white px-4 sm:px-8 py-5 sm:py-6">
+              <h2 className="text-xl sm:text-2xl font-bold break-words">
                 Información de la Categoría
               </h2>
 
-              <p className="text-green-100 mt-2 text-sm">
+              <p className="text-green-100 mt-2 text-sm leading-relaxed">
                 Completa los datos necesarios para registrar la categoría.
               </p>
             </div>
@@ -186,18 +221,21 @@ function FormularioCategoriaRepuesto() {
             {/* FORMULARIO */}
 
             {cargando ? (
-              <div className="p-10 text-center text-gray-500">
+              <div className="p-6 sm:p-10 text-center text-gray-500">
                 Cargando información de la categoría...
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="p-5 sm:p-8">
-                <div className="space-y-7">
+              <form
+                onSubmit={handleSubmit}
+                className="w-full min-w-0 p-4 sm:p-6 lg:p-8"
+              >
+                <div className="space-y-6 sm:space-y-7">
                   {/* NOMBRE */}
 
-                  <div>
+                  <div className="min-w-0">
                     <label
                       htmlFor="nombre"
-                      className="block font-bold text-[#063D2A] mb-3"
+                      className="block font-bold text-[#063D2A] mb-2 sm:mb-3 text-sm sm:text-base"
                     >
                       Nombre de la Categoría
                     </label>
@@ -214,7 +252,7 @@ function FormularioCategoriaRepuesto() {
                       className={inputClass}
                     />
 
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2 leading-relaxed">
                       Este nombre permitirá clasificar los repuestos dentro del
                       catálogo.
                     </p>
@@ -222,17 +260,17 @@ function FormularioCategoriaRepuesto() {
 
                   {/* DESCRIPCIÓN */}
 
-                  <div>
+                  <div className="min-w-0">
                     <label
                       htmlFor="descripcion"
-                      className="block font-bold text-[#063D2A] mb-3"
+                      className="block font-bold text-[#063D2A] mb-2 sm:mb-3 text-sm sm:text-base"
                     >
                       Descripción
                     </label>
 
                     <textarea
                       id="descripcion"
-                      rows={6}
+                      rows={5}
                       name="descripcion"
                       value={categoria.descripcion}
                       onChange={handleChange}
@@ -243,50 +281,56 @@ function FormularioCategoriaRepuesto() {
                   </div>
                 </div>
 
-                {/* VISTA PREVIA */}
+                {/* ==========================================
+                    VISTA PREVIA
+                ========================================== */}
 
                 {categoria.nombre.trim() && (
-                  <div className="mt-8 bg-[#F0F9F3] border border-green-200 rounded-2xl p-5">
+                  <div className="mt-7 sm:mt-8 bg-[#F0F9F3] border border-green-200 rounded-2xl p-4 sm:p-5 min-w-0">
                     <p className="text-xs text-[#009E49] font-black uppercase tracking-wider">
                       Vista Previa
                     </p>
 
-                    <div className="mt-3">
-                      <span className="inline-block bg-[#063D2A] text-white px-4 py-2 rounded-full text-sm font-bold">
+                    <div className="mt-3 min-w-0">
+                      <span className="inline-block max-w-full bg-[#063D2A] text-white px-3 sm:px-4 py-2 rounded-xl sm:rounded-full text-sm font-bold break-words">
                         {categoria.nombre}
                       </span>
                     </div>
 
                     {categoria.descripcion.trim() && (
-                      <p className="text-sm text-gray-600 mt-4 whitespace-pre-wrap">
+                      <p className="text-sm text-gray-600 mt-4 whitespace-pre-wrap break-words leading-relaxed">
                         {categoria.descripcion}
                       </p>
                     )}
                   </div>
                 )}
 
-                {/* MENSAJE DE ERROR */}
+                {/* ==========================================
+                    MENSAJE DE ERROR
+                ========================================== */}
 
                 {error && (
                   <div
                     role="alert"
-                    className="mt-7 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl font-medium"
+                    className="mt-6 sm:mt-7 bg-red-50 border border-red-200 text-red-700 px-4 sm:px-5 py-4 rounded-xl font-medium text-sm sm:text-base break-words"
                   >
                     {error}
                   </div>
                 )}
 
-                {/* BOTONES */}
+                {/* ==========================================
+                    BOTONES
+                ========================================== */}
 
-                <div className="flex flex-col sm:flex-row gap-4 mt-10">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8 sm:mt-10">
                   <button
                     type="submit"
                     disabled={guardando}
-                    className="bg-[#009E49] hover:bg-[#007A39] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold shadow-md transition"
+                    className="w-full sm:w-auto inline-flex items-center justify-center bg-[#009E49] hover:bg-[#007A39] disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-4 rounded-xl font-bold shadow-md transition text-sm sm:text-base"
                   >
                     {guardando
                       ? "Guardando..."
-                      : id
+                      : esEdicion
                         ? "Actualizar Categoría"
                         : "Guardar Categoría"}
                   </button>
@@ -295,34 +339,36 @@ function FormularioCategoriaRepuesto() {
                     type="button"
                     onClick={() => navigate("/admin/categorias-repuesto")}
                     disabled={guardando}
-                    className="bg-[#FF6600] hover:bg-[#E85C00] disabled:opacity-60 text-white px-8 py-4 rounded-xl font-bold transition"
+                    className="w-full sm:w-auto inline-flex items-center justify-center bg-[#FF6600] hover:bg-[#E85C00] disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-4 rounded-xl font-bold transition text-sm sm:text-base"
                   >
                     Cancelar
                   </button>
                 </div>
               </form>
             )}
-          </div>
+          </section>
 
-          {/* INFORMACIÓN */}
+          {/* ==========================================
+              INFORMACIÓN ADICIONAL
+          ========================================== */}
 
-          <div className="max-w-4xl mx-auto mt-8">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+          <section className="w-full min-w-0 max-w-4xl mx-auto mt-6 sm:mt-8">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 lg:p-8">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-2 h-9 bg-[#FF6600] rounded-full" />
+                <div className="shrink-0 w-2 h-9 bg-[#FF6600] rounded-full" />
 
                 <h3 className="text-xl sm:text-2xl font-bold text-[#063D2A]">
                   Recomendación
                 </h3>
               </div>
 
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
                 Mantén una estructura clara de categorías para facilitar la
                 búsqueda de repuestos y mejorar la organización del inventario
                 de Grupo Comercial J&G.
               </p>
             </div>
-          </div>
+          </section>
         </div>
       </main>
     </div>

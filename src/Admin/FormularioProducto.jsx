@@ -25,7 +25,10 @@ const productoInicial = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-[#009E49] focus:ring-2 focus:ring-green-100";
+  "block w-full min-w-0 max-w-full rounded-xl border border-gray-300 " +
+  "bg-white px-4 py-3.5 text-base text-gray-800 outline-none transition " +
+  "focus:border-[#009E49] focus:ring-2 focus:ring-green-100 " +
+  "disabled:bg-gray-100 disabled:cursor-not-allowed";
 
 const labelClass = "mb-2 block text-sm font-semibold text-[#063D2A]";
 
@@ -39,10 +42,18 @@ function FormularioProducto() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
 
+  const esEdicion = Boolean(id);
+
+  // CARGAR CATEGORÍAS Y PRODUCTO
   useEffect(() => {
     let activo = true;
 
     async function cargarDatos() {
+      if (activo) {
+        setError("");
+        setCargando(Boolean(id));
+      }
+
       try {
         const lista = await obtenerCategorias();
 
@@ -53,27 +64,33 @@ function FormularioProducto() {
         console.error("Error cargando categorías:", err);
       }
 
-      if (!id) return;
+      if (!id) {
+        if (activo) {
+          setProducto(productoInicial);
+          setCargando(false);
+        }
+        return;
+      }
 
       try {
         const data = await obtenerProductoPorId(id);
 
-        if (activo) {
-          setProducto({
-            ...productoInicial,
-            ...data,
-            nombre: data.nombre ?? "",
-            marca: data.marca ?? "",
-            modelo: data.modelo ?? "",
-            categoria: data.categoria ?? "",
-            precio: data.precio ?? "",
-            stock: data.stock ?? "",
-            descripcion: data.descripcion ?? "",
-            imagen: data.imagen ?? "",
-            imagen2: data.imagen2 ?? "",
-            datosTecnicos: data.datosTecnicos ?? "",
-          });
-        }
+        if (!activo) return;
+
+        setProducto({
+          ...productoInicial,
+          ...data,
+          nombre: data.nombre ?? "",
+          marca: data.marca ?? "",
+          modelo: data.modelo ?? "",
+          categoria: data.categoria ?? "",
+          precio: data.precio ?? "",
+          stock: data.stock ?? "",
+          descripcion: data.descripcion ?? "",
+          imagen: data.imagen ?? "",
+          imagen2: data.imagen2 ?? "",
+          datosTecnicos: data.datosTecnicos ?? "",
+        });
       } catch (err) {
         console.error("Error cargando producto:", err);
 
@@ -92,6 +109,7 @@ function FormularioProducto() {
     };
   }, [id]);
 
+  // CAMBIOS DEL FORMULARIO
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -103,10 +121,11 @@ function FormularioProducto() {
     if (error) setError("");
   };
 
+  // GUARDAR O ACTUALIZAR
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (guardando) return;
+    if (guardando || cargando) return;
 
     setError("");
 
@@ -117,6 +136,24 @@ function FormularioProducto() {
 
     if (producto.datosTecnicos.length > LIMITE_DATOS_TECNICOS) {
       setError("Los datos técnicos superan los 10,000 caracteres.");
+      return;
+    }
+
+    if (
+      producto.precio === "" ||
+      !Number.isFinite(Number(producto.precio)) ||
+      Number(producto.precio) < 0
+    ) {
+      setError("Ingresa un precio válido.");
+      return;
+    }
+
+    if (
+      producto.stock === "" ||
+      !Number.isInteger(Number(producto.stock)) ||
+      Number(producto.stock) < 0
+    ) {
+      setError("Ingresa una cantidad de stock válida.");
       return;
     }
 
@@ -137,7 +174,7 @@ function FormularioProducto() {
         datosTecnicos: producto.datosTecnicos,
       };
 
-      // Obtener CSRF usando la sesión actual.
+      // OBTENER TOKEN CSRF DE LA SESIÓN ACTUAL
       const csrfResponse = await fetch(`${API_URL}/api/auth/csrf`, {
         method: "GET",
         credentials: "include",
@@ -156,12 +193,12 @@ function FormularioProducto() {
         throw new Error("El backend no devolvió un token CSRF válido.");
       }
 
-      const url = id
+      const url = esEdicion
         ? `${API_URL}/api/productos/${encodeURIComponent(id)}`
         : `${API_URL}/api/productos`;
 
       const respuesta = await fetch(url, {
-        method: id ? "PUT" : "POST",
+        method: esEdicion ? "PUT" : "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -173,7 +210,7 @@ function FormularioProducto() {
       if (!respuesta.ok) {
         if (respuesta.status === 403) {
           throw new Error(
-            "Error 403: el servidor rechazó la edición. " +
+            "Error 403: el servidor rechazó la solicitud. " +
               "Verifica la sesión, las cookies y el token CSRF.",
           );
         }
@@ -187,8 +224,8 @@ function FormularioProducto() {
         );
       }
 
-      alert(
-        id
+      window.alert(
+        esEdicion
           ? "Producto actualizado correctamente."
           : "Producto registrado correctamente.",
       );
@@ -205,10 +242,12 @@ function FormularioProducto() {
     }
   };
 
+  // CONTADORES
   const caracteresDescripcion = (producto.descripcion || "").length;
 
   const caracteresTecnicos = (producto.datosTecnicos || "").length;
 
+  // CONVERTIR DATOS TÉCNICOS A ESPECIFICACIONES
   const especificaciones = (producto.datosTecnicos || "")
     .split("\n")
     .map((linea) => {
@@ -225,106 +264,143 @@ function FormularioProducto() {
     })
     .filter(Boolean);
 
+  // CARGANDO
   if (cargando) {
     return (
-      <div className="flex min-h-screen">
+      <div className="flex flex-col lg:flex-row min-h-screen w-full min-w-0 bg-[#F1F7F3]">
         <MenuAdmin />
 
-        <main className="flex min-h-screen flex-1 items-center justify-center bg-[#F1F7F3]">
-          <p className="font-semibold text-[#063D2A]">Cargando producto...</p>
+        <main className="flex flex-1 min-w-0 w-full items-center justify-center p-6">
+          <p className="font-semibold text-[#063D2A] text-center">
+            Cargando producto...
+          </p>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col lg:flex-row min-h-screen w-full min-w-0 max-w-full bg-[#F1F7F3]">
       <MenuAdmin />
 
-      <main className="min-w-0 flex-1 bg-[#F1F7F3]">
+      <main className="flex-1 min-w-0 w-full lg:w-auto overflow-x-hidden">
         {/* ENCABEZADO */}
-        <header className="bg-gradient-to-r from-[#063D2A] via-[#075E3B] to-[#009E49] px-6 py-8 text-white shadow-lg md:px-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-green-100">
-            Grupo Comercial J&G
-          </p>
+        <header className="bg-gradient-to-r from-[#063D2A] via-[#075E3B] to-[#009E49] text-white shadow-lg">
+          <div className="px-4 sm:px-8 lg:px-10 py-7 sm:py-9">
+            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-green-100">
+              Grupo Comercial J&G
+            </p>
 
-          <h1 className="mt-2 text-2xl font-bold md:text-3xl">
-            {id ? "Editar Producto" : "Registrar Producto"}
-          </h1>
+            <h1 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black leading-tight break-words">
+              {esEdicion ? "Editar Producto" : "Registrar Producto"}
+            </h1>
 
-          <p className="mt-2 text-sm text-green-100">
-            Gestión de maquinaria y equipos comerciales.
-          </p>
+            <p className="mt-3 text-sm sm:text-base text-green-100 leading-relaxed">
+              Gestión de maquinaria y equipos comerciales.
+            </p>
+
+            <div className="w-20 h-1 bg-[#FF6600] rounded-full mt-5" />
+          </div>
         </header>
 
-        <div className="p-4 md:p-8">
-          <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
-            <div className="bg-[#063D2A] px-6 py-4 text-white md:px-8">
-              <h2 className="text-lg font-bold md:text-xl">
+        {/* CONTENIDO */}
+        <div className="w-full min-w-0 p-3 sm:p-6 lg:p-8">
+          <div className="w-full min-w-0 overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-xl">
+            <div className="bg-[#063D2A] px-4 sm:px-8 py-5 text-white">
+              <h2 className="text-lg sm:text-xl font-bold">
                 Información del Producto
               </h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-9 p-5 md:p-8">
+            <form
+              onSubmit={handleSubmit}
+              className="w-full min-w-0 space-y-8 sm:space-y-9 p-4 sm:p-6 lg:p-8"
+            >
               {/* INFORMACIÓN PRINCIPAL */}
-              <section>
+              <section className="min-w-0">
                 <h3 className="mb-5 text-lg font-bold text-[#063D2A]">
                   Datos principales
                 </h3>
 
-                <div className="grid gap-5 md:grid-cols-2">
-                  <div>
-                    <label className={labelClass}>Nombre del Producto</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="min-w-0">
+                    <label htmlFor="nombre" className={labelClass}>
+                      Nombre del Producto
+                    </label>
 
                     <input
+                      id="nombre"
                       type="text"
                       name="nombre"
                       value={producto.nombre}
                       onChange={handleChange}
                       placeholder="Ej. Motosierra STIHL MS 250"
                       className={inputClass}
+                      disabled={guardando}
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className={labelClass}>Marca</label>
+                  <div className="min-w-0">
+                    <label htmlFor="marca" className={labelClass}>
+                      Marca
+                    </label>
 
                     <input
+                      id="marca"
                       type="text"
                       name="marca"
                       value={producto.marca}
                       onChange={handleChange}
                       placeholder="Ej. STIHL"
                       className={inputClass}
+                      disabled={guardando}
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className={labelClass}>Modelo</label>
+                  <div className="min-w-0">
+                    <label htmlFor="modelo" className={labelClass}>
+                      Modelo
+                    </label>
 
                     <input
+                      id="modelo"
                       type="text"
                       name="modelo"
                       value={producto.modelo}
                       onChange={handleChange}
                       placeholder="Ej. MS 250"
                       className={inputClass}
+                      disabled={guardando}
                     />
                   </div>
 
-                  <div>
-                    <label className={labelClass}>Categoría</label>
+                  <div className="min-w-0">
+                    <label htmlFor="categoria" className={labelClass}>
+                      Categoría
+                    </label>
 
                     <select
+                      id="categoria"
                       name="categoria"
                       value={producto.categoria}
                       onChange={handleChange}
                       className={inputClass}
+                      disabled={guardando}
                       required
                     >
                       <option value="">Seleccione una categoría</option>
+
+                      {producto.categoria &&
+                        !categorias.some(
+                          (categoria) =>
+                            categoria.nombre === producto.categoria,
+                        ) && (
+                          <option value={producto.categoria}>
+                            {producto.categoria}
+                          </option>
+                        )}
 
                       {categorias.map((categoria) => (
                         <option key={categoria.id} value={categoria.nombre}>
@@ -334,10 +410,13 @@ function FormularioProducto() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className={labelClass}>Precio (S/)</label>
+                  <div className="min-w-0">
+                    <label htmlFor="precio" className={labelClass}>
+                      Precio (S/)
+                    </label>
 
                     <input
+                      id="precio"
                       type="number"
                       name="precio"
                       value={producto.precio}
@@ -345,15 +424,20 @@ function FormularioProducto() {
                       placeholder="0.00"
                       min="0"
                       step="0.01"
+                      inputMode="decimal"
                       className={inputClass}
+                      disabled={guardando}
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className={labelClass}>Stock Disponible</label>
+                  <div className="min-w-0">
+                    <label htmlFor="stock" className={labelClass}>
+                      Stock Disponible
+                    </label>
 
                     <input
+                      id="stock"
                       type="number"
                       name="stock"
                       value={producto.stock}
@@ -361,7 +445,9 @@ function FormularioProducto() {
                       placeholder="0"
                       min="0"
                       step="1"
+                      inputMode="numeric"
                       className={inputClass}
+                      disabled={guardando}
                       required
                     />
                   </div>
@@ -369,65 +455,73 @@ function FormularioProducto() {
               </section>
 
               {/* FOTOGRAFÍAS */}
-              <section className="border-t border-gray-200 pt-8">
+              <section className="min-w-0 border-t border-gray-200 pt-7 sm:pt-8">
                 <h3 className="text-lg font-bold text-[#063D2A]">
                   Fotografías del Producto
                 </h3>
 
-                <p className="mb-5 mt-2 text-sm text-gray-500">
+                <p className="mb-5 mt-2 text-sm text-gray-500 leading-relaxed">
                   Agrega las URLs de dos fotografías del mismo producto. Se
                   mostrarán en una galería con flechas y miniaturas.
                 </p>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <label className={labelClass}>Imagen principal (URL)</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                  <div className="min-w-0">
+                    <label htmlFor="imagen" className={labelClass}>
+                      Imagen principal (URL)
+                    </label>
 
                     <input
+                      id="imagen"
                       type="url"
                       name="imagen"
                       value={producto.imagen}
                       onChange={handleChange}
                       placeholder="https://ejemplo.com/imagen1.jpg"
                       className={inputClass}
+                      disabled={guardando}
                     />
 
-                    <div className="mt-3 flex h-56 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="mt-3 flex h-44 sm:h-56 w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
                       {producto.imagen ? (
                         <img
                           src={producto.imagen}
                           alt="Vista previa imagen principal"
-                          className="h-full w-full object-contain"
+                          className="h-full w-full max-w-full object-contain"
                         />
                       ) : (
-                        <p className="text-sm text-gray-400">
+                        <p className="text-center text-sm text-gray-400">
                           📷 Primera fotografía
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div>
-                    <label className={labelClass}>Segunda imagen (URL)</label>
+                  <div className="min-w-0">
+                    <label htmlFor="imagen2" className={labelClass}>
+                      Segunda imagen (URL)
+                    </label>
 
                     <input
+                      id="imagen2"
                       type="url"
                       name="imagen2"
                       value={producto.imagen2}
                       onChange={handleChange}
                       placeholder="https://ejemplo.com/imagen2.jpg"
                       className={inputClass}
+                      disabled={guardando}
                     />
 
-                    <div className="mt-3 flex h-56 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="mt-3 flex h-44 sm:h-56 w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
                       {producto.imagen2 ? (
                         <img
                           src={producto.imagen2}
                           alt="Vista previa segunda imagen"
-                          className="h-full w-full object-contain"
+                          className="h-full w-full max-w-full object-contain"
                         />
                       ) : (
-                        <p className="text-sm text-gray-400">
+                        <p className="text-center text-sm text-gray-400">
                           📷 Segunda fotografía
                         </p>
                       )}
@@ -435,35 +529,37 @@ function FormularioProducto() {
                   </div>
                 </div>
 
-                <p className="mt-3 text-xs text-gray-500">
+                <p className="mt-3 text-xs text-gray-500 leading-relaxed">
                   Utiliza enlaces públicos de imágenes. No es necesario que
                   ambas fotografías tengan las mismas dimensiones.
                 </p>
               </section>
 
               {/* DESCRIPCIÓN */}
-              <section className="border-t border-gray-200 pt-8">
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <section className="min-w-0 border-t border-gray-200 pt-7 sm:pt-8">
+                <div className="mb-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
                   <h3 className="text-lg font-bold text-[#063D2A]">
                     Descripción del Producto
                   </h3>
 
-                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-[#009E49]">
+                  <span className="self-start rounded-full bg-green-50 px-3 py-1.5 text-xs font-bold text-[#009E49]">
                     Hasta 5,000 caracteres
                   </span>
                 </div>
 
-                <p className="mb-4 text-sm text-gray-500">
+                <p className="mb-4 text-sm text-gray-500 leading-relaxed">
                   Describe las características, beneficios y recomendaciones de
                   uso del producto.
                 </p>
 
                 <textarea
+                  id="descripcion"
                   name="descripcion"
                   value={producto.descripcion}
                   onChange={handleChange}
                   maxLength={LIMITE_DESCRIPCION}
                   rows={10}
+                  disabled={guardando}
                   placeholder={`Escribe la descripción completa...
 
 Características principales:
@@ -476,10 +572,10 @@ Beneficios:
 
 Recomendaciones de uso:
 -`}
-                  className="min-h-[260px] w-full resize-y rounded-2xl border-2 border-gray-200 p-4 text-sm leading-7 text-gray-800 outline-none transition focus:border-[#009E49] focus:ring-2 focus:ring-green-100"
+                  className={`${inputClass} min-h-[220px] sm:min-h-[260px] resize-y leading-7`}
                 />
 
-                <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-gray-500">
+                <div className="mt-2 flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2 text-xs text-gray-500">
                   <p>Puedes utilizar saltos de línea y listas.</p>
 
                   <p className="font-semibold">
@@ -501,23 +597,25 @@ Recomendaciones de uso:
               </section>
 
               {/* DATOS TÉCNICOS */}
-              <section className="border-t border-gray-200 pt-8">
+              <section className="min-w-0 border-t border-gray-200 pt-7 sm:pt-8">
                 <h3 className="text-lg font-bold text-[#063D2A]">
                   Datos Técnicos
                 </h3>
 
-                <p className="mb-4 mt-2 text-sm text-gray-500">
+                <p className="mb-4 mt-2 text-sm text-gray-500 leading-relaxed">
                   Escribe una característica por línea, separando el nombre y su
                   valor con dos puntos (:). Estos datos aparecerán en una tabla
                   en la página del producto.
                 </p>
 
                 <textarea
+                  id="datosTecnicos"
                   name="datosTecnicos"
                   value={producto.datosTecnicos}
                   onChange={handleChange}
                   maxLength={LIMITE_DATOS_TECNICOS}
                   rows={9}
+                  disabled={guardando}
                   placeholder={`Marca: STIHL
 Modelo: MS 250
 Motor: 2 tiempos
@@ -526,10 +624,10 @@ Cilindrada: 45.4 cm³
 Peso: 4.6 kg
 Longitud de corte: 18 pulgadas
 Garantía: 1 año`}
-                  className="min-h-[220px] w-full resize-y rounded-2xl border-2 border-gray-200 p-4 text-sm leading-7 text-gray-800 outline-none transition focus:border-[#009E49] focus:ring-2 focus:ring-green-100"
+                  className={`${inputClass} min-h-[220px] resize-y leading-7`}
                 />
 
-                <div className="mt-2 flex justify-between gap-3 text-xs text-gray-500">
+                <div className="mt-2 flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-3 text-xs text-gray-500">
                   <p>Ejemplo: Potencia: 3.1 HP</p>
 
                   <p className="font-semibold">
@@ -538,25 +636,26 @@ Garantía: 1 año`}
                   </p>
                 </div>
 
+                {/* VISTA PREVIA DE ESPECIFICACIONES */}
                 {especificaciones.length > 0 && (
-                  <div className="mt-6">
+                  <div className="mt-6 min-w-0">
                     <h4 className="mb-3 text-sm font-bold text-[#063D2A]">
                       Vista previa de especificaciones
                     </h4>
 
-                    <div className="overflow-hidden rounded-xl border border-gray-200">
+                    <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200">
                       {especificaciones.map((dato, index) => (
                         <div
                           key={`${dato.nombre}-${index}`}
-                          className={`grid grid-cols-2 text-sm ${
+                          className={`grid grid-cols-1 sm:grid-cols-2 min-w-0 text-sm ${
                             index % 2 === 0 ? "bg-gray-50" : "bg-white"
                           }`}
                         >
-                          <div className="break-words border-b border-r border-gray-200 px-4 py-3 font-semibold text-[#063D2A]">
+                          <div className="min-w-0 break-words border-b sm:border-r border-gray-200 px-3 sm:px-4 py-3 font-semibold text-[#063D2A]">
                             {dato.nombre}
                           </div>
 
-                          <div className="break-words border-b border-gray-200 px-4 py-3 text-gray-600">
+                          <div className="min-w-0 break-words border-b border-gray-200 px-3 sm:px-4 py-3 text-gray-600">
                             {dato.valor}
                           </div>
                         </div>
@@ -567,13 +666,13 @@ Garantía: 1 año`}
               </section>
 
               {/* VISTA PREVIA GENERAL */}
-              <section className="rounded-2xl border border-green-200 bg-[#F1F7F3] p-5 md:p-6">
+              <section className="min-w-0 rounded-2xl border border-green-200 bg-[#F1F7F3] p-4 sm:p-6">
                 <h3 className="mb-5 text-lg font-bold text-[#009E49]">
                   Vista Previa del Producto
                 </h3>
 
-                <div className="grid gap-5 text-sm md:grid-cols-2">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+                  <div className="min-w-0 space-y-3 break-words">
                     <p>
                       <strong>Producto:</strong> {producto.nombre || "-"}
                     </p>
@@ -591,7 +690,7 @@ Garantía: 1 año`}
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-3 break-words">
                     <p>
                       <strong>Precio:</strong> S/ {producto.precio || "0"}
                     </p>
@@ -618,7 +717,7 @@ Garantía: 1 año`}
                 </div>
 
                 {producto.descripcion && (
-                  <div className="mt-5 border-t border-green-200 pt-5">
+                  <div className="mt-5 min-w-0 border-t border-green-200 pt-5">
                     <h4 className="mb-2 text-sm font-bold text-[#063D2A]">
                       Descripción:
                     </h4>
@@ -634,22 +733,22 @@ Garantía: 1 año`}
               {error && (
                 <div
                   role="alert"
-                  className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700"
+                  className="min-w-0 break-words rounded-xl border border-red-200 bg-red-50 px-4 sm:px-5 py-4 text-sm font-semibold text-red-700"
                 >
                   {error}
                 </div>
               )}
 
               {/* BOTONES */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   type="submit"
                   disabled={guardando}
-                  className="rounded-xl bg-[#FF6600] px-7 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#E85D00] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-[#FF6600] px-7 py-4 text-sm sm:text-base font-bold text-white shadow-md transition hover:bg-[#E85D00] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {guardando
                     ? "Guardando..."
-                    : id
+                    : esEdicion
                       ? "Actualizar Producto"
                       : "Guardar Producto"}
                 </button>
@@ -658,7 +757,7 @@ Garantía: 1 año`}
                   type="button"
                   onClick={() => navigate("/admin/productos")}
                   disabled={guardando}
-                  className="rounded-xl bg-gray-200 px-7 py-3 text-sm font-bold text-gray-800 transition hover:bg-gray-300 disabled:opacity-60"
+                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-gray-200 px-7 py-4 text-sm sm:text-base font-bold text-gray-800 transition hover:bg-gray-300 disabled:opacity-60"
                 >
                   Cancelar
                 </button>
