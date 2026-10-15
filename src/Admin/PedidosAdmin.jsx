@@ -5,6 +5,8 @@ const API_URL = (
   "https://grupocomercialjg-backend.onrender.com"
 ).replace(/\/+$/, "");
 
+const WHATSAPP_EMPRESA = "979501557";
+
 const ESTADOS_PAGO = [
   "TODOS",
   "PENDIENTE",
@@ -27,10 +29,7 @@ function fecha(valor) {
   if (!valor) return "Sin registrar";
 
   const convertida = new Date(valor);
-
-  if (Number.isNaN(convertida.getTime())) {
-    return "Sin registrar";
-  }
+  if (Number.isNaN(convertida.getTime())) return "Sin registrar";
 
   return convertida.toLocaleString("es-PE", {
     day: "2-digit",
@@ -56,6 +55,100 @@ function fleteCotizado(pedido) {
     tieneAgencia(pedido) &&
     ["ESTIMADO", "CONFIRMADO"].includes(pedido?.estadoCotizacionFlete)
   );
+}
+
+function numeroWhatsApp(telefono) {
+  const numero = String(telefono || "").replace(/\D/g, "");
+
+  if (/^9\d{8}$/.test(numero)) return `51${numero}`;
+  if (/^519\d{8}$/.test(numero)) return numero;
+
+  return null;
+}
+
+function crearMensajeWhatsApp(pedido, estado, observacion) {
+  const nombre = pedido.nombreCliente || "estimado cliente";
+  const numeroPedido = pedido.id;
+  const total = moneda(pedido.total);
+
+  if (estado === "APROBADO") {
+    return `🟢 *GRUPO COMERCIAL J&G*
+
+¡Hola, ${nombre}! 👋
+
+Te informamos que hemos verificado correctamente el pago de tu pedido *#${numeroPedido}*.
+
+✅ *ESTADO DEL PAGO: APROBADO*
+💰 *Importe recibido: ${total}*
+💳 *Método de pago: ${pedido.metodoPago || "No especificado"}*
+
+Tu pedido continuará con el proceso de preparación y entrega.
+
+${
+  tieneAgencia(pedido)
+    ? `📦 *Agencia de transporte: ${pedido.metodoEntrega}*
+
+Recuerda que el costo del flete se paga directamente a la agencia al recoger tu pedido.`
+    : "📦 Te mantendremos informado sobre la disponibilidad de tu pedido para recojo."
+}
+
+Muchas gracias por confiar en *Grupo Comercial J&G*. 🧡
+
+📲 Consultas: ${WHATSAPP_EMPRESA}`;
+  }
+
+  return `🔴 *GRUPO COMERCIAL J&G*
+
+Hola, ${nombre}.
+
+Te informamos sobre la verificación del pago correspondiente a tu pedido *#${numeroPedido}*.
+
+❌ *ESTADO DEL PAGO: RECHAZADO*
+💰 *Importe del pedido: ${total}*
+
+*Motivo:*
+${observacion || "No se pudo verificar el abono reportado."}
+
+Por favor, revisa tu operación y comunícate con nosotros para ayudarte a solucionar el inconveniente.
+
+Tu pago todavía no ha sido confirmado.
+
+Atentamente,
+*Grupo Comercial J&G*
+
+📲 WhatsApp: ${WHATSAPP_EMPRESA}`;
+}
+
+function notificarWhatsApp(pedido, estadoPago, observacionPago) {
+  const estado = estadoPago || pedido.estadoPago;
+
+  if (!["APROBADO", "RECHAZADO"].includes(estado)) {
+    alert("Primero debes aprobar o rechazar el pago.");
+    return;
+  }
+
+  const numero = numeroWhatsApp(pedido.telefonoCliente);
+
+  if (!numero) {
+    alert(
+      "El cliente no tiene un número de celular peruano válido. Revisa el teléfono registrado.",
+    );
+    return;
+  }
+
+  const mensaje = crearMensajeWhatsApp(
+    pedido,
+    estado,
+    observacionPago ?? pedido.observacionPago,
+  );
+
+  const enlace = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+  const ventana = window.open(enlace, "_blank", "noopener,noreferrer");
+
+  if (!ventana) {
+    window.location.href = enlace;
+  }
 }
 
 function EtiquetaEstado({ estado }) {
@@ -99,7 +192,9 @@ function Dato({ etiqueta, valor }) {
     <div>
       <p className="text-xs font-semibold text-gray-500">{etiqueta}</p>
       <p className="mt-1 break-words text-sm font-bold text-[#063D2A]">
-        {valor || "No registrado"}
+        {valor === null || valor === undefined || valor === ""
+          ? "No registrado"
+          : valor}
       </p>
     </div>
   );
@@ -116,24 +211,36 @@ async function obtenerCsrf() {
 
   if (!respuesta.ok) {
     throw new Error(
-      "No se pudo obtener el token de seguridad. Inicia sesión nuevamente.",
+      "No se pudo obtener el token CSRF. Inicia sesión nuevamente.",
     );
   }
 
   const datos = await respuesta.json();
-
   const token = datos.token || datos.csrfToken || datos._csrf?.token;
 
   const nombreHeader =
     datos.headerName || datos._csrf?.headerName || "X-CSRF-TOKEN";
 
   if (!token) {
-    throw new Error(
-      "El servidor no devolvió el token CSRF necesario para guardar.",
-    );
+    throw new Error("El servidor no devolvió el token CSRF.");
   }
 
   return { token, nombreHeader };
+}
+
+async function leerError(respuesta) {
+  try {
+    const cuerpo = await respuesta.json();
+
+    return (
+      cuerpo.message ||
+      cuerpo.detail ||
+      cuerpo.error ||
+      `Error HTTP ${respuesta.status}`
+    );
+  } catch {
+    return `Error HTTP ${respuesta.status}`;
+  }
 }
 
 function FormularioFlete({ pedido, guardar, guardando }) {
@@ -196,23 +303,21 @@ function FormularioFlete({ pedido, guardar, guardando }) {
 
   return (
     <section className="rounded-2xl border border-orange-200 bg-orange-50/70 p-5">
-      <div className="mb-5">
-        <p className="text-xs font-black uppercase tracking-widest text-[#C94E14]">
-          Gestión de transporte
-        </p>
+      <p className="text-xs font-black uppercase tracking-widest text-[#C94E14]">
+        Gestión de transporte
+      </p>
 
-        <h3 className="mt-2 text-lg font-black text-[#063D2A]">
-          Cotizar flete contra entrega
-        </h3>
+      <h3 className="mt-2 text-lg font-black text-[#063D2A]">
+        Cotizar flete contra entrega
+      </h3>
 
-        <p className="mt-2 text-sm leading-relaxed text-gray-600">
-          Ingresa el costo informado por {pedido.metodoEntrega}. El cliente
-          pagará este importe directamente a la agencia cuando recoja su pedido.
-          J&G no cobrará el flete.
-        </p>
-      </div>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        Ingresa el costo informado por {pedido.metodoEntrega}. El cliente pagará
+        este importe directamente a la agencia cuando recoja su pedido. J&G no
+        cobrará el flete.
+      </p>
 
-      <form onSubmit={enviar} className="space-y-4">
+      <form onSubmit={enviar} className="mt-5 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label
@@ -228,7 +333,7 @@ function FormularioFlete({ pedido, guardar, guardando }) {
               min="0.01"
               step="0.01"
               value={costo}
-              onChange={(evento) => setCosto(evento.target.value)}
+              onChange={(e) => setCosto(e.target.value)}
               placeholder="Ejemplo: 35.00"
               required
               disabled={guardando}
@@ -247,12 +352,11 @@ function FormularioFlete({ pedido, guardar, guardando }) {
             <select
               id="estado-cotizacion"
               value={estado}
-              onChange={(evento) => setEstado(evento.target.value)}
+              onChange={(e) => setEstado(e.target.value)}
               disabled={guardando}
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#009E49]"
             >
               <option value="ESTIMADO">Estimado</option>
-
               <option value="CONFIRMADO">Confirmado por la agencia</option>
             </select>
           </div>
@@ -271,9 +375,9 @@ function FormularioFlete({ pedido, guardar, guardando }) {
             rows={3}
             maxLength={500}
             value={observacion}
-            onChange={(evento) => setObservacion(evento.target.value)}
+            onChange={(e) => setObservacion(e.target.value)}
             disabled={guardando}
-            placeholder="Ejemplo: 2 bultos, peso aproximado 15 kg, agencia Shalom..."
+            placeholder="Ejemplo: 2 bultos, peso aproximado 15 kg..."
             className="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#009E49]"
           />
 
@@ -294,7 +398,6 @@ function FormularioFlete({ pedido, guardar, guardando }) {
         <div className="rounded-xl bg-white p-4">
           <div className="flex justify-between gap-3 text-sm">
             <span className="text-gray-600">Productos (pago a J&G)</span>
-
             <strong className="text-[#063D2A]">{moneda(pedido.total)}</strong>
           </div>
 
@@ -302,7 +405,6 @@ function FormularioFlete({ pedido, guardar, guardando }) {
             <span className="text-gray-600">
               Flete (pago a {pedido.metodoEntrega})
             </span>
-
             <strong className="text-[#C94E14]">
               {costo && Number(costo) > 0 ? moneda(costo) : "Por definir"}
             </strong>
@@ -312,7 +414,6 @@ function FormularioFlete({ pedido, guardar, guardando }) {
             <span className="text-sm font-bold text-[#063D2A]">
               Costo total para el cliente
             </span>
-
             <strong className="text-[#063D2A]">
               {costo && Number(costo) > 0
                 ? moneda(Number(pedido.total) + Number(costo))
@@ -324,7 +425,7 @@ function FormularioFlete({ pedido, guardar, guardando }) {
         <button
           type="submit"
           disabled={guardando}
-          className="w-full rounded-xl bg-[#C94E14] px-5 py-3 font-black text-white transition hover:bg-[#A83E0B] disabled:cursor-not-allowed disabled:bg-gray-400 sm:w-auto"
+          className="w-full rounded-xl bg-[#C94E14] px-5 py-3 font-black text-white transition hover:bg-[#A83E0B] disabled:bg-gray-400 sm:w-auto"
         >
           {guardando
             ? "Guardando cotización..."
@@ -337,21 +438,306 @@ function FormularioFlete({ pedido, guardar, guardando }) {
   );
 }
 
-function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
+function GestionPago({
+  pedido,
+  informacionPago,
+  aprobarPago,
+  rechazarPago,
+  procesandoPago,
+  cargandoPago,
+  errorPago,
+}) {
+  const [motivo, setMotivo] = useState("");
+  const [mostrarRechazo, setMostrarRechazo] = useState(false);
+  const [errorFormulario, setErrorFormulario] = useState("");
+
+  useEffect(() => {
+    setMotivo("");
+    setMostrarRechazo(false);
+    setErrorFormulario("");
+  }, [pedido.id]);
+
+  const estado = informacionPago?.estadoPago || pedido.estadoPago;
+
+  const numeroOperacion =
+    informacionPago?.numeroOperacion ?? pedido.numeroOperacionPago;
+
+  const fechaReporte = informacionPago?.fechaReporte ?? pedido.fechaReportePago;
+
+  const fechaVerificacion =
+    informacionPago?.fechaVerificacion ?? pedido.fechaVerificacionPago;
+
+  const observacion = informacionPago?.observacion ?? pedido.observacionPago;
+
+  const puedeDecidir =
+    estado === "EN_REVISION" && pedido.estadoPedido !== "CANCELADO";
+
+  const confirmarAprobacion = async () => {
+    setErrorFormulario("");
+
+    if (
+      !window.confirm(
+        `¿Confirmas que verificaste el ingreso real de ${moneda(
+          pedido.total,
+        )} en la cuenta de J&G para el pedido #${pedido.id}?\n\n` +
+          "Esta acción marcará el pago como APROBADO.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await aprobarPago(pedido.id);
+    } catch (error) {
+      setErrorFormulario(error.message);
+    }
+  };
+
+  const confirmarRechazo = async (evento) => {
+    evento.preventDefault();
+    setErrorFormulario("");
+
+    if (!motivo.trim() || motivo.trim().length > 500) {
+      setErrorFormulario(
+        "Indica un motivo de rechazo de hasta 500 caracteres.",
+      );
+      return;
+    }
+
+    if (!window.confirm(`¿Rechazar el pago del pedido #${pedido.id}?`)) {
+      return;
+    }
+
+    try {
+      await rechazarPago(pedido.id, motivo.trim());
+      setMostrarRechazo(false);
+      setMotivo("");
+    } catch (error) {
+      setErrorFormulario(error.message);
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-green-200 bg-green-50/60 p-5">
+      <p className="text-xs font-black uppercase tracking-widest text-[#009E49]">
+        Administración de pagos
+      </p>
+
+      <h3 className="mt-2 text-lg font-black text-[#063D2A]">
+        Verificación del pago
+      </h3>
+
+      <p className="mt-2 text-sm text-gray-600">
+        Comprueba el abono en Yape, Plin o tu cuenta bancaria antes de
+        aprobarlo. El número de operación por sí solo no demuestra que el dinero
+        fue recibido.
+      </p>
+
+      {cargandoPago && (
+        <p className="mt-4 text-sm text-gray-500">
+          Consultando información del pago...
+        </p>
+      )}
+
+      {errorPago && (
+        <p
+          role="alert"
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          {errorPago}
+        </p>
+      )}
+
+      <div className="mt-5 grid gap-4 rounded-xl bg-white p-4 sm:grid-cols-2">
+        <Dato etiqueta="Método de pago" valor={pedido.metodoPago} />
+
+        <div>
+          <p className="mb-2 text-xs font-semibold text-gray-500">
+            Estado del pago
+          </p>
+          <EtiquetaEstado estado={estado} />
+        </div>
+
+        <Dato etiqueta="Número de operación" valor={numeroOperacion} />
+        <Dato etiqueta="Importe a verificar" valor={moneda(pedido.total)} />
+        <Dato etiqueta="Fecha de reporte" valor={fecha(fechaReporte)} />
+        <Dato
+          etiqueta="Fecha de verificación"
+          valor={fecha(fechaVerificacion)}
+        />
+
+        {observacion && (
+          <div className="sm:col-span-2">
+            <Dato etiqueta="Observación del pago" valor={observacion} />
+          </div>
+        )}
+      </div>
+
+      {estado === "APROBADO" && (
+        <div className="mt-4 rounded-xl border border-green-200 bg-green-100 p-4 text-sm font-semibold text-green-800">
+          ✓ Pago aprobado. El abono fue marcado como verificado por el
+          administrador.
+        </div>
+      )}
+
+      {estado === "RECHAZADO" && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          El pago fue rechazado. El cliente podrá reportar nuevamente una
+          operación válida.
+        </div>
+      )}
+
+      {estado === "PENDIENTE" && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          El cliente todavía no tiene un pago en revisión. Espera a que reporte
+          su número de operación.
+        </div>
+      )}
+
+      {puedeDecidir && (
+        <div className="mt-5 space-y-4">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+            Antes de aprobar, verifica el importe, la cuenta receptora y la
+            operación en el banco. No apruebes pagos de prueba ni comprobantes
+            no verificados.
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={confirmarAprobacion}
+              disabled={procesandoPago || cargandoPago || !!errorPago}
+              className="rounded-xl bg-[#009E49] px-5 py-3 text-sm font-black text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            >
+              {procesandoPago ? "Procesando..." : "✓ Aprobar pago"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMostrarRechazo((actual) => !actual);
+                setErrorFormulario("");
+              }}
+              disabled={procesandoPago || cargandoPago || !!errorPago}
+              className="rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700 disabled:bg-gray-400"
+            >
+              ✕ Rechazar pago
+            </button>
+          </div>
+
+          {mostrarRechazo && (
+            <form
+              onSubmit={confirmarRechazo}
+              className="rounded-xl border border-red-200 bg-white p-4"
+            >
+              <label
+                htmlFor="motivo-rechazo"
+                className="mb-2 block text-sm font-bold text-red-800"
+              >
+                Motivo del rechazo
+              </label>
+
+              <textarea
+                id="motivo-rechazo"
+                rows={3}
+                maxLength={500}
+                required
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                placeholder="Ejemplo: No se encontró el abono en la cuenta bancaria."
+                className="w-full rounded-xl border border-gray-200 p-3 text-sm outline-none focus:border-red-500"
+              />
+
+              <p className="mt-1 text-right text-xs text-gray-500">
+                {motivo.length}/500 caracteres
+              </p>
+
+              <button
+                type="submit"
+                disabled={procesandoPago}
+                className="mt-3 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white hover:bg-red-700 disabled:bg-gray-400"
+              >
+                Confirmar rechazo
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+
+      {pedido.estadoPedido === "CANCELADO" && (
+        <p className="mt-4 text-sm text-red-700">
+          Este pedido está cancelado y no puede aprobarse desde este panel.
+        </p>
+      )}
+
+      {errorFormulario && (
+        <p
+          role="alert"
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          {errorFormulario}
+        </p>
+      )}
+
+      {["APROBADO", "RECHAZADO"].includes(estado) && (
+        <div className="mt-5 rounded-2xl border border-green-200 bg-white p-5">
+          <h4 className="font-black text-[#063D2A]">
+            📲 Notificación al cliente por WhatsApp
+          </h4>
+
+          <p className="mt-2 text-sm text-gray-600">
+            El pago está {estado === "APROBADO" ? "aprobado" : "rechazado"}.
+            Puedes comunicar el resultado al número registrado por el cliente.
+          </p>
+
+          <p className="mt-3 text-sm font-bold text-[#063D2A]">
+            Número del cliente: {pedido.telefonoCliente || "No registrado"}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => notificarWhatsApp(pedido, estado, observacion)}
+            disabled={procesandoPago}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-4 text-sm font-black text-white transition hover:bg-[#128C7E] disabled:bg-gray-400"
+          >
+            📲 Notificar al cliente por WhatsApp
+          </button>
+
+          <p className="mt-3 text-xs text-gray-500">
+            Se abrirá WhatsApp con el mensaje preparado. Comprueba que estés
+            usando la cuenta de J&G ({WHATSAPP_EMPRESA}) y presiona Enviar.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DetallePedido({
+  pedido,
+  cerrar,
+  guardarFlete,
+  guardandoFlete,
+  informacionPago,
+  aprobarPago,
+  rechazarPago,
+  procesandoPago,
+  cargandoPago,
+  errorPago,
+}) {
   if (!pedido) return null;
 
   const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
-
   const esAgencia = tieneAgencia(pedido);
   const cotizado = fleteCotizado(pedido);
-
   const subtotal = Number(pedido.subtotal) || 0;
   const flete = cotizado ? Number(pedido.costoEnvio) || 0 : 0;
+  const ocupado = guardandoFlete || procesandoPago;
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
-      onClick={guardandoFlete ? undefined : cerrar}
+      onClick={ocupado ? undefined : cerrar}
     >
       <div
         role="dialog"
@@ -365,14 +751,13 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
             <p className="text-xs font-bold uppercase tracking-widest text-green-200">
               Grupo Comercial J&G
             </p>
-
             <h2 className="mt-2 text-xl font-black">Pedido #{pedido.id}</h2>
           </div>
 
           <button
             type="button"
             onClick={cerrar}
-            disabled={guardandoFlete}
+            disabled={ocupado}
             className="rounded-lg bg-white/10 px-4 py-2 font-bold hover:bg-white/20 disabled:opacity-50"
           >
             Cerrar ✕
@@ -387,14 +772,11 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Dato etiqueta="Nombre completo" valor={pedido.nombreCliente} />
-
               <Dato etiqueta="Teléfono" valor={pedido.telefonoCliente} />
-
               <Dato
                 etiqueta="Correo electrónico"
                 valor={pedido.correoCliente}
               />
-
               <Dato
                 etiqueta="Fecha del pedido"
                 valor={fecha(pedido.fechaPedido)}
@@ -409,15 +791,10 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Dato etiqueta="Método de entrega" valor={pedido.metodoEntrega} />
-
               <Dato etiqueta="Dirección" valor={pedido.direccionEntrega} />
-
               <Dato etiqueta="Departamento" valor={pedido.departamento} />
-
               <Dato etiqueta="Provincia" valor={pedido.provincia} />
-
               <Dato etiqueta="Distrito" valor={pedido.distrito} />
-
               <Dato etiqueta="Referencia" valor={pedido.referencia} />
             </div>
           </section>
@@ -430,19 +807,30 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
             <div className="flex flex-wrap gap-6">
               <div>
                 <p className="mb-2 text-xs text-gray-500">Pedido</p>
-
                 <EtiquetaEstado estado={pedido.estadoPedido} />
               </div>
 
               <div>
                 <p className="mb-2 text-xs text-gray-500">Pago</p>
-
-                <EtiquetaEstado estado={pedido.estadoPago} />
+                <EtiquetaEstado
+                  estado={informacionPago?.estadoPago || pedido.estadoPago}
+                />
               </div>
 
               <Dato etiqueta="Método de pago" valor={pedido.metodoPago} />
             </div>
           </section>
+
+          <GestionPago
+            key={pedido.id}
+            pedido={pedido}
+            informacionPago={informacionPago}
+            aprobarPago={aprobarPago}
+            rechazarPago={rechazarPago}
+            procesandoPago={procesandoPago}
+            cargandoPago={cargandoPago}
+            errorPago={errorPago}
+          />
 
           {esAgencia && (
             <section className="border-t border-gray-100 pt-6">
@@ -460,7 +848,6 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
                   <p className="mb-2 text-xs font-semibold text-gray-500">
                     Estado de cotización
                   </p>
-
                   <EtiquetaEstado
                     estado={pedido.estadoCotizacionFlete || "PENDIENTE"}
                   />
@@ -544,7 +931,6 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
             <div className="space-y-3">
               <div className="flex justify-between gap-3 text-sm">
                 <span className="text-gray-500">Subtotal de productos</span>
-
                 <strong>{moneda(subtotal)}</strong>
               </div>
 
@@ -588,7 +974,7 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
 
                     <span className="font-black text-[#063D2A]">
                       {cotizado
-                        ? moneda(subtotal + flete)
+                        ? moneda(Number(pedido.total) + flete)
                         : "Pendiente de flete"}
                     </span>
                   </div>
@@ -625,10 +1011,14 @@ function DetallePedido({ pedido, cerrar, guardarFlete, guardandoFlete }) {
 
 export default function PedidosAdmin() {
   const [pedidos, setPedidos] = useState([]);
+  const [pagosAdmin, setPagosAdmin] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [actualizando, setActualizando] = useState(false);
   const [guardandoFlete, setGuardandoFlete] = useState(false);
+  const [procesandoPago, setProcesandoPago] = useState(false);
+  const [cargandoPago, setCargandoPago] = useState(false);
   const [error, setError] = useState("");
+  const [errorPago, setErrorPago] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [filtroPago, setFiltroPago] = useState("TODOS");
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
@@ -656,13 +1046,12 @@ export default function PedidosAdmin() {
         if (respuesta.status === 401 || respuesta.status === 403) {
           throw new Error(
             "No se pudo validar la sesión administrativa. " +
-              "Inicia sesión nuevamente. Si el problema continúa, " +
-              "revisa las cookies entre React y Render.",
+              "Inicia sesión nuevamente.",
           );
         }
 
         throw new Error(
-          `No se pudieron cargar los pedidos. Error HTTP ${respuesta.status}.`,
+          `No se pudieron cargar los pedidos. HTTP ${respuesta.status}.`,
         );
       }
 
@@ -676,29 +1065,62 @@ export default function PedidosAdmin() {
 
       setPedidoSeleccionado((anterior) => {
         if (!anterior) return null;
-
         return datos.find((pedido) => pedido.id === anterior.id) || null;
       });
     } catch (err) {
       console.error("Error cargando pedidos:", err);
-
-      if (err instanceof TypeError) {
-        setError(
-          "No se pudo conectar con Render. " +
-            "Comprueba la URL del backend, CORS y la conexión.",
-        );
-      } else {
-        setError(err.message || "Ocurrió un error inesperado.");
-      }
+      setError(err.message || "No se pudieron cargar los pedidos.");
     } finally {
       setCargando(false);
       setActualizando(false);
     }
   }, []);
 
+  const cargarPagosAdmin = useCallback(async () => {
+    setCargandoPago(true);
+    setErrorPago("");
+
+    try {
+      const respuesta = await fetch(`${API_URL}/api/admin/pagos`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!respuesta.ok) {
+        if (respuesta.status === 401 || respuesta.status === 403) {
+          throw new Error(
+            "No tienes acceso a la administración de pagos. " +
+              "Revisa tu sesión y los permisos del backend.",
+          );
+        }
+
+        throw new Error(
+          `No se pudieron consultar los pagos. HTTP ${respuesta.status}.`,
+        );
+      }
+
+      const datos = await respuesta.json();
+
+      if (!Array.isArray(datos)) {
+        throw new Error("La respuesta de pagos no tiene el formato esperado.");
+      }
+
+      setPagosAdmin(datos);
+    } catch (err) {
+      console.error("Error cargando pagos:", err);
+      setErrorPago(err.message || "No se pudieron cargar los pagos.");
+    } finally {
+      setCargandoPago(false);
+    }
+  }, []);
+
   useEffect(() => {
     cargarPedidos();
-  }, [cargarPedidos]);
+    cargarPagosAdmin();
+  }, [cargarPedidos, cargarPagosAdmin]);
 
   const guardarCotizacionFlete = async (datosFlete) => {
     if (!pedidoSeleccionado) {
@@ -727,84 +1149,183 @@ export default function PedidosAdmin() {
       );
 
       if (!respuesta.ok) {
-        let mensaje = "";
-
-        try {
-          const cuerpo = await respuesta.json();
-
-          mensaje = cuerpo.message || cuerpo.detail || cuerpo.error || "";
-        } catch {
-          // El servidor puede devolver una respuesta sin JSON.
-        }
-
-        if (respuesta.status === 401 || respuesta.status === 403) {
-          throw new Error(
-            "No tienes una sesión administrativa válida " +
-              "o el token CSRF fue rechazado. " +
-              "Vuelve a iniciar sesión.",
-          );
-        }
-
-        if (respuesta.status === 404) {
-          throw new Error(
-            "No se encontró la ruta para actualizar el flete. " +
-              "Comprueba que el backend actualizado esté desplegado en Render.",
-          );
-        }
-
-        throw new Error(
-          mensaje ||
-            `No se pudo guardar el flete. Error HTTP ${respuesta.status}.`,
-        );
+        throw new Error(await leerError(respuesta));
       }
 
-      const pedidoActualizado = await respuesta.json();
+      const actualizado = await respuesta.json();
 
       setPedidos((anteriores) =>
         anteriores.map((pedido) =>
-          pedido.id === pedidoActualizado.id ? pedidoActualizado : pedido,
+          pedido.id === actualizado.id ? actualizado : pedido,
         ),
       );
 
-      setPedidoSeleccionado(pedidoActualizado);
+      setPedidoSeleccionado(actualizado);
 
       setMensajeExito(
-        `Cotización del pedido #${pedidoActualizado.id} guardada correctamente.`,
+        `Cotización del pedido #${actualizado.id} guardada correctamente.`,
       );
     } catch (err) {
-      console.error("Error guardando cotización:", err);
-
-      if (err instanceof TypeError) {
-        throw new Error(
-          "No se pudo conectar con Render para guardar el flete.",
-        );
-      }
-
+      console.error("Error guardando flete:", err);
       throw err;
     } finally {
       setGuardandoFlete(false);
     }
   };
 
-  const estadisticas = useMemo(() => {
-    return {
-      total: pedidos.length,
+  const actualizarPagoLocal = (pagoActualizado) => {
+    setPagosAdmin((anteriores) => {
+      const existe = anteriores.some(
+        (pago) => pago.pedidoId === pagoActualizado.pedidoId,
+      );
 
-      pendientes: pedidos.filter((pedido) => pedido.estadoPago === "PENDIENTE")
-        .length,
+      if (existe) {
+        return anteriores.map((pago) =>
+          pago.pedidoId === pagoActualizado.pedidoId ? pagoActualizado : pago,
+        );
+      }
 
-      revision: pedidos.filter((pedido) => pedido.estadoPago === "EN_REVISION")
-        .length,
+      return [pagoActualizado, ...anteriores];
+    });
 
-      aprobados: pedidos.filter((pedido) => pedido.estadoPago === "APROBADO")
-        .length,
-    };
-  }, [pedidos]);
+    setPedidos((anteriores) =>
+      anteriores.map((pedido) =>
+        pedido.id === pagoActualizado.pedidoId
+          ? {
+              ...pedido,
+              estadoPago: pagoActualizado.estadoPago,
+              numeroOperacionPago: pagoActualizado.numeroOperacion,
+              fechaReportePago: pagoActualizado.fechaReporte,
+              fechaVerificacionPago: pagoActualizado.fechaVerificacion,
+              observacionPago: pagoActualizado.observacion,
+            }
+          : pedido,
+      ),
+    );
+
+    setPedidoSeleccionado((anterior) => {
+      if (!anterior || anterior.id !== pagoActualizado.pedidoId) {
+        return anterior;
+      }
+
+      return {
+        ...anterior,
+        estadoPago: pagoActualizado.estadoPago,
+        numeroOperacionPago: pagoActualizado.numeroOperacion,
+        fechaReportePago: pagoActualizado.fechaReporte,
+        fechaVerificacionPago: pagoActualizado.fechaVerificacion,
+        observacionPago: pagoActualizado.observacion,
+      };
+    });
+  };
+
+  const ejecutarAccionPago = async (pedidoId, accion, motivo = null) => {
+    setProcesandoPago(true);
+    setErrorPago("");
+    setMensajeExito("");
+
+    try {
+      const csrf = await obtenerCsrf();
+
+      const respuesta = await fetch(
+        `${API_URL}/api/admin/pagos/${pedidoId}/${accion}`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+            ...(motivo !== null ? { "Content-Type": "application/json" } : {}),
+            [csrf.nombreHeader]: csrf.token,
+          },
+          ...(motivo !== null
+            ? {
+                body: JSON.stringify({ motivo }),
+              }
+            : {}),
+        },
+      );
+
+      if (!respuesta.ok) {
+        const mensaje = await leerError(respuesta);
+
+        if (respuesta.status === 401 || respuesta.status === 403) {
+          throw new Error(
+            "No se pudo autorizar la operación. " +
+              "Inicia sesión nuevamente y verifica los permisos. " +
+              mensaje,
+          );
+        }
+
+        throw new Error(mensaje);
+      }
+
+      const pagoActualizado = await respuesta.json();
+      actualizarPagoLocal(pagoActualizado);
+
+      setMensajeExito(
+        accion === "aprobar"
+          ? `Pago del pedido #${pedidoId} aprobado. Ya puedes notificar al cliente por WhatsApp.`
+          : `Pago del pedido #${pedidoId} rechazado. Ya puedes notificar al cliente por WhatsApp.`,
+      );
+    } catch (err) {
+      console.error(`Error al ${accion} pago:`, err);
+      throw err;
+    } finally {
+      setProcesandoPago(false);
+    }
+  };
+
+  const aprobarPago = (pedidoId) => ejecutarAccionPago(pedidoId, "aprobar");
+
+  const rechazarPago = (pedidoId, motivo) =>
+    ejecutarAccionPago(pedidoId, "rechazar", motivo);
+
+  const pagosPorPedido = useMemo(() => {
+    const mapa = new Map();
+
+    pagosAdmin.forEach((pago) => {
+      mapa.set(pago.pedidoId, pago);
+    });
+
+    return mapa;
+  }, [pagosAdmin]);
+
+  const pedidosConPago = useMemo(
+    () =>
+      pedidos.map((pedido) => {
+        const pago = pagosPorPedido.get(pedido.id);
+
+        return pago
+          ? {
+              ...pedido,
+              estadoPago: pago.estadoPago,
+              observacionPago: pago.observacion ?? pedido.observacionPago,
+            }
+          : pedido;
+      }),
+    [pedidos, pagosPorPedido],
+  );
+
+  const estadisticas = useMemo(
+    () => ({
+      total: pedidosConPago.length,
+      pendientes: pedidosConPago.filter(
+        (pedido) => pedido.estadoPago === "PENDIENTE",
+      ).length,
+      revision: pedidosConPago.filter(
+        (pedido) => pedido.estadoPago === "EN_REVISION",
+      ).length,
+      aprobados: pedidosConPago.filter(
+        (pedido) => pedido.estadoPago === "APROBADO",
+      ).length,
+    }),
+    [pedidosConPago],
+  );
 
   const pedidosFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLowerCase();
 
-    return pedidos.filter((pedido) => {
+    return pedidosConPago.filter((pedido) => {
       const coincideTexto =
         !termino ||
         String(pedido.id || "")
@@ -822,7 +1343,17 @@ export default function PedidosAdmin() {
 
       return coincideTexto && coincideEstado;
     });
-  }, [pedidos, busqueda, filtroPago]);
+  }, [pedidosConPago, busqueda, filtroPago]);
+
+  const refrescarTodo = async () => {
+    await Promise.all([cargarPedidos(true), cargarPagosAdmin()]);
+  };
+
+  const abrirPedido = (pedido) => {
+    setMensajeExito("");
+    setPedidoSeleccionado(pedido);
+    cargarPagosAdmin();
+  };
 
   return (
     <main className="min-h-screen bg-[#F4F7F5]">
@@ -835,8 +1366,8 @@ export default function PedidosAdmin() {
           <h1 className="mt-3 text-3xl font-black">Gestión de pedidos</h1>
 
           <p className="mt-2 text-sm text-green-50">
-            Consulta las órdenes, revisa sus pagos y gestiona el flete contra
-            entrega de cada envío.
+            Consulta las órdenes, verifica pagos, notifica por WhatsApp y
+            gestiona el flete contra entrega de cada envío.
           </p>
         </div>
       </header>
@@ -847,17 +1378,14 @@ export default function PedidosAdmin() {
             titulo="Total pedidos"
             valor={estadisticas.total}
           />
-
           <TarjetaEstadistica
             titulo="Pagos pendientes"
             valor={estadisticas.pendientes}
           />
-
           <TarjetaEstadistica
             titulo="Por verificar"
             valor={estadisticas.revision}
           />
-
           <TarjetaEstadistica
             titulo="Pagos aprobados"
             valor={estadisticas.aprobados}
@@ -870,7 +1398,6 @@ export default function PedidosAdmin() {
               <h2 className="text-lg font-black text-[#063D2A]">
                 Órdenes registradas
               </h2>
-
               <p className="mt-1 text-xs text-gray-500">
                 Información obtenida del backend.
               </p>
@@ -878,9 +1405,9 @@ export default function PedidosAdmin() {
 
             <button
               type="button"
-              onClick={() => cargarPedidos(true)}
-              disabled={actualizando || cargando}
-              className="rounded-xl bg-[#009E49] px-5 py-3 text-sm font-black text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+              onClick={refrescarTodo}
+              disabled={actualizando || cargando || cargandoPago}
+              className="rounded-xl bg-[#009E49] px-5 py-3 text-sm font-black text-white transition hover:bg-green-700 disabled:bg-gray-400"
             >
               {actualizando ? "Actualizando..." : "Actualizar pedidos"}
             </button>
@@ -892,7 +1419,6 @@ export default function PedidosAdmin() {
               className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800"
             >
               <span>{mensajeExito}</span>
-
               <button
                 type="button"
                 onClick={() => setMensajeExito("")}
@@ -907,14 +1433,14 @@ export default function PedidosAdmin() {
             <input
               type="search"
               value={busqueda}
-              onChange={(evento) => setBusqueda(evento.target.value)}
+              onChange={(e) => setBusqueda(e.target.value)}
               placeholder="Buscar por pedido, cliente o teléfono..."
               className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#009E49]"
             />
 
             <select
               value={filtroPago}
-              onChange={(evento) => setFiltroPago(evento.target.value)}
+              onChange={(e) => setFiltroPago(e.target.value)}
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#009E49]"
             >
               {ESTADOS_PAGO.map((estado) => (
@@ -931,6 +1457,15 @@ export default function PedidosAdmin() {
               className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
             >
               {error}
+            </div>
+          )}
+
+          {errorPago && (
+            <div
+              role="alert"
+              className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+            >
+              Administración de pagos: {errorPago}
             </div>
           )}
 
@@ -973,7 +1508,6 @@ export default function PedidosAdmin() {
                         <p className="font-bold text-[#063D2A]">
                           {pedido.nombreCliente}
                         </p>
-
                         <p className="mt-1 text-xs text-gray-500">
                           {pedido.telefonoCliente}
                         </p>
@@ -996,7 +1530,6 @@ export default function PedidosAdmin() {
                           <p className="text-xs font-semibold text-gray-500">
                             {pedido.metodoPago}
                           </p>
-
                           <EtiquetaEstado estado={pedido.estadoPago} />
                         </div>
                       </td>
@@ -1012,15 +1545,18 @@ export default function PedidosAdmin() {
                       <td className="px-3 py-4">
                         <button
                           type="button"
-                          onClick={() => {
-                            setMensajeExito("");
-                            setPedidoSeleccionado(pedido);
-                          }}
+                          onClick={() => abrirPedido(pedido)}
                           className="rounded-lg bg-green-50 px-4 py-2 text-xs font-black text-[#009E49] hover:bg-green-100"
                         >
-                          {tieneAgencia(pedido)
-                            ? "Ver / Cotizar flete"
-                            : "Ver detalles"}
+                          {pedido.estadoPago === "EN_REVISION"
+                            ? "Ver / Verificar pago"
+                            : ["APROBADO", "RECHAZADO"].includes(
+                                  pedido.estadoPago,
+                                )
+                              ? "Ver / Notificar WhatsApp"
+                              : tieneAgencia(pedido)
+                                ? "Ver / Cotizar flete"
+                                : "Ver detalles"}
                         </button>
                       </td>
                     </tr>
@@ -1044,6 +1580,14 @@ export default function PedidosAdmin() {
         cerrar={() => setPedidoSeleccionado(null)}
         guardarFlete={guardarCotizacionFlete}
         guardandoFlete={guardandoFlete}
+        informacionPago={
+          pedidoSeleccionado ? pagosPorPedido.get(pedidoSeleccionado.id) : null
+        }
+        aprobarPago={aprobarPago}
+        rechazarPago={rechazarPago}
+        procesandoPago={procesandoPago}
+        cargandoPago={cargandoPago}
+        errorPago={errorPago}
       />
     </main>
   );
