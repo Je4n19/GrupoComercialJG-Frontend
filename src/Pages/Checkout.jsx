@@ -12,29 +12,43 @@ import logoEmtrafesa from "../assets/emtrafesa.png";
 import logoOlva from "../assets/olva.png";
 
 const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:8080"
+  import.meta.env.VITE_API_URL ||
+  "https://grupocomercialjg-backend.onrender.com"
 ).replace(/\/+$/, "");
 
 const CLAVE_CARRITO = "jg_carrito";
 const CLAVE_PEDIDO = "jg_ultimo_pedido";
 
+const DATOS_BANCARIOS = {
+  titular: "Jesus Oliver Guevara Torres",
+  celular: "943168545",
+  bcp: {
+    cuenta: "305-2469851-0-96",
+    cci: "00230500246985109613",
+  },
+  bbva: {
+    cuenta: "0011-0287-0200258047",
+    cci: "0112870020025804706",
+  },
+};
+
 const ENTREGAS = [
   {
     id: "SHALOM",
     nombre: "Shalom",
-    descripcion: "Envío mediante agencia Shalom",
+    descripcion: "Flete contra entrega en agencia",
     logo: logoShalom,
   },
   {
     id: "EMTRAFESA",
     nombre: "Emtrafesa",
-    descripcion: "Envío mediante agencia Emtrafesa",
+    descripcion: "Flete contra entrega en agencia",
     logo: logoEmtrafesa,
   },
   {
     id: "OLVA",
     nombre: "Olva Courier",
-    descripcion: "Envío mediante Olva Courier",
+    descripcion: "Flete contra entrega en agencia",
     logo: logoOlva,
   },
   {
@@ -65,14 +79,14 @@ const PAGOS = [
     nombre: "BCP",
     descripcion: "Transferencia bancaria",
     logo: logoBCP,
-    habilitado: false,
+    habilitado: true,
   },
   {
     id: "BBVA",
     nombre: "BBVA",
     descripcion: "Transferencia bancaria",
     logo: logoBBVA,
-    habilitado: false,
+    habilitado: true,
   },
   {
     id: "TARJETA",
@@ -98,6 +112,7 @@ const DATOS_INICIALES = {
 function leerCarrito() {
   try {
     const datos = JSON.parse(localStorage.getItem(CLAVE_CARRITO) || "[]");
+
     return Array.isArray(datos) ? datos : [];
   } catch {
     return [];
@@ -105,10 +120,16 @@ function leerCarrito() {
 }
 
 function formatearPrecio(valor) {
-  const numero = Number(valor);
-  if (!Number.isFinite(numero) || valor == null || valor === "") {
-    return "Consultar";
+  if (valor === null || valor === undefined || valor === "") {
+    return "Por confirmar";
   }
+
+  const numero = Number(valor);
+
+  if (!Number.isFinite(numero)) {
+    return "Por confirmar";
+  }
+
   return `S/ ${numero.toLocaleString("es-PE", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -145,6 +166,7 @@ function Campo({
       <span className="mb-2 block text-sm font-bold text-[#063D2A]">
         {etiqueta}
       </span>
+
       <input
         name={nombre}
         type={type}
@@ -187,12 +209,15 @@ function obtenerDetalles(carrito) {
 
 async function obtenerCsrf() {
   const respuesta = await fetch(`${API_URL}/api/auth/csrf`, {
+    method: "GET",
     credentials: "include",
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+    },
   });
 
   if (!respuesta.ok) {
-    throw new Error("No se pudo obtener la sesión de seguridad del servidor.");
+    throw new Error("No se pudo obtener el token de seguridad del servidor.");
   }
 
   const csrf = await respuesta.json();
@@ -205,35 +230,343 @@ async function obtenerCsrf() {
 }
 
 async function leerError(respuesta) {
-  let mensaje = `Error HTTP ${respuesta.status} al registrar el pedido.`;
+  let mensaje = `Error HTTP ${respuesta.status}.`;
 
   try {
     const datos = await respuesta.json();
-    mensaje = datos.detail || datos.message || mensaje;
+
+    mensaje = datos.detail || datos.message || datos.error || mensaje;
   } catch {
-    // Mantener mensaje general.
+    // Conservar mensaje general.
   }
 
   if (respuesta.status === 403) {
-    return "El servidor rechazó la solicitud de seguridad. Revisa las cookies, CORS y CSRF.";
+    return (
+      "El servidor rechazó la solicitud de seguridad. " +
+      "Verifica la sesión, las cookies, CORS y CSRF."
+    );
   }
 
   if (respuesta.status === 409) {
-    return "Uno de los artículos no tiene stock suficiente. Revisa tu carrito.";
+    return "La operación no puede completarse en el estado actual. " + mensaje;
   }
 
   return mensaje;
 }
 
+function DatoCopiable({ etiqueta, valor }) {
+  const [copiado, setCopiado] = useState(false);
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(valor);
+      setCopiado(true);
+    } catch {
+      setCopiado(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <p className="text-xs font-semibold text-gray-500">{etiqueta}</p>
+
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <span className="break-all text-sm font-black text-[#063D2A]">
+          {valor}
+        </span>
+
+        <button
+          type="button"
+          onClick={copiar}
+          className="rounded-lg bg-green-50 px-3 py-2 text-xs font-bold text-[#009E49] hover:bg-green-100"
+        >
+          {copiado ? "Copiado ✓" : "Copiar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DatosPago({ metodoPago, importe }) {
+  const metodo = PAGOS.find((opcion) => opcion.id === metodoPago);
+
+  if (!metodo || metodoPago === "TARJETA") {
+    return null;
+  }
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-2xl border border-green-200 bg-green-50 text-left">
+      <div className="flex items-center gap-4 border-b border-green-200 bg-white p-5">
+        <Logo src={metodo.logo} alt={metodo.nombre} grande />
+
+        <div>
+          <h3 className="font-black text-[#063D2A]">
+            Pago mediante {metodo.nombre}
+          </h3>
+
+          <p className="mt-1 text-xs text-gray-500">Grupo Comercial J&G</p>
+        </div>
+      </div>
+
+      <div className="space-y-3 p-5">
+        <div className="rounded-xl border border-green-200 bg-white p-4">
+          <p className="text-sm font-bold text-[#063D2A]">
+            Importe exacto a transferir
+          </p>
+
+          <p className="mt-2 text-2xl font-black text-[#FF6600]">
+            {formatearPrecio(importe)}
+          </p>
+
+          <p className="mt-2 text-xs text-gray-600">
+            Este pago corresponde únicamente a los productos comprados en J&G.
+            No incluye el flete contra entrega.
+          </p>
+        </div>
+
+        {(metodoPago === "YAPE" || metodoPago === "PLIN") && (
+          <>
+            <DatoCopiable
+              etiqueta={`Número de ${metodoPago}`}
+              valor={DATOS_BANCARIOS.celular}
+            />
+
+            <DatoCopiable etiqueta="Titular" valor={DATOS_BANCARIOS.titular} />
+          </>
+        )}
+
+        {metodoPago === "BCP" && (
+          <>
+            <DatoCopiable
+              etiqueta="Cuenta BCP en soles"
+              valor={DATOS_BANCARIOS.bcp.cuenta}
+            />
+
+            <DatoCopiable etiqueta="CCI BCP" valor={DATOS_BANCARIOS.bcp.cci} />
+
+            <DatoCopiable etiqueta="Titular" valor={DATOS_BANCARIOS.titular} />
+          </>
+        )}
+
+        {metodoPago === "BBVA" && (
+          <>
+            <DatoCopiable
+              etiqueta="Cuenta BBVA en soles"
+              valor={DATOS_BANCARIOS.bbva.cuenta}
+            />
+
+            <DatoCopiable
+              etiqueta="CCI BBVA"
+              valor={DATOS_BANCARIOS.bbva.cci}
+            />
+
+            <DatoCopiable etiqueta="Titular" valor={DATOS_BANCARIOS.titular} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
+  const [numeroOperacion, setNumeroOperacion] = useState("");
+
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
+  const enviandoRef = useRef(false);
+
+  const enviarReporte = async (evento) => {
+    evento.preventDefault();
+
+    if (enviandoRef.current) return;
+
+    const operacion = numeroOperacion.trim();
+
+    if (!/^[A-Za-z0-9-]{4,50}$/.test(operacion)) {
+      setError(
+        "Ingresa un número de operación válido de 4 a 50 caracteres, usando letras, números o guiones.",
+      );
+      return;
+    }
+
+    enviandoRef.current = true;
+    setEnviando(true);
+    setError("");
+
+    try {
+      const csrf = await obtenerCsrf();
+
+      const respuesta = await fetch(`${API_URL}/api/pagos/reportar`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          [csrf.headerName]: csrf.token,
+        },
+        body: JSON.stringify({
+          pedidoId: pedido.id,
+          tokenSeguimiento,
+          numeroOperacion: operacion,
+        }),
+      });
+
+      if (!respuesta.ok) {
+        throw new Error(await leerError(respuesta));
+      }
+
+      const resultado = await respuesta.json();
+
+      if (resultado.estadoPago !== "EN_REVISION") {
+        throw new Error("El servidor no confirmó el estado del reporte.");
+      }
+
+      onPagoReportado(resultado);
+    } catch (err) {
+      setError(
+        err instanceof TypeError
+          ? "No se pudo conectar con el servidor. Verifica Render y la conexión."
+          : err.message || "No se pudo reportar el pago.",
+      );
+    } finally {
+      enviandoRef.current = false;
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={enviarReporte}
+      className="mt-6 rounded-2xl border border-green-200 bg-white p-5 text-left"
+    >
+      <h3 className="text-lg font-black text-[#063D2A]">Reportar mi pago</h3>
+
+      <p className="mt-2 text-sm text-gray-600">
+        Después de transferir el importe de los productos a J&G, introduce el
+        número de operación de tu comprobante.
+      </p>
+
+      <div className="mt-5">
+        <Campo
+          nombre="numeroOperacion"
+          etiqueta="Número de operación"
+          valor={numeroOperacion}
+          onChange={(evento) => {
+            setNumeroOperacion(evento.target.value);
+            setError("");
+          }}
+          placeholder="Ejemplo: 123456789"
+          maxLength={50}
+        />
+      </div>
+
+      {error && (
+        <div
+          role="alert"
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
+          {error}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={enviando}
+        className="mt-5 w-full rounded-xl bg-[#009E49] px-5 py-4 font-black text-white transition hover:bg-green-700 disabled:bg-gray-400"
+      >
+        {enviando ? "Enviando reporte..." : "Ya pagué, reportar operación →"}
+      </button>
+
+      <p className="mt-3 text-xs text-gray-500">
+        El reporte no aprueba automáticamente el pago. Nuestro equipo verificará
+        el abono recibido.
+      </p>
+    </form>
+  );
+}
+
+function ResumenFlete({ pedido }) {
+  const esRecojo = pedido.metodoEntrega === "RECOJO";
+
+  const cotizado = ["ESTIMADO", "CONFIRMADO"].includes(
+    pedido.estadoCotizacionFlete,
+  );
+
+  const flete =
+    cotizado && pedido.costoEnvio != null ? Number(pedido.costoEnvio) : null;
+
+  return (
+    <div className="mt-6 rounded-2xl bg-[#F4F7F5] p-5 text-left">
+      <h3 className="font-black text-[#063D2A]">Resumen de importes</h3>
+
+      <div className="mt-4 flex justify-between gap-3 text-sm">
+        <span className="text-gray-600">Productos</span>
+
+        <strong>{formatearPrecio(pedido.subtotal)}</strong>
+      </div>
+
+      <div className="mt-4 flex justify-between gap-3 text-sm">
+        <span className="text-gray-600">
+          {esRecojo ? "Recojo en tienda" : `Flete por ${pedido.metodoEntrega}`}
+        </span>
+
+        <strong>
+          {esRecojo
+            ? "Sin costo"
+            : flete !== null
+              ? formatearPrecio(flete)
+              : "Pendiente de cotización"}
+        </strong>
+      </div>
+
+      <div className="mt-4 flex justify-between gap-3 border-t border-gray-200 pt-4">
+        <span className="font-bold text-[#063D2A]">Total a pagar a J&G</span>
+
+        <strong className="text-xl text-[#FF6600]">
+          {formatearPrecio(pedido.total)}
+        </strong>
+      </div>
+
+      {!esRecojo && (
+        <>
+          <p className="mt-3 text-xs text-amber-700">
+            El flete no está incluido en el pago a J&G. Se paga directamente a
+            la agencia cuando recojas tu pedido.
+          </p>
+
+          <div className="mt-4 flex justify-between gap-3 border-t border-gray-200 pt-4">
+            <span className="text-sm font-bold text-[#063D2A]">
+              Gasto total estimado
+            </span>
+
+            <strong className="text-[#063D2A]">
+              {flete !== null
+                ? formatearPrecio(Number(pedido.total) + flete)
+                : "Por confirmar"}
+            </strong>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function Checkout() {
   const [carrito, setCarrito] = useState(leerCarrito);
+
   const [datos, setDatos] = useState(DATOS_INICIALES);
+
   const [metodoPago, setMetodoPago] = useState("YAPE");
 
   const [registrando, setRegistrando] = useState(false);
+
   const [errorPedido, setErrorPedido] = useState("");
+
   const [pedidoConfirmado, setPedidoConfirmado] = useState(null);
+
   const [tokenSeguimiento, setTokenSeguimiento] = useState("");
+
+  const [reporteConfirmado, setReporteConfirmado] = useState(null);
 
   const enviandoRef = useRef(false);
 
@@ -249,10 +582,12 @@ export default function Checkout() {
     const actualizar = () => setCarrito(leerCarrito());
 
     window.addEventListener("storage", actualizar);
+
     window.addEventListener("jg-carrito-actualizado", actualizar);
 
     return () => {
       window.removeEventListener("storage", actualizar);
+
       window.removeEventListener("jg-carrito-actualizado", actualizar);
     };
   }, []);
@@ -279,7 +614,11 @@ export default function Checkout() {
       }
     });
 
-    return { subtotal, unidades, sinPrecio };
+    return {
+      subtotal,
+      unidades,
+      sinPrecio,
+    };
   }, [carrito]);
 
   const cambiarCampo = (evento) => {
@@ -296,7 +635,9 @@ export default function Checkout() {
   const manejarEnvio = async (evento) => {
     evento.preventDefault();
 
-    if (enviandoRef.current || pedidoConfirmado) return;
+    if (enviandoRef.current || pedidoConfirmado) {
+      return;
+    }
 
     setErrorPedido("");
 
@@ -310,8 +651,8 @@ export default function Checkout() {
       return;
     }
 
-    if (!["YAPE", "PLIN"].includes(metodoPago)) {
-      setErrorPedido("Selecciona Yape o Plin.");
+    if (!["YAPE", "PLIN", "BCP", "BBVA"].includes(metodoPago)) {
+      setErrorPedido("Selecciona un método de pago válido.");
       return;
     }
 
@@ -326,17 +667,27 @@ export default function Checkout() {
 
     const cuerpo = {
       nombreCliente: datos.nombreCliente.trim(),
+
       telefonoCliente: datos.telefonoCliente.trim(),
+
       correoCliente: datos.correoCliente.trim() || null,
+
       metodoEntrega: datos.metodoEntrega,
+
       metodoPago,
+
       direccionEntrega: esRecojo
         ? "RECOJO EN TIENDA"
         : datos.direccionEntrega.trim(),
+
       departamento: esRecojo ? null : datos.departamento.trim(),
+
       provincia: esRecojo ? null : datos.provincia.trim(),
+
       distrito: esRecojo ? null : datos.distrito.trim(),
+
       referencia: datos.referencia.trim() || null,
+
       detalles,
     };
 
@@ -363,21 +714,18 @@ export default function Checkout() {
 
       const resultado = await respuesta.json();
 
-      // NUEVA ESTRUCTURA DEL BACKEND
       const pedido = resultado.pedido;
       const token = resultado.tokenSeguimiento;
 
       if (!pedido?.id || !token) {
         throw new Error(
-          "El servidor respondió sin la confirmación completa. No vuelvas a registrar el pedido sin verificarlo primero.",
+          "El servidor respondió sin la confirmación completa. No registres otro pedido sin verificarlo primero.",
         );
       }
 
       setPedidoConfirmado(pedido);
       setTokenSeguimiento(token);
 
-      // Guardar temporalmente la referencia del pedido.
-      // El token es secreto: no se comparte en enlaces.
       try {
         sessionStorage.setItem(
           CLAVE_PEDIDO,
@@ -387,23 +735,27 @@ export default function Checkout() {
           }),
         );
       } catch {
-        console.warn("No fue posible guardar temporalmente el seguimiento.");
+        console.warn("No se pudo guardar temporalmente el seguimiento.");
       }
 
       try {
         localStorage.removeItem(CLAVE_CARRITO);
+
         window.dispatchEvent(new Event("jg-carrito-actualizado"));
       } catch {
         console.warn("No se pudo limpiar el carrito.");
       }
 
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     } catch (error) {
       console.error("Error registrando pedido:", error);
 
       setErrorPedido(
         error instanceof TypeError
-          ? "No se pudo conectar con el backend. Verifica Render, CORS y la configuración de cookies."
+          ? "No se pudo conectar con el backend. Verifica Render, CORS y las cookies."
           : error.message || "Ocurrió un error al registrar el pedido.",
       );
     } finally {
@@ -412,14 +764,36 @@ export default function Checkout() {
     }
   };
 
-  // ==========================================
-  // CONFIRMACIÓN DEL PEDIDO
-  // ==========================================
+  const manejarReporteConfirmado = (resultado) => {
+    setReporteConfirmado(resultado);
+
+    setPedidoConfirmado((anterior) => ({
+      ...anterior,
+      estadoPago: resultado.estadoPago,
+    }));
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // ========================================
+  // PANTALLA DE CONFIRMACION
+  // ========================================
 
   if (pedidoConfirmado) {
     const entrega = ENTREGAS.find(
       (opcion) => opcion.id === pedidoConfirmado.metodoEntrega,
     );
+
+    const esRecojoConfirmado = pedidoConfirmado.metodoEntrega === "RECOJO";
+
+    const puedeReportar =
+      ["PENDIENTE", "RECHAZADO"].includes(pedidoConfirmado.estadoPago) &&
+      Boolean(tokenSeguimiento) &&
+      pedidoConfirmado.estadoPedido !== "CANCELADO" &&
+      ["YAPE", "PLIN", "BCP", "BBVA"].includes(pedidoConfirmado.metodoPago);
 
     return (
       <main className="min-h-[75vh] bg-[#F4F7F5] px-4 py-12">
@@ -437,8 +811,7 @@ export default function Checkout() {
           </h1>
 
           <p className="mt-3 text-sm text-gray-600">
-            Hemos recibido tu pedido correctamente. Conserva tu número para
-            futuras consultas.
+            Hemos recibido tu pedido. Conserva tu número para futuras consultas.
           </p>
 
           <div className="mt-7 rounded-2xl bg-[#F4F7F5] p-6">
@@ -453,6 +826,7 @@ export default function Checkout() {
             <div className="mt-6 grid gap-4 border-t border-gray-200 pt-5 text-left sm:grid-cols-2">
               <div>
                 <p className="text-xs text-gray-500">Cliente</p>
+
                 <p className="font-bold text-[#063D2A]">
                   {pedidoConfirmado.nombreCliente}
                 </p>
@@ -460,6 +834,7 @@ export default function Checkout() {
 
               <div>
                 <p className="text-xs text-gray-500">Entrega</p>
+
                 <p className="font-bold text-[#063D2A]">
                   {entrega?.nombre || pedidoConfirmado.metodoEntrega}
                 </p>
@@ -467,6 +842,7 @@ export default function Checkout() {
 
               <div>
                 <p className="text-xs text-gray-500">Estado del pedido</p>
+
                 <p className="font-bold text-amber-700">
                   {pedidoConfirmado.estadoPedido}
                 </p>
@@ -474,61 +850,116 @@ export default function Checkout() {
 
               <div>
                 <p className="text-xs text-gray-500">Estado del pago</p>
-                <p className="font-bold text-amber-700">
+
+                <p className="font-bold text-[#063D2A]">
                   {pedidoConfirmado.estadoPago}
                 </p>
               </div>
             </div>
+          </div>
 
-            <div className="mt-5 border-t border-gray-200 pt-5 text-left">
-              <p className="text-xs text-gray-500">Subtotal de artículos</p>
+          <ResumenFlete pedido={pedidoConfirmado} />
 
-              <p className="mt-1 text-2xl font-black text-[#FF6600]">
-                {formatearPrecio(pedidoConfirmado.subtotal)}
+          {!esRecojoConfirmado && (
+            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-left">
+              <h2 className="font-black text-amber-800">
+                Flete contra entrega
+              </h2>
+
+              <p className="mt-3 text-sm text-amber-700">
+                Tu pedido será enviado mediante{" "}
+                <strong>{entrega?.nombre}</strong>. El transporte se cotiza
+                según el peso, volumen y destino.
               </p>
 
-              <p className="mt-2 text-xs text-gray-500">
-                {pedidoConfirmado.metodoEntrega === "RECOJO"
-                  ? "Sin costo de envío."
-                  : "El costo de envío todavía debe confirmarse. Este no es el importe final."}
+              <p className="mt-3 text-sm font-semibold text-amber-800">
+                Pagarás el flete directamente a la agencia cuando recojas tus
+                productos.
+              </p>
+
+              <p className="mt-2 text-xs text-amber-700">
+                No necesitas esperar la cotización del flete para pagar los
+                productos a J&G.
               </p>
             </div>
-          </div>
-
-          <div className="mt-6 rounded-xl border border-purple-200 bg-purple-50 p-5 text-left">
-            <h2 className="font-black text-[#063D2A]">
-              Método elegido: {pedidoConfirmado.metodoPago}
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-700">
-              Tu pedido está registrado, pero el pago todavía no ha sido
-              realizado ni verificado.
-            </p>
-
-            <p className="mt-3 text-sm font-semibold text-purple-800">
-              Próximamente podrás reportar tu operación de Yape o Plin desde
-              esta pantalla.
-            </p>
-          </div>
-
-          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left">
-            <p className="text-sm font-bold text-amber-800">
-              Pedido pendiente de confirmación
-            </p>
-
-            <p className="mt-2 text-sm text-amber-700">
-              Registrar el pedido no significa que esté pagado ni que los
-              artículos estén reservados. No realices pagos todavía desde esta
-              pantalla.
-            </p>
-          </div>
-
-          {tokenSeguimiento && (
-            <p className="mt-4 text-xs text-gray-500">
-              Se generó correctamente tu acceso privado de seguimiento para esta
-              sesión.
-            </p>
           )}
+
+          {reporteConfirmado ||
+          pedidoConfirmado.estadoPago === "EN_REVISION" ? (
+            <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-6 text-left">
+              <h2 className="text-lg font-black text-[#063D2A]">
+                ✓ Pago reportado correctamente
+              </h2>
+
+              <p className="mt-3 text-sm text-gray-700">
+                Recibimos tu número de operación. El pago se encuentra en
+                revisión.
+              </p>
+
+              {reporteConfirmado?.numeroOperacion && (
+                <p className="mt-3 text-sm font-bold text-[#063D2A]">
+                  Operación: {reporteConfirmado.numeroOperacion}
+                </p>
+              )}
+
+              <p className="mt-3 text-xs text-gray-600">
+                Nuestro equipo verificará el dinero recibido antes de aprobar el
+                pago.
+              </p>
+            </div>
+          ) : puedeReportar ? (
+            <>
+              <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5 text-left">
+                <h2 className="font-black text-[#063D2A]">
+                  Siguiente paso: realizar el pago
+                </h2>
+
+                <p className="mt-2 text-sm text-gray-700">
+                  Método seleccionado:{" "}
+                  <strong>{pedidoConfirmado.metodoPago}</strong>
+                </p>
+
+                <p className="mt-2 text-sm text-gray-700">
+                  Importe de productos:{" "}
+                  <strong>{formatearPrecio(pedidoConfirmado.total)}</strong>
+                </p>
+
+                <p className="mt-3 text-xs text-gray-600">
+                  Verifica el importe y la cuenta antes de transferir.
+                </p>
+              </div>
+
+              <DatosPago
+                metodoPago={pedidoConfirmado.metodoPago}
+                importe={pedidoConfirmado.total}
+              />
+
+              <ReportarPago
+                pedido={pedidoConfirmado}
+                tokenSeguimiento={tokenSeguimiento}
+                onPagoReportado={manejarReporteConfirmado}
+              />
+            </>
+          ) : (
+            <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5 text-left">
+              <p className="text-sm font-semibold text-gray-700">
+                Estado del pago: {pedidoConfirmado.estadoPago}. No hay un nuevo
+                reporte disponible para este pedido.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4 text-left">
+            <p className="text-sm font-bold text-[#063D2A]">
+              Información importante
+            </p>
+
+            <p className="mt-2 text-xs text-gray-600">
+              Registrar un pedido o reportar una transferencia no significa que
+              el pago esté aprobado. El stock tampoco se reserva
+              automáticamente.
+            </p>
+          </div>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -550,9 +981,9 @@ export default function Checkout() {
     );
   }
 
-  // ==========================================
+  // ========================================
   // FORMULARIO DE CHECKOUT
-  // ==========================================
+  // ========================================
 
   return (
     <main className="min-h-[75vh] bg-[#F4F7F5] px-4 py-8 sm:px-6 sm:py-12">
@@ -574,8 +1005,7 @@ export default function Checkout() {
           </h1>
 
           <p className="mt-3 text-sm text-gray-600">
-            Completa tus datos, selecciona la entrega y el método de pago
-            preferido.
+            Completa tus datos, selecciona la entrega y el método de pago.
           </p>
         </div>
 
@@ -601,8 +1031,6 @@ export default function Checkout() {
         ) : (
           <div className="grid items-start gap-6 lg:grid-cols-3">
             <form onSubmit={manejarEnvio} className="space-y-6 lg:col-span-2">
-              {/* INFORMACIÓN DEL CLIENTE */}
-
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
                   1. Información del cliente
@@ -644,8 +1072,6 @@ export default function Checkout() {
                   </div>
                 </div>
               </section>
-
-              {/* MÉTODO DE ENTREGA */}
 
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
@@ -779,6 +1205,26 @@ export default function Checkout() {
                         </div>
                       </div>
                     </div>
+
+                    <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-5">
+                      <h3 className="font-black text-[#C94E14]">
+                        Flete contra entrega
+                      </h3>
+
+                      <p className="mt-2 text-sm text-gray-700">
+                        El costo de transporte se calcula según el peso, tamaño
+                        y destino.
+                      </p>
+
+                      <p className="mt-2 text-sm font-semibold text-[#063D2A]">
+                        Pagarás el flete directamente a la agencia al recoger tu
+                        pedido.
+                      </p>
+
+                      <p className="mt-2 text-xs text-gray-600">
+                        J&G solo recibirá el pago de los productos.
+                      </p>
+                    </div>
                   </>
                 ) : (
                   <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5">
@@ -798,16 +1244,14 @@ export default function Checkout() {
                 )}
               </section>
 
-              {/* MÉTODO DE PAGO */}
-
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
                   3. Método de pago
                 </h2>
 
                 <p className="mb-6 mt-2 text-sm text-gray-500">
-                  Selecciona un método disponible. El registro del pedido no
-                  realiza cobros.
+                  Selecciona tu método de pago. El pedido se registra antes de
+                  reportar la operación.
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -862,57 +1306,42 @@ export default function Checkout() {
                   })}
                 </div>
 
-                {["YAPE", "PLIN"].includes(metodoPago) && (
-                  <div className="mt-6 rounded-xl border border-purple-200 bg-purple-50 p-5">
-                    <div className="flex items-center gap-3">
-                      <Logo
-                        src={metodoPago === "YAPE" ? logoYape : logoPlin}
-                        alt={metodoPago}
-                        grande
-                      />
+                <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
+                  <p className="text-sm font-bold text-[#063D2A]">
+                    Método seleccionado: {pagoSeleccionado?.nombre}
+                  </p>
 
-                      <h3 className="font-black text-[#063D2A]">
-                        {metodoPago}
-                      </h3>
-                    </div>
+                  <p className="mt-2 text-xs text-gray-600">
+                    Los datos oficiales para transferir aparecerán después de
+                    registrar tu pedido.
+                  </p>
 
-                    <p className="mt-3 text-sm text-gray-700">
-                      Este método está disponible para seleccionarlo al
-                      registrar tu pedido.
+                  <p className="mt-2 text-sm font-semibold text-[#063D2A]">
+                    Solo pagarás a J&G el importe de los productos.
+                  </p>
+                </div>
+
+                {!esRecojo && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-bold text-amber-800">
+                      Transporte contra entrega
                     </p>
 
-                    <div className="mt-4 rounded-xl border border-purple-200 bg-white p-4">
-                      <p className="text-sm font-bold text-purple-800">
-                        Verificación de pagos en preparación
-                      </p>
-
-                      <p className="mt-2 text-sm text-gray-600">
-                        Estamos terminando el formulario para informar el número
-                        de operación y verificar el abono recibido.
-                      </p>
-
-                      <p className="mt-2 text-xs text-gray-500">
-                        No realices pagos todavía. El número oficial y las
-                        instrucciones de pago se mostrarán cuando activemos el
-                        proceso completo.
-                      </p>
-                    </div>
+                    <p className="mt-2 text-xs text-amber-700">
+                      Puedes pagar tus productos a J&G después de registrar el
+                      pedido, aunque el flete todavía no esté cotizado. El
+                      transporte se paga directamente a la agencia.
+                    </p>
                   </div>
                 )}
 
-                <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-sm font-bold text-amber-800">
-                    ⚠️ Los cobros todavía no están habilitados
-                  </p>
-
-                  <p className="mt-2 text-xs leading-relaxed text-amber-700">
-                    Al continuar, registrarás un pedido pendiente. No se
-                    procesará dinero ni se reservará stock automáticamente.
+                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-xs text-gray-600">
+                    Los pagos se verifican manualmente. Registrar el pedido no
+                    genera ningún cobro automático.
                   </p>
                 </div>
               </section>
-
-              {/* ERRORES */}
 
               {errorPedido && (
                 <div
@@ -923,12 +1352,10 @@ export default function Checkout() {
                 </div>
               )}
 
-              {/* REGISTRO */}
-
               <button
                 type="submit"
                 disabled={registrando}
-                className="w-full rounded-xl bg-[#FF6600] px-6 py-4 font-black text-white shadow-sm transition hover:bg-[#E65C00] disabled:cursor-not-allowed disabled:bg-gray-400"
+                className="w-full rounded-xl bg-[#FF6600] px-6 py-4 font-black text-white shadow-sm transition hover:bg-[#E65C00] disabled:bg-gray-400"
               >
                 {registrando
                   ? "Registrando tu pedido..."
@@ -940,8 +1367,6 @@ export default function Checkout() {
                 cobro al registrarlo.
               </p>
             </form>
-
-            {/* RESUMEN */}
 
             <aside className="rounded-2xl bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-28">
               <h2 className="text-xl font-black text-[#063D2A]">
@@ -983,11 +1408,13 @@ export default function Checkout() {
               <div className="mt-5 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Unidades</span>
+
                   <strong>{resumen.unidades}</strong>
                 </div>
 
                 <div className="flex justify-between gap-3 text-sm">
                   <span className="text-gray-500">Método de entrega</span>
+
                   <strong className="text-right text-[#063D2A]">
                     {entregaSeleccionada?.nombre}
                   </strong>
@@ -995,29 +1422,30 @@ export default function Checkout() {
 
                 <div className="flex justify-between gap-3 text-sm">
                   <span className="text-gray-500">Método de pago</span>
+
                   <strong className="text-right text-[#063D2A]">
                     {pagoSeleccionado?.nombre}
                   </strong>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Subtotal</span>
+                  <span className="text-gray-500">Subtotal de productos</span>
+
                   <strong>{formatearPrecio(resumen.subtotal)}</strong>
                 </div>
 
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Envío</span>
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-gray-500">Flete</span>
+
                   <strong
                     className={esRecojo ? "text-[#009E49]" : "text-amber-700"}
                   >
-                    {esRecojo ? "Sin costo" : "Por confirmar"}
+                    {esRecojo ? "No aplica" : "Contra entrega"}
                   </strong>
                 </div>
 
                 <div className="border-t border-gray-100 pt-4">
-                  <p className="text-xs text-gray-500">
-                    {esRecojo ? "Total de artículos" : "Subtotal sin envío"}
-                  </p>
+                  <p className="text-xs text-gray-500">Total a pagar a J&G</p>
 
                   <p className="mt-2 text-3xl font-black text-[#FF6600]">
                     {formatearPrecio(resumen.subtotal)}
@@ -1025,8 +1453,10 @@ export default function Checkout() {
                 </div>
 
                 {!esRecojo && (
-                  <p className="text-xs text-amber-700">
-                    El envío se cotizará según el destino y la agencia.
+                  <p className="rounded-xl bg-orange-50 p-3 text-xs text-[#A83E0B]">
+                    El flete se cotizará según el peso, volumen y destino. No
+                    está incluido en este total. Lo pagarás directamente a la
+                    agencia al recoger tu pedido.
                   </p>
                 )}
 

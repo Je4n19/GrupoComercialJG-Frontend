@@ -15,7 +15,7 @@ import NoEncontrado from "../Pages/NoEncontrado";
 // CARRITO DE COTIZACIÓN
 import Carrito from "../Pages/Carrito";
 
-// FINALIZAR COMPRA - NUEVO
+// FINALIZAR COMPRA
 import Checkout from "../Pages/Checkout";
 
 // RASTREAR PEDIDO
@@ -43,6 +43,9 @@ import FormularioCategoriaRepuesto from "../Admin/FormularioCategoriaRepuesto";
 import Inventario from "../Admin/Inventario";
 import Configuracion from "../Admin/Configuracion";
 
+// GESTIÓN DE PEDIDOS - RUTA CORREGIDA
+import PedidosAdmin from "../Admin/PedidosAdmin";
+
 /* ========================================
    COMPONENTE DE RUTAS
 ======================================== */
@@ -66,10 +69,10 @@ function RutasApp() {
       {/* CONTACTO */}
       <Route path="/contacto" element={<Contacto />} />
 
-      {/* CARRITO DE COTIZACIÓN */}
+      {/* CARRITO */}
       <Route path="/carrito" element={<Carrito />} />
 
-      {/* FINALIZAR COMPRA - NUEVA RUTA */}
+      {/* FINALIZAR COMPRA */}
       <Route path="/checkout" element={<Checkout />} />
 
       {/* DETALLE DE PRODUCTO */}
@@ -98,7 +101,11 @@ function RutasApp() {
         }
       />
 
-      {/* PRODUCTOS */}
+      {/* ========================================
+          PRODUCTOS
+      ======================================== */}
+
+      {/* LISTAR PRODUCTOS */}
       <Route
         path="/admin/productos"
         element={
@@ -128,7 +135,11 @@ function RutasApp() {
         }
       />
 
-      {/* REPUESTOS ADMIN */}
+      {/* ========================================
+          REPUESTOS
+      ======================================== */}
+
+      {/* LISTAR REPUESTOS */}
       <Route
         path="/admin/repuestos"
         element={
@@ -158,7 +169,11 @@ function RutasApp() {
         }
       />
 
-      {/* CATEGORÍAS */}
+      {/* ========================================
+          CATEGORÍAS DE PRODUCTOS
+      ======================================== */}
+
+      {/* LISTAR CATEGORÍAS */}
       <Route
         path="/admin/categorias"
         element={
@@ -188,7 +203,11 @@ function RutasApp() {
         }
       />
 
-      {/* CATEGORÍAS DE REPUESTOS */}
+      {/* ========================================
+          CATEGORÍAS DE REPUESTOS
+      ======================================== */}
+
+      {/* LISTAR CATEGORÍAS DE REPUESTOS */}
       <Route
         path="/admin/categorias-repuesto"
         element={
@@ -218,7 +237,10 @@ function RutasApp() {
         }
       />
 
-      {/* INVENTARIO */}
+      {/* ========================================
+          INVENTARIO
+      ======================================== */}
+
       <Route
         path="/admin/inventario"
         element={
@@ -228,7 +250,23 @@ function RutasApp() {
         }
       />
 
-      {/* CONFIGURACIÓN */}
+      {/* ========================================
+          GESTIÓN DE PEDIDOS
+      ======================================== */}
+
+      <Route
+        path="/admin/pedidos"
+        element={
+          <RutaProtegida>
+            <PedidosAdmin />
+          </RutaProtegida>
+        }
+      />
+
+      {/* ========================================
+          CONFIGURACIÓN
+      ======================================== */}
+
       <Route
         path="/admin/configuracion"
         element={

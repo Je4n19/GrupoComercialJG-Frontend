@@ -49,6 +49,15 @@ function Icono({ tipo, className = "w-5 h-5" }) {
       </>
     ),
 
+    // NUEVO ICONO: PEDIDOS
+    pedidos: (
+      <>
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+      </>
+    ),
+
     configuracion: (
       <>
         <circle cx="12" cy="12" r="3" />
@@ -114,23 +123,18 @@ function MenuAdmin() {
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
   const [errorSesion, setErrorSesion] = useState("");
 
-  /* ========================================
-     CERRAR MENÚ AL CAMBIAR DE PÁGINA
-  ======================================== */
+  /* CERRAR MENÚ AL CAMBIAR DE PÁGINA */
 
   useEffect(() => {
     setMenuAbierto(false);
   }, [location.pathname]);
 
-  /* ========================================
-     BLOQUEAR SCROLL AL ABRIR MENÚ MÓVIL
-  ======================================== */
+  /* BLOQUEAR SCROLL AL ABRIR MENÚ MÓVIL */
 
   useEffect(() => {
     if (!menuAbierto) return;
 
     const overflowAnterior = document.body.style.overflow;
-
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -138,9 +142,7 @@ function MenuAdmin() {
     };
   }, [menuAbierto]);
 
-  /* ========================================
-     CERRAR MENÚ CON ESCAPE
-  ======================================== */
+  /* CERRAR MENÚ CON ESCAPE */
 
   useEffect(() => {
     if (!menuAbierto) return;
@@ -158,9 +160,7 @@ function MenuAdmin() {
     };
   }, [menuAbierto]);
 
-  /* ========================================
-     CERRAR SESIÓN CON SPRING BOOT
-  ======================================== */
+  /* CERRAR SESIÓN CON SPRING BOOT */
 
   const cerrarSesion = async () => {
     if (cerrandoSesion) return;
@@ -170,7 +170,6 @@ function MenuAdmin() {
 
     try {
       await logout();
-
       window.location.replace("/login");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
@@ -218,6 +217,14 @@ function MenuAdmin() {
       ruta: "/admin/inventario",
       icono: "inventario",
     },
+
+    // NUEVA OPCIÓN DE PEDIDOS
+    {
+      nombre: "Pedidos",
+      ruta: "/admin/pedidos",
+      icono: "pedidos",
+    },
+
     {
       nombre: "Configuración",
       ruta: "/admin/configuracion",
