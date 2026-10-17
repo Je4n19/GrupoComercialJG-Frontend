@@ -11,6 +11,10 @@ import TarjetaProducto from "../Components/TarjetaProducto";
 
 const CLAVE_CARRITO = "jg_carrito";
 
+// ========================================
+// FUNCIONES AUXILIARES
+// ========================================
+
 const nombreCategoria = (categoria) => {
   if (typeof categoria === "string") return categoria;
   return categoria?.nombre || "Sin categoría";
@@ -19,18 +23,22 @@ const nombreCategoria = (categoria) => {
 const claveCategoria = (categoria) => {
   if (categoria && typeof categoria === "object") {
     if (categoria.id != null) return `id:${categoria.id}`;
+
     return `nombre:${String(categoria.nombre || "").toLowerCase()}`;
   }
+
   return `nombre:${String(categoria || "").toLowerCase()}`;
 };
 
-const obtenerImagenes = (producto) => [
-  ...new Set(
-    [producto.imagen, producto.imagen2].filter(
-      (imagen) => typeof imagen === "string" && imagen.trim() !== "",
+const obtenerImagenes = (producto) => {
+  return [
+    ...new Set(
+      [producto.imagen, producto.imagen2].filter(
+        (imagen) => typeof imagen === "string" && imagen.trim() !== "",
+      ),
     ),
-  ),
-];
+  ];
+};
 
 const obtenerDatosTecnicos = (producto) => {
   let datos = [];
@@ -40,6 +48,7 @@ const obtenerDatosTecnicos = (producto) => {
       .split("\n")
       .map((linea) => {
         const posicion = linea.indexOf(":");
+
         if (posicion === -1) return null;
 
         const nombre = linea.slice(0, posicion).trim();
@@ -79,6 +88,26 @@ const obtenerDatosTecnicos = (producto) => {
 const whatsapp = (mensaje) =>
   `https://wa.me/51979501557?text=${encodeURIComponent(mensaje)}`;
 
+const formatearPrecio = (precio) => {
+  if (
+    precio === null ||
+    precio === undefined ||
+    precio === "" ||
+    !Number.isFinite(Number(precio))
+  ) {
+    return "Consultar precio";
+  }
+
+  return `S/ ${Number(precio).toLocaleString("es-PE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+// ========================================
+// ICONOS
+// ========================================
+
 function Icono({ tipo, className = "w-5 h-5" }) {
   const iconos = {
     flecha: (
@@ -87,19 +116,23 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="m12 5 7 7-7 7" />
       </>
     ),
+
     atras: (
       <>
         <path d="M19 12H5" />
         <path d="m12 19-7-7 7-7" />
       </>
     ),
+
     whatsapp: (
       <>
         <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3a8.5 8.5 0 0 1 8.5 8.5Z" />
         <path d="M8 11.5h9M8 15h6" />
       </>
     ),
+
     check: <path d="m5 12 4 4L19 6" />,
+
     camion: (
       <>
         <path d="M3 7h11v10H3z" />
@@ -108,12 +141,14 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <circle cx="17.5" cy="18" r="2" />
       </>
     ),
+
     documento: (
       <>
         <path d="M6 3h8l4 4v14H6z" />
         <path d="M14 3v5h4M9 13h6M9 17h6" />
       </>
     ),
+
     carrito: (
       <>
         <circle cx="9" cy="21" r="1" />
@@ -139,6 +174,10 @@ function Icono({ tipo, className = "w-5 h-5" }) {
   );
 }
 
+// ========================================
+// COMPONENTE PRINCIPAL
+// ========================================
+
 function DetalleProducto() {
   const { id } = useParams();
 
@@ -146,11 +185,36 @@ function DetalleProducto() {
   const [relacionados, setRelacionados] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+
   const [imagenActual, setImagenActual] = useState(0);
   const [pestana, setPestana] = useState("descripcion");
 
   const [agregado, setAgregado] = useState(false);
   const [mensajeCarrito, setMensajeCarrito] = useState("");
+
+  // ========================================
+  // CORRECCIÓN: SUBIR AUTOMÁTICAMENTE
+  // AL INICIO AL ABRIR UN PRODUCTO
+  // ========================================
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+
+    // Repetir después de que React actualice la vista.
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [id]);
+
+  // ========================================
+  // CARGAR PRODUCTO
+  // ========================================
 
   useEffect(() => {
     let activo = true;
@@ -195,7 +259,7 @@ function DetalleProducto() {
               .slice(0, 3),
           );
         } catch (err) {
-          console.error("Error cargando relacionados:", err);
+          console.error("Error cargando productos relacionados:", err);
         }
       } catch (err) {
         console.error("Error cargando producto:", err);
@@ -204,7 +268,9 @@ function DetalleProducto() {
           setError("No se pudo cargar el producto.");
         }
       } finally {
-        if (activo) setCargando(false);
+        if (activo) {
+          setCargando(false);
+        }
       }
     };
 
@@ -317,22 +383,33 @@ function DetalleProducto() {
     }
   };
 
+  // ========================================
+  // PANTALLA DE CARGA
+  // ========================================
+
   if (cargando) {
     return (
       <>
         <main className="flex min-h-[70vh] flex-col items-center justify-center bg-[#F7FAF8] px-5">
           <div className="h-14 w-14 animate-spin rounded-full border-4 border-[#DCEFE4] border-t-[#009E49]" />
+
           <h2 className="mt-6 text-xl font-black text-[#1A1A1A]">
             Cargando producto...
           </h2>
+
           <p className="mt-2 text-sm text-gray-500">
             Estamos preparando la información.
           </p>
         </main>
+
         <Footer />
       </>
     );
   }
+
+  // ========================================
+  // PRODUCTO NO ENCONTRADO
+  // ========================================
 
   if (error || !producto) {
     return (
@@ -358,10 +435,15 @@ function DetalleProducto() {
             Volver al catálogo
           </Link>
         </main>
+
         <Footer />
       </>
     );
   }
+
+  // ========================================
+  // INFORMACIÓN DEL PRODUCTO
+  // ========================================
 
   const imagenes = obtenerImagenes(producto);
   const datosTecnicos = obtenerDatosTecnicos(producto);
@@ -373,21 +455,7 @@ function DetalleProducto() {
     : [];
 
   const categoria = nombreCategoria(producto.categoria);
-
-  const precioNumero = Number(producto.precio);
-
-  const tienePrecio =
-    producto.precio !== null &&
-    producto.precio !== undefined &&
-    producto.precio !== "" &&
-    Number.isFinite(precioNumero);
-
-  const precioFormateado = tienePrecio
-    ? `S/ ${precioNumero.toLocaleString("es-PE", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`
-    : "Consultar precio";
+  const precioFormateado = formatearPrecio(producto.precio);
 
   const stockNumero = Number(producto.stock);
 
@@ -399,6 +467,10 @@ function DetalleProducto() {
     stockNumero >= 0;
 
   const disponible = tieneStock && stockNumero > 0;
+
+  // ========================================
+  // GALERÍA DE IMÁGENES
+  // ========================================
 
   const siguienteImagen = () => {
     if (imagenes.length < 2) return;
@@ -420,10 +492,16 @@ function DetalleProducto() {
     { id: "descargables", nombre: "Descargables" },
   ];
 
+  // ========================================
+  // INTERFAZ PRINCIPAL
+  // ========================================
+
   return (
     <>
       <main className="min-h-screen overflow-x-hidden bg-white">
-        {/* NAVEGACIÓN SUPERIOR */}
+        {/* ========================================
+            NAVEGACIÓN SUPERIOR
+        ======================================== */}
 
         <div className="border-b border-[#E1EEE6] bg-[#F7FAF8]">
           <div className="mx-auto max-w-7xl px-5 py-5 sm:px-6 lg:px-8">
@@ -459,11 +537,15 @@ function DetalleProducto() {
           </div>
         </div>
 
-        {/* INFORMACIÓN PRINCIPAL */}
+        {/* ========================================
+            INFORMACIÓN PRINCIPAL
+        ======================================== */}
 
         <section className="mx-auto max-w-7xl px-5 pb-14 pt-10 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 items-start gap-9 lg:grid-cols-2 lg:gap-14">
-            {/* GALERÍA */}
+            {/* ========================================
+                GALERÍA
+            ======================================== */}
 
             <div className="min-w-0">
               <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-[#F8FAF9] shadow-sm">
@@ -485,6 +567,7 @@ function DetalleProducto() {
                   ) : (
                     <div className="text-center text-gray-400">
                       <div className="mb-4 text-5xl">📷</div>
+
                       <p className="text-sm font-semibold">
                         Imagen no disponible
                       </p>
@@ -513,6 +596,8 @@ function DetalleProducto() {
                     </>
                   )}
                 </div>
+
+                {/* MINIATURAS */}
 
                 {imagenes.length > 1 && (
                   <div className="flex flex-wrap justify-center gap-3 border-t border-gray-100 bg-white px-4 py-5">
@@ -546,6 +631,8 @@ function DetalleProducto() {
                 </p>
               )}
 
+              {/* GARANTÍA DE ATENCIÓN */}
+
               <div className="mt-6 rounded-2xl border border-[#D5EEDF] bg-[#E8F7EE] p-5">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#009E49] text-white">
@@ -565,7 +652,9 @@ function DetalleProducto() {
               </div>
             </div>
 
-            {/* INFORMACIÓN DEL PRODUCTO */}
+            {/* ========================================
+                INFORMACIÓN DEL PRODUCTO
+            ======================================== */}
 
             <div className="min-w-0">
               <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -588,10 +677,13 @@ function DetalleProducto() {
 
               <div className="mt-4 flex items-center gap-3">
                 <span className="h-[3px] w-9 rounded-full bg-[#FF6600]" />
+
                 <p className="text-sm font-bold text-[#009E49]">{categoria}</p>
               </div>
 
-              {/* PRECIO Y STOCK */}
+              {/* ========================================
+                  PRECIO Y STOCK
+              ======================================== */}
 
               <div className="mt-8 border-b border-gray-200 pb-7">
                 <p className="text-sm font-medium text-gray-500">
@@ -631,7 +723,9 @@ function DetalleProducto() {
                 </div>
               </div>
 
-              {/* INFORMACIÓN BÁSICA */}
+              {/* ========================================
+                  INFORMACIÓN BÁSICA
+              ======================================== */}
 
               <div className="mt-7">
                 <h2 className="mb-5 text-lg font-black text-[#1A1A1A]">
@@ -642,6 +736,7 @@ function DetalleProducto() {
                   {producto.marca && (
                     <div className="flex justify-between gap-4 border-b border-gray-100 pb-3">
                       <span className="text-gray-500">Marca</span>
+
                       <span className="break-words text-right font-bold text-[#1A1A1A]">
                         {producto.marca}
                       </span>
@@ -651,6 +746,7 @@ function DetalleProducto() {
                   {producto.modelo && (
                     <div className="flex justify-between gap-4 border-b border-gray-100 pb-3">
                       <span className="text-gray-500">Modelo</span>
+
                       <span className="break-words text-right font-bold text-[#1A1A1A]">
                         {producto.modelo}
                       </span>
@@ -659,6 +755,7 @@ function DetalleProducto() {
 
                   <div className="flex justify-between gap-4 border-b border-gray-100 pb-3">
                     <span className="text-gray-500">Categoría</span>
+
                     <span className="break-words text-right font-bold text-[#1A1A1A]">
                       {categoria}
                     </span>
@@ -667,7 +764,7 @@ function DetalleProducto() {
               </div>
 
               {/* ========================================
-                  NUEVA SECCIÓN: CARRITO
+                  AGREGAR AL CARRITO
               ======================================== */}
 
               <div className="mt-8 rounded-[24px] border-2 border-[#DCEFE4] bg-[#F7FAF8] p-5 sm:p-6">
@@ -678,12 +775,12 @@ function DetalleProducto() {
 
                   <div className="min-w-0">
                     <h2 className="text-xl font-black text-[#073D27]">
-                      Agrega este producto a tu cotización
+                      Agrega este producto a tu carrito
                     </h2>
 
                     <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                      Añádelo a tu carrito junto con otros productos y repuestos
-                      para solicitar una cotización completa por WhatsApp.
+                      Añade este producto a tu carrito junto con otros productos
+                      y repuestos para continuar con tu pedido.
                     </p>
                   </div>
                 </div>
@@ -740,46 +837,38 @@ function DetalleProducto() {
                 </p>
               </div>
 
-              {/* COTIZACIÓN POR WHATSAPP */}
+              {/* ========================================
+                  CONSULTAS POR WHATSAPP
+              ======================================== */}
 
               <div className="mt-5 rounded-[24px] border border-[#DCEFE4] bg-white p-5 sm:p-6">
                 <h2 className="text-xl font-black text-[#1A1A1A]">
-                  ¿Te interesa este producto?
+                  ¿Necesitas más información?
                 </h2>
 
                 <p className="mt-3 text-sm leading-relaxed text-gray-600">
-                  También puedes consultar directamente por WhatsApp sobre
-                  disponibilidad, características y opciones de envío.
+                  Consulta directamente con nuestro equipo sobre las
+                  características del producto, disponibilidad y opciones de
+                  envío.
                 </p>
 
-                <div className="mt-6 flex flex-col flex-wrap gap-3 sm:flex-row">
-                  <a
-                    href={whatsapp(
-                      `Hola, deseo cotizar el producto ${producto.nombre}.`,
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF6600] px-6 py-4 text-sm font-black text-white transition hover:bg-[#E65C00]"
-                  >
-                    Solicitar Cotización
-                    <Icono tipo="flecha" />
-                  </a>
-
-                  <a
-                    href={whatsapp(
-                      `Hola, deseo más información sobre ${producto.nombre}.`,
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#009E49] px-6 py-4 text-sm font-black text-white transition hover:bg-[#00843D]"
-                  >
-                    <Icono tipo="whatsapp" />
-                    WhatsApp
-                  </a>
-                </div>
+                <a
+                  href={whatsapp(
+                    `Hola, deseo más información sobre el producto ${producto.nombre}.`,
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center justify-center gap-3 rounded-xl bg-[#009E49] px-6 py-4 text-sm font-black text-white transition hover:bg-[#00843D]"
+                >
+                  <Icono tipo="whatsapp" />
+                  Consultar por WhatsApp
+                  <Icono tipo="flecha" />
+                </a>
               </div>
 
-              {/* BENEFICIOS */}
+              {/* ========================================
+                  BENEFICIOS
+              ======================================== */}
 
               <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex items-start gap-3 rounded-2xl border border-[#DCEFE4] bg-[#F7FAF8] p-4">
@@ -791,6 +880,7 @@ function DetalleProducto() {
                     <p className="text-sm font-black text-[#1A1A1A]">
                       Envíos nacionales
                     </p>
+
                     <p className="mt-2 text-xs leading-relaxed text-gray-500">
                       Consultas de envío a todo el Perú.
                     </p>
@@ -806,6 +896,7 @@ function DetalleProducto() {
                     <p className="text-sm font-black text-[#1A1A1A]">
                       Atención especializada
                     </p>
+
                     <p className="mt-2 text-xs leading-relaxed text-gray-500">
                       Te ayudamos a elegir el equipo adecuado.
                     </p>
@@ -815,7 +906,9 @@ function DetalleProducto() {
             </div>
           </div>
 
-          {/* PESTAÑAS DE INFORMACIÓN */}
+          {/* ========================================
+              PESTAÑAS DE INFORMACIÓN
+          ======================================== */}
 
           <div className="mt-14 overflow-hidden rounded-[26px] border border-gray-100 bg-white shadow-sm">
             <div
@@ -842,6 +935,8 @@ function DetalleProducto() {
             </div>
 
             <div className="min-h-[180px] p-6 sm:p-8 lg:p-10">
+              {/* DESCRIPCIÓN */}
+
               {pestana === "descripcion" && (
                 <div>
                   <h2 className="mb-6 text-xl font-black text-[#1A1A1A] sm:text-2xl">
@@ -854,6 +949,8 @@ function DetalleProducto() {
                   </p>
                 </div>
               )}
+
+              {/* DATOS TÉCNICOS */}
 
               {pestana === "tecnicos" && (
                 <div>
@@ -888,6 +985,8 @@ function DetalleProducto() {
                   )}
                 </div>
               )}
+
+              {/* DESCARGABLES */}
 
               {pestana === "descargables" && (
                 <div>
@@ -941,7 +1040,9 @@ function DetalleProducto() {
           </div>
         </section>
 
-        {/* PRODUCTOS RELACIONADOS */}
+        {/* ========================================
+            PRODUCTOS RELACIONADOS
+        ======================================== */}
 
         {relacionados.length > 0 && (
           <section className="bg-[#F7FAF8] py-16 sm:py-20">
@@ -949,9 +1050,11 @@ function DetalleProducto() {
               <div className="mx-auto mb-11 max-w-2xl text-center">
                 <div className="flex items-center justify-center gap-3">
                   <span className="h-[3px] w-9 rounded-full bg-[#FF6600]" />
+
                   <span className="text-xs font-black uppercase tracking-[0.16em] text-[#009E49] sm:text-sm">
                     Descubre Más
                   </span>
+
                   <span className="h-[3px] w-9 rounded-full bg-[#FF6600]" />
                 </div>
 
@@ -984,7 +1087,9 @@ function DetalleProducto() {
           </section>
         )}
 
-        {/* CTA FINAL */}
+        {/* ========================================
+            SECCIÓN FINAL DE ASESORÍA
+        ======================================== */}
 
         <section className="relative overflow-hidden bg-[#073D27] py-16 text-white sm:py-20">
           <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-[#009E49]/25 blur-3xl" />
