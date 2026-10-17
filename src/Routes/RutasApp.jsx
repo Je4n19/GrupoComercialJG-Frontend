@@ -22,6 +22,22 @@ import Checkout from "../Pages/Checkout";
 import RastrearPedido from "../Pages/RastrearPedido";
 
 /* ========================================
+   PÁGINAS LEGALES - GRUPO COMERCIAL J&G
+======================================== */
+
+// TÉRMINOS Y CONDICIONES
+import TerminosCondiciones from "../Pages/TerminosCondiciones";
+
+// POLÍTICA DE PRIVACIDAD
+import PoliticaPrivacidad from "../Pages/PoliticaPrivacidad";
+
+// CAMBIOS Y DEVOLUCIONES
+import CambiosDevoluciones from "../Pages/CambiosDevoluciones";
+
+// LIBRO DE RECLAMACIONES
+import LibroReclamaciones from "../Pages/LibroReclamaciones";
+
+/* ========================================
    SEGURIDAD
 ======================================== */
 
@@ -43,7 +59,7 @@ import FormularioCategoriaRepuesto from "../Admin/FormularioCategoriaRepuesto";
 import Inventario from "../Admin/Inventario";
 import Configuracion from "../Admin/Configuracion";
 
-// GESTIÓN DE PEDIDOS - RUTA CORREGIDA
+// GESTIÓN DE PEDIDOS
 import PedidosAdmin from "../Admin/PedidosAdmin";
 
 /* ========================================
@@ -80,6 +96,23 @@ function RutasApp() {
 
       {/* RASTREAR PEDIDO */}
       <Route path="/rastrear-pedido" element={<RastrearPedido />} />
+
+      {/* ========================================
+          INFORMACIÓN LEGAL
+          GRUPO COMERCIAL J&G
+      ======================================== */}
+
+      {/* TÉRMINOS Y CONDICIONES */}
+      <Route path="/terminos-y-condiciones" element={<TerminosCondiciones />} />
+
+      {/* POLÍTICA DE PRIVACIDAD */}
+      <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
+
+      {/* CAMBIOS Y DEVOLUCIONES */}
+      <Route path="/cambios-y-devoluciones" element={<CambiosDevoluciones />} />
+
+      {/* LIBRO DE RECLAMACIONES */}
+      <Route path="/libro-de-reclamaciones" element={<LibroReclamaciones />} />
 
       {/* ========================================
           LOGIN ADMINISTRATIVO

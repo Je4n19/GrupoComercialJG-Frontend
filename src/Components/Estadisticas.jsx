@@ -40,7 +40,7 @@ function IconoEstadistica({ tipo }) {
       strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="w-8 h-8 sm:w-9 sm:h-9"
+      className="w-6 h-6 sm:w-9 sm:h-9"
       aria-hidden="true"
     >
       {iconos[tipo]}
@@ -81,7 +81,7 @@ function Estadisticas() {
       className="
         relative
         bg-[#F7FAF8]
-        py-16
+        py-12
         sm:py-20
         lg:py-24
         overflow-hidden
@@ -116,35 +116,38 @@ function Estadisticas() {
         "
       />
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ENCABEZADO */}
-        <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-14">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-14">
           <span
             className="
               inline-flex
               items-center
+              justify-center
               gap-2
               text-[#009E49]
-              text-xs
+              text-[10px]
               sm:text-sm
               font-black
               uppercase
-              tracking-[0.16em]
+              tracking-[0.12em]
+              sm:tracking-[0.16em]
             "
           >
-            <span className="w-7 h-[3px] bg-[#FF6600] rounded-full" />
+            <span className="w-4 sm:w-7 h-[3px] bg-[#FF6600] rounded-full" />
             Grupo Comercial J&G
-            <span className="w-7 h-[3px] bg-[#FF6600] rounded-full" />
+            <span className="w-4 sm:w-7 h-[3px] bg-[#FF6600] rounded-full" />
           </span>
 
           <h2
             className="
-              text-3xl
+              text-2xl
               sm:text-4xl
               lg:text-5xl
               font-black
               text-[#1A1A1A]
-              mt-5
+              mt-4
+              sm:mt-5
               leading-tight
               tracking-tight
             "
@@ -159,7 +162,8 @@ function Estadisticas() {
               text-sm
               sm:text-base
               lg:text-lg
-              mt-4
+              mt-3
+              sm:mt-4
               leading-relaxed
             "
           >
@@ -168,15 +172,16 @@ function Estadisticas() {
           </p>
         </div>
 
-        {/* TARJETAS */}
+        {/* TARJETAS RESPONSIVE */}
         <div
           className="
             grid
-            grid-cols-1
-            sm:grid-cols-2
+            grid-cols-2
             lg:grid-cols-4
-            gap-5
+            gap-3
+            sm:gap-5
             lg:gap-6
+            items-stretch
           "
         >
           {datos.map((item) => (
@@ -185,8 +190,11 @@ function Estadisticas() {
               className="
                 group
                 relative
+                min-w-0
+                h-full
                 bg-white
-                rounded-[24px]
+                rounded-2xl
+                sm:rounded-[24px]
                 border
                 border-gray-100
                 shadow-sm
@@ -195,7 +203,8 @@ function Estadisticas() {
                 transition-all
                 duration-300
                 overflow-hidden
-                p-6
+                px-3
+                py-5
                 sm:p-7
                 text-center
                 flex
@@ -221,14 +230,16 @@ function Estadisticas() {
               {/* ICONO */}
               <div
                 className="
-                  w-16
-                  h-16
+                  w-12
+                  h-12
                   sm:w-[72px]
                   sm:h-[72px]
-                  rounded-2xl
+                  rounded-xl
+                  sm:rounded-2xl
                   bg-[#E8F7EE]
                   text-[#009E49]
                   flex
+                  shrink-0
                   items-center
                   justify-center
                   group-hover:bg-[#009E49]
@@ -243,12 +254,16 @@ function Estadisticas() {
               {/* NÚMERO */}
               <h3
                 className="
-                  text-4xl
+                  text-[26px]
+                  leading-tight
                   sm:text-5xl
                   font-black
                   text-[#009E49]
-                  mt-6
+                  mt-4
+                  sm:mt-6
                   tracking-tight
+                  break-words
+                  max-w-full
                 "
               >
                 {item.numero}
@@ -257,11 +272,13 @@ function Estadisticas() {
               {/* LÍNEA NARANJA */}
               <div
                 className="
-                  w-10
+                  w-9
+                  sm:w-10
                   h-[3px]
                   bg-[#FF6600]
                   rounded-full
-                  mt-4
+                  mt-3
+                  sm:mt-4
                   group-hover:w-16
                   transition-all
                   duration-300
@@ -272,10 +289,13 @@ function Estadisticas() {
               <h4
                 className="
                   text-[#1A1A1A]
-                  text-base
+                  text-xs
                   sm:text-lg
                   font-black
-                  mt-5
+                  mt-4
+                  sm:mt-5
+                  leading-snug
+                  break-words
                 "
               >
                 {item.titulo}
@@ -285,9 +305,12 @@ function Estadisticas() {
               <p
                 className="
                   text-gray-500
-                  text-sm
+                  text-[11px]
+                  sm:text-sm
                   leading-relaxed
-                  mt-3
+                  mt-2
+                  sm:mt-3
+                  break-words
                 "
               >
                 {item.descripcion}

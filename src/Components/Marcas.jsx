@@ -93,14 +93,13 @@ function Marcas() {
       className="
         relative
         bg-white
-        py-20
-        sm:py-24
+        py-12
+        sm:py-20
         lg:py-28
         overflow-hidden
       "
     >
-      {/* DECORACIÓN DE FONDO */}
-
+      {/* DECORACIONES DE FONDO */}
       <div
         className="
           pointer-events-none
@@ -130,18 +129,18 @@ function Marcas() {
       />
 
       {/* CONTENIDO PRINCIPAL */}
-
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ENCABEZADO */}
-
         <div
           className="
             grid
             lg:grid-cols-2
-            gap-8
+            gap-5
+            sm:gap-8
             lg:gap-12
             items-end
-            mb-12
+            mb-8
+            sm:mb-12
             lg:mb-14
           "
         >
@@ -150,18 +149,21 @@ function Marcas() {
               className="
                 inline-flex
                 items-center
-                gap-3
+                gap-2
+                sm:gap-3
                 text-[#009E49]
                 font-black
                 uppercase
-                tracking-[0.18em]
+                tracking-[0.12em]
+                sm:tracking-[0.18em]
                 text-xs
                 sm:text-sm
               "
             >
               <span
                 className="
-                  w-10
+                  w-7
+                  sm:w-10
                   h-[3px]
                   bg-[#FF6600]
                   rounded-full
@@ -172,14 +174,15 @@ function Marcas() {
 
             <h2
               className="
-                text-3xl
+                text-2xl
                 sm:text-4xl
                 lg:text-5xl
                 xl:text-6xl
                 font-black
                 text-[#1A1A1A]
-                mt-6
-                leading-[1.08]
+                mt-4
+                sm:mt-6
+                leading-tight
                 tracking-tight
               "
             >
@@ -197,12 +200,11 @@ function Marcas() {
           </div>
 
           {/* DESCRIPCIÓN */}
-
           <div className="lg:pb-2">
             <p
               className="
                 text-gray-600
-                text-base
+                text-sm
                 sm:text-lg
                 leading-relaxed
                 max-w-xl
@@ -226,7 +228,7 @@ function Marcas() {
             grid-cols-2
             sm:grid-cols-3
             lg:grid-cols-5
-            gap-4
+            gap-3
             sm:gap-5
           "
         >
@@ -236,10 +238,12 @@ function Marcas() {
               className="
                 group
                 relative
-                min-h-[175px]
+                min-w-0
+                min-h-[135px]
                 sm:min-h-[190px]
                 bg-white
-                rounded-2xl
+                rounded-xl
+                sm:rounded-2xl
                 border
                 border-gray-200
                 shadow-sm
@@ -252,7 +256,6 @@ function Marcas() {
               "
             >
               {/* LÍNEA SUPERIOR */}
-
               <div
                 className="
                   absolute
@@ -270,7 +273,6 @@ function Marcas() {
               />
 
               {/* LOGO Y NOMBRE */}
-
               <div
                 className="
                   h-full
@@ -278,17 +280,20 @@ function Marcas() {
                   flex-col
                   items-center
                   justify-center
-                  gap-5
-                  px-4
-                  py-7
+                  gap-3
+                  sm:gap-5
+                  px-2
+                  sm:px-4
+                  py-5
+                  sm:py-7
                 "
               >
                 {/* LOGO */}
-
                 <div
                   className="
                     w-full
-                    h-20
+                    h-14
+                    sm:h-20
                     flex
                     items-center
                     justify-center
@@ -299,9 +304,11 @@ function Marcas() {
                     alt={`Logo de ${marca.nombre}`}
                     loading="lazy"
                     className="
-                      max-h-20
+                      max-h-14
+                      sm:max-h-20
                       max-w-full
                       w-auto
+                      h-auto
                       object-contain
                       transition-transform
                       duration-300
@@ -311,13 +318,15 @@ function Marcas() {
                 </div>
 
                 {/* NOMBRE */}
-
                 <span
                   className="
                     text-gray-500
-                    text-sm
+                    text-xs
+                    sm:text-sm
                     font-bold
                     text-center
+                    leading-snug
+                    break-words
                     group-hover:text-[#009E49]
                     transition-colors
                     duration-300
@@ -328,7 +337,6 @@ function Marcas() {
               </div>
 
               {/* BORDE INFERIOR */}
-
               <div
                 className="
                   absolute
@@ -354,22 +362,25 @@ function Marcas() {
 
         <div
           className="
-            mt-12
+            mt-9
+            sm:mt-12
             flex
             flex-col
             sm:flex-row
             items-center
             justify-center
-            gap-4
+            gap-3
+            sm:gap-4
             text-center
           "
         >
           {/* ICONO */}
-
           <div
             className="
-              w-12
-              h-12
+              w-11
+              h-11
+              sm:w-12
+              sm:h-12
               shrink-0
               rounded-full
               bg-[#E6F6EC]
@@ -394,13 +405,13 @@ function Marcas() {
           </div>
 
           {/* TEXTO */}
-
           <p
             className="
               text-gray-600
-              text-sm
+              text-xs
               sm:text-base
               leading-relaxed
+              max-w-xl
             "
           >
             Diferentes marcas y alternativas para{" "}
@@ -411,15 +422,16 @@ function Marcas() {
         </div>
 
         {/* ACENTO DECORATIVO */}
-
         <div
           className="
-            w-20
+            w-16
+            sm:w-20
             h-1
             bg-[#FF6600]
             rounded-full
             mx-auto
-            mt-10
+            mt-7
+            sm:mt-10
           "
         />
       </div>

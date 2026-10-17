@@ -57,6 +57,38 @@ function Icono({ tipo, className = "w-5 h-5" }) {
         <path d="m12 5 7 7-7 7" />
       </>
     ),
+
+    documento: (
+      <>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+        <path d="M14 2v6h6" />
+        <path d="M8 13h8" />
+        <path d="M8 17h8" />
+      </>
+    ),
+
+    escudo: (
+      <>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+        <path d="m9 12 2 2 4-4" />
+      </>
+    ),
+
+    devolver: (
+      <>
+        <path d="M3 11a9 9 0 1 1 2.5 6.2" />
+        <path d="M3 4v7h7" />
+        <path d="M3 11a9 9 0 0 1 15-6.7" />
+      </>
+    ),
+
+    libro: (
+      <>
+        <path d="M12 7v14" />
+        <path d="M3 18V4a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v14" />
+        <path d="M3 18h5a4 4 0 0 1 4 3 4 4 0 0 1 4-3h5" />
+      </>
+    ),
   };
 
   return (
@@ -111,6 +143,30 @@ function Footer() {
     { nombre: "Contacto", ruta: "/contacto" },
   ];
 
+  // NUEVA SECCIÓN DE INFORMACIÓN LEGAL
+  const informacionLegal = [
+    {
+      nombre: "Términos y Condiciones",
+      ruta: "/terminos-y-condiciones",
+      icono: "documento",
+    },
+    {
+      nombre: "Política de Privacidad",
+      ruta: "/politica-de-privacidad",
+      icono: "escudo",
+    },
+    {
+      nombre: "Cambios y Devoluciones",
+      ruta: "/cambios-y-devoluciones",
+      icono: "devolver",
+    },
+    {
+      nombre: "Libro de Reclamaciones",
+      ruta: "/libro-de-reclamaciones",
+      icono: "libro",
+    },
+  ];
+
   const servicios = [
     "Venta de Maquinaria",
     "Venta de Repuestos",
@@ -136,7 +192,7 @@ function Footer() {
         "
       >
         {/* ======================================== */}
-        {/* CUATRO COLUMNAS PRINCIPALES */}
+        {/* CINCO COLUMNAS PRINCIPALES */}
         {/* ======================================== */}
 
         <div
@@ -144,9 +200,9 @@ function Footer() {
             grid
             grid-cols-1
             sm:grid-cols-2
-            lg:grid-cols-[1.15fr_0.85fr_1fr_1.3fr]
-            gap-x-8
-            lg:gap-x-10
+            lg:grid-cols-[1.2fr_0.75fr_1fr_1fr_1.25fr]
+            gap-x-7
+            xl:gap-x-9
             gap-y-10
             items-start
           "
@@ -183,7 +239,7 @@ function Footer() {
               sectores agrícola, forestal e industrial.
             </p>
 
-            {/* REDES SOCIALES ABAJO */}
+            {/* REDES SOCIALES */}
             <div className="mt-10">
               <h4 className="text-white font-bold text-sm mb-4">
                 Síguenos en nuestras redes
@@ -238,13 +294,11 @@ function Footer() {
           </div>
 
           {/* ======================================== */}
-          {/* COLUMNA 2: NAVEGACIÓN */}
+          {/* COLUMNA 2: TIENDA */}
           {/* ======================================== */}
 
-          <div>
-            <h3 className="text-lg font-black text-[#FF6600] mb-7">
-              Navegación
-            </h3>
+          <div className="min-w-0">
+            <h3 className="text-lg font-black text-[#FF6600] mb-7">Tienda</h3>
 
             <ul className="space-y-5">
               {navegacion.map((enlace) => (
@@ -266,10 +320,56 @@ function Footer() {
           </div>
 
           {/* ======================================== */}
-          {/* COLUMNA 3: SERVICIOS */}
+          {/* COLUMNA 3: INFORMACIÓN LEGAL */}
           {/* ======================================== */}
 
-          <div>
+          <div className="min-w-0">
+            <h3 className="text-lg font-black text-[#FF6600] mb-7">
+              Información legal
+            </h3>
+
+            <ul className="space-y-5">
+              {informacionLegal.map((enlace) => (
+                <li key={enlace.ruta}>
+                  <Link
+                    to={enlace.ruta}
+                    className="
+                      group
+                      flex
+                      items-start
+                      gap-3
+                      text-gray-400
+                      text-sm
+                      leading-relaxed
+                      hover:text-[#009E49]
+                      transition-colors
+                    "
+                  >
+                    <Icono
+                      tipo={enlace.icono}
+                      className="
+                        w-4
+                        h-4
+                        shrink-0
+                        mt-0.5
+                        text-gray-500
+                        group-hover:text-[#009E49]
+                        transition-colors
+                      "
+                    />
+
+                    <span>{enlace.nombre}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ======================================== */}
+          {/* COLUMNA 4: SERVICIOS */}
+          {/* ======================================== */}
+
+          <div className="min-w-0">
             <h3 className="text-lg font-black text-[#FF6600] mb-7">
               Servicios
             </h3>
@@ -287,7 +387,7 @@ function Footer() {
           </div>
 
           {/* ======================================== */}
-          {/* COLUMNA 4: CONTÁCTANOS */}
+          {/* COLUMNA 5: CONTÁCTANOS */}
           {/* ======================================== */}
 
           <div className="lg:row-span-2 min-w-0">
@@ -404,14 +504,15 @@ function Footer() {
 
           {/* ======================================== */}
           {/* MÉTODOS DE PAGO */}
-          {/* DEBAJO DE NAVEGACIÓN Y SERVICIOS */}
+          {/* MISMO DISEÑO ORIGINAL, SIN CAMBIOS */}
+          {/* SOLO SE AJUSTA SU POSICIÓN EN EL GRID */}
           {/* ======================================== */}
 
           <div
             className="
               sm:col-span-2
               lg:col-start-2
-              lg:col-span-2
+              lg:col-span-3
               lg:row-start-2
               min-w-0
               self-start
