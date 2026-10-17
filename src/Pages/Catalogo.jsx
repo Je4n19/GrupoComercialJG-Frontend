@@ -38,40 +38,68 @@ function Catalogo() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
-  // Cargar información desde el backend
+  // Carga inicial y actualización automática del catálogo.
   useEffect(() => {
     let activo = true;
+    let consultando = false;
 
-    const cargarDatos = async () => {
-      setCargando(true);
-      setError("");
+    const actualizarProductos = async (esCargaInicial = false) => {
+      if (consultando || (!esCargaInicial && document.hidden)) return;
+      consultando = true;
 
       try {
-        const [productosData, categoriasData] = await Promise.all([
-          obtenerProductos(),
-          obtenerCategorias(),
-        ]);
-
+        const productosData = await obtenerProductos();
         if (!activo) return;
 
         setProductos(Array.isArray(productosData) ? productosData : []);
-
-        setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
+        setError("");
       } catch (err) {
-        console.error("Error cargando catálogo:", err);
+        console.error("Error actualizando productos:", err);
 
-        if (activo) {
+        // Conservamos los últimos datos válidos ante fallos temporales.
+        if (activo && esCargaInicial) {
           setError("No se pudieron cargar los productos. Intenta nuevamente.");
         }
       } finally {
-        if (activo) setCargando(false);
+        consultando = false;
+        if (activo && esCargaInicial) setCargando(false);
       }
     };
 
-    cargarDatos();
+    const cargarDatosIniciales = async () => {
+      setCargando(true);
+      setError("");
+
+      // Las categorías solo se consultan al abrir el catálogo.
+      const cargaCategorias = obtenerCategorias()
+        .then((datos) => {
+          if (activo) setCategorias(Array.isArray(datos) ? datos : []);
+        })
+        .catch((err) => {
+          console.error("Error cargando categorías:", err);
+        });
+
+      await Promise.all([actualizarProductos(true), cargaCategorias]);
+    };
+
+    const actualizarAlVolver = () => {
+      if (!document.hidden) actualizarProductos();
+    };
+
+    cargarDatosIniciales();
+
+    // Actualizar el stock cada 15 segundos.
+    const intervalo = window.setInterval(() => {
+      actualizarProductos();
+    }, 15000);
+
+    // Actualizar inmediatamente al regresar a la pestaña.
+    document.addEventListener("visibilitychange", actualizarAlVolver);
 
     return () => {
       activo = false;
+      window.clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", actualizarAlVolver);
     };
   }, []);
 

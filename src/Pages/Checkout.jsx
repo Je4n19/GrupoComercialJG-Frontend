@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { obtenerProductos } from "../Services/productoService";
+import { obtenerRepuestos } from "../Services/repuestoService";
+
 import logoYape from "../assets/Pagos/yape.png";
 import logoPlin from "../assets/Pagos/plin.png";
 import logoBCP from "../assets/Pagos/bcp.png";
@@ -10,6 +13,10 @@ import logoVisa from "../assets/Pagos/visa.png";
 import logoShalom from "../assets/shalom.png";
 import logoEmtrafesa from "../assets/emtrafesa.png";
 import logoOlva from "../assets/olva.png";
+
+// ==========================================
+// CONFIGURACIÓN
+// ==========================================
 
 const API_URL = (
   import.meta.env.VITE_API_URL ||
@@ -109,6 +116,10 @@ const DATOS_INICIALES = {
   referencia: "",
 };
 
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
+
 function leerCarrito() {
   try {
     const datos = JSON.parse(localStorage.getItem(CLAVE_CARRITO) || "[]");
@@ -126,7 +137,7 @@ function formatearPrecio(valor) {
 
   const numero = Number(valor);
 
-  if (!Number.isFinite(numero)) {
+  if (!Number.isFinite(numero) || numero < 0) {
     return "Por confirmar";
   }
 
@@ -207,6 +218,105 @@ function obtenerDetalles(carrito) {
   });
 }
 
+// ==========================================
+// VERIFICACIÓN DE STOCK ACTUALIZADO
+// ==========================================
+
+async function verificarInventarioCheckout(carrito) {
+  if (!Array.isArray(carrito) || carrito.length === 0) {
+    throw new Error("Tu carrito está vacío.");
+  }
+
+  const necesitaProductos = carrito.some(
+    (item) => String(item.tipo || "producto").toLowerCase() === "producto",
+  );
+
+  const necesitaRepuestos = carrito.some(
+    (item) => String(item.tipo || "producto").toLowerCase() === "repuesto",
+  );
+
+  const [productos, repuestos] = await Promise.all([
+    necesitaProductos ? obtenerProductos() : Promise.resolve([]),
+    necesitaRepuestos ? obtenerRepuestos() : Promise.resolve([]),
+  ]);
+
+  if (!Array.isArray(productos) || !Array.isArray(repuestos)) {
+    throw new Error("No se pudo verificar el inventario. Intenta nuevamente.");
+  }
+
+  // Acumular cantidades por artículo para impedir
+  // superar el stock con entradas duplicadas.
+  const cantidades = new Map();
+
+  for (const item of carrito) {
+    const tipo = String(item.tipo || "producto").toLowerCase();
+
+    const id = Number(item.id);
+    const cantidad = Number(item.cantidad ?? 1);
+
+    if (
+      !["producto", "repuesto"].includes(tipo) ||
+      !Number.isSafeInteger(id) ||
+      id <= 0 ||
+      !Number.isSafeInteger(cantidad) ||
+      cantidad <= 0
+    ) {
+      throw new Error(`Hay datos inválidos en "${item.nombre || "Artículo"}".`);
+    }
+
+    const clave = `${tipo}-${id}`;
+
+    const anterior = cantidades.get(clave);
+
+    cantidades.set(clave, {
+      tipo,
+      id,
+      nombre: item.nombre || "Artículo",
+      cantidad: (anterior?.cantidad || 0) + cantidad,
+    });
+  }
+
+  for (const item of cantidades.values()) {
+    const lista = item.tipo === "repuesto" ? repuestos : productos;
+
+    const articulo = lista.find(
+      (elemento) => String(elemento.id) === String(item.id),
+    );
+
+    if (!articulo) {
+      throw new Error(
+        `"${item.nombre}" ya no está disponible. Regresa al carrito.`,
+      );
+    }
+
+    const stock = Number(articulo.stock);
+
+    if (
+      articulo.stock === null ||
+      articulo.stock === undefined ||
+      articulo.stock === "" ||
+      !Number.isSafeInteger(stock) ||
+      stock < 0
+    ) {
+      throw new Error(`No se pudo confirmar el stock de "${item.nombre}".`);
+    }
+
+    if (stock < item.cantidad) {
+      throw new Error(
+        `Stock insuficiente para "${item.nombre}". ` +
+          `Solicitaste ${item.cantidad} y solo quedan ` +
+          `${stock} unidades. Regresa al carrito para modificarlo.`,
+      );
+    }
+  }
+
+  return true;
+}
+
+// ==========================================
+// SEGURIDAD CSRF
+// ==========================================
+
 async function obtenerCsrf() {
   const respuesta = await fetch(`${API_URL}/api/auth/csrf`, {
     method: "GET",
@@ -237,7 +347,7 @@ async function leerError(respuesta) {
 
     mensaje = datos.detail || datos.message || datos.error || mensaje;
   } catch {
-    // Conservar mensaje general.
+    // Mantener mensaje general.
   }
 
   if (respuesta.status === 403) {
@@ -253,6 +363,10 @@ async function leerError(respuesta) {
 
   return mensaje;
 }
+
+// ==========================================
+// DATOS COPIABLES
+// ==========================================
 
 function DatoCopiable({ etiqueta, valor }) {
   const [copiado, setCopiado] = useState(false);
@@ -286,6 +400,10 @@ function DatoCopiable({ etiqueta, valor }) {
     </div>
   );
 }
+
+// ==========================================
+// DATOS DE PAGO
+// ==========================================
 
 function DatosPago({ metodoPago, importe }) {
   const metodo = PAGOS.find((opcion) => opcion.id === metodoPago);
@@ -368,11 +486,16 @@ function DatosPago({ metodoPago, importe }) {
   );
 }
 
+// ==========================================
+// REPORTAR PAGO
+// ==========================================
+
 function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
   const [numeroOperacion, setNumeroOperacion] = useState("");
 
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
+
   const enviandoRef = useRef(false);
 
   const enviarReporte = async (evento) => {
@@ -485,6 +608,10 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
   );
 }
 
+// ==========================================
+// RESUMEN DEL FLETE
+// ==========================================
+
 function ResumenFlete({ pedido }) {
   const esRecojo = pedido.metodoEntrega === "RECOJO";
 
@@ -501,7 +628,6 @@ function ResumenFlete({ pedido }) {
 
       <div className="mt-4 flex justify-between gap-3 text-sm">
         <span className="text-gray-600">Productos</span>
-
         <strong>{formatearPrecio(pedido.subtotal)}</strong>
       </div>
 
@@ -551,6 +677,10 @@ function ResumenFlete({ pedido }) {
   );
 }
 
+// ==========================================
+// COMPONENTE PRINCIPAL
+// ==========================================
+
 export default function Checkout() {
   const [carrito, setCarrito] = useState(leerCarrito);
 
@@ -578,8 +708,14 @@ export default function Checkout() {
 
   const pagoSeleccionado = PAGOS.find((opcion) => opcion.id === metodoPago);
 
+  // ========================================
+  // SINCRONIZACIÓN DEL CARRITO
+  // ========================================
+
   useEffect(() => {
-    const actualizar = () => setCarrito(leerCarrito());
+    const actualizar = () => {
+      setCarrito(leerCarrito());
+    };
 
     window.addEventListener("storage", actualizar);
 
@@ -591,6 +727,10 @@ export default function Checkout() {
       window.removeEventListener("jg-carrito-actualizado", actualizar);
     };
   }, []);
+
+  // ========================================
+  // RESUMEN DE COMPRA
+  // ========================================
 
   const resumen = useMemo(() => {
     let subtotal = 0;
@@ -621,6 +761,10 @@ export default function Checkout() {
     };
   }, [carrito]);
 
+  // ========================================
+  // FORMULARIO
+  // ========================================
+
   const cambiarCampo = (evento) => {
     const { name, value } = evento.target;
 
@@ -631,6 +775,10 @@ export default function Checkout() {
 
     setErrorPedido("");
   };
+
+  // ========================================
+  // REGISTRAR PEDIDO
+  // ========================================
 
   const manejarEnvio = async (evento) => {
     evento.preventDefault();
@@ -695,7 +843,40 @@ export default function Checkout() {
     setRegistrando(true);
 
     try {
+      // =====================================
+      // NUEVA VALIDACIÓN DE INVENTARIO
+      // =====================================
+
+      const carritoActual = leerCarrito();
+
+      if (JSON.stringify(carritoActual) !== JSON.stringify(carrito)) {
+        setCarrito(carritoActual);
+
+        throw new Error(
+          "Tu carrito cambió mientras completabas el formulario. Revisa las cantidades antes de continuar.",
+        );
+      }
+
+      // Consultar stock real de productos y repuestos
+      // antes de enviar el pedido al backend.
+      await verificarInventarioCheckout(carritoActual);
+
+      // Obtener token CSRF.
       const csrf = await obtenerCsrf();
+
+      // Comprobar nuevamente que el carrito no cambió
+      // durante la consulta de inventario.
+      if (JSON.stringify(leerCarrito()) !== JSON.stringify(carritoActual)) {
+        setCarrito(leerCarrito());
+
+        throw new Error(
+          "El carrito cambió durante la verificación. Revisa tu pedido e inténtalo nuevamente.",
+        );
+      }
+
+      // =====================================
+      // CREAR PEDIDO EN EL BACKEND
+      // =====================================
 
       const respuesta = await fetch(`${API_URL}/api/pedidos`, {
         method: "POST",
@@ -723,9 +904,11 @@ export default function Checkout() {
         );
       }
 
+      // Confirmar pedido registrado.
       setPedidoConfirmado(pedido);
       setTokenSeguimiento(token);
 
+      // Guardar seguimiento.
       try {
         sessionStorage.setItem(
           CLAVE_PEDIDO,
@@ -738,6 +921,7 @@ export default function Checkout() {
         console.warn("No se pudo guardar temporalmente el seguimiento.");
       }
 
+      // Limpiar carrito tras confirmación del backend.
       try {
         localStorage.removeItem(CLAVE_CARRITO);
 
@@ -764,6 +948,10 @@ export default function Checkout() {
     }
   };
 
+  // ========================================
+  // CONFIRMAR REPORTE DE PAGO
+  // ========================================
+
   const manejarReporteConfirmado = (resultado) => {
     setReporteConfirmado(resultado);
 
@@ -779,7 +967,7 @@ export default function Checkout() {
   };
 
   // ========================================
-  // PANTALLA DE CONFIRMACION
+  // PANTALLA DE PEDIDO REGISTRADO
   // ========================================
 
   if (pedidoConfirmado) {
@@ -1030,7 +1218,11 @@ export default function Checkout() {
           </div>
         ) : (
           <div className="grid items-start gap-6 lg:grid-cols-3">
+            {/* FORMULARIO */}
+
             <form onSubmit={manejarEnvio} className="space-y-6 lg:col-span-2">
+              {/* 1. INFORMACIÓN DEL CLIENTE */}
+
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
                   1. Información del cliente
@@ -1072,6 +1264,8 @@ export default function Checkout() {
                   </div>
                 </div>
               </section>
+
+              {/* 2. MÉTODO DE ENTREGA */}
 
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
@@ -1244,6 +1438,8 @@ export default function Checkout() {
                 )}
               </section>
 
+              {/* 3. MÉTODO DE PAGO */}
+
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
                   3. Método de pago
@@ -1343,6 +1539,8 @@ export default function Checkout() {
                 </div>
               </section>
 
+              {/* ERRORES */}
+
               {errorPedido && (
                 <div
                   role="alert"
@@ -1352,13 +1550,15 @@ export default function Checkout() {
                 </div>
               )}
 
+              {/* BOTÓN DE REGISTRO */}
+
               <button
                 type="submit"
                 disabled={registrando}
                 className="w-full rounded-xl bg-[#FF6600] px-6 py-4 font-black text-white shadow-sm transition hover:bg-[#E65C00] disabled:bg-gray-400"
               >
                 {registrando
-                  ? "Registrando tu pedido..."
+                  ? "Verificando stock y registrando pedido..."
                   : "Registrar mi pedido →"}
               </button>
 
@@ -1367,6 +1567,8 @@ export default function Checkout() {
                 cobro al registrarlo.
               </p>
             </form>
+
+            {/* RESUMEN DEL PEDIDO */}
 
             <aside className="rounded-2xl bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-28">
               <h2 className="text-xl font-black text-[#063D2A]">
@@ -1467,7 +1669,9 @@ export default function Checkout() {
                 )}
 
                 <p className="text-xs text-gray-500">
-                  Los precios y el stock serán verificados por el servidor.
+                  El stock se verificará nuevamente antes de registrar el
+                  pedido. El servidor confirmará los importes y la
+                  disponibilidad.
                 </p>
               </div>
 

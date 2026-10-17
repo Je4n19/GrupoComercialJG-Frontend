@@ -13,6 +13,7 @@ import imagenRepuestos from "../assets/repuesto.png";
 
 const CLAVE_CARRITO = "jg_carrito";
 const WHATSAPP = "51979501557";
+const INTERVALO_STOCK = 15000;
 
 const normalizar = (valor) =>
   String(valor ?? "")
@@ -159,6 +160,7 @@ function TarjetaRepuesto({ repuesto, destacado }) {
     }
 
     if (!disponible) {
+      setAgregado(false);
       setMensaje("Disponibilidad por consultar.");
       return;
     }
@@ -445,42 +447,82 @@ function Repuestos() {
   const [error, setError] = useState("");
 
   // ========================================
-  // CARGAR DATOS DEL BACKEND
+  // CARGAR DATOS Y ACTUALIZAR STOCK
   // ========================================
 
   useEffect(() => {
     let activo = true;
+    let consultando = false;
 
-    const cargarDatos = async () => {
-      setCargando(true);
-      setError("");
+    const actualizarRepuestos = async (cargaInicial = false) => {
+      if (consultando) return;
+
+      // No consultar cuando la pestaña esté oculta.
+      if (!cargaInicial && document.hidden) return;
+
+      consultando = true;
 
       try {
-        const [repuestosData, categoriasData] = await Promise.all([
-          obtenerRepuestos(),
-          obtenerCategoriasRepuesto(),
-        ]);
+        const repuestosData = await obtenerRepuestos();
 
         if (!activo) return;
 
         setRepuestos(Array.isArray(repuestosData) ? repuestosData : []);
 
-        setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
+        setError("");
       } catch (err) {
-        console.error("Error cargando repuestos:", err);
+        console.error("Error actualizando repuestos:", err);
 
-        if (activo) {
+        // Si una actualización falla, mantener los últimos
+        // datos disponibles y volver a intentar más tarde.
+        if (activo && cargaInicial) {
           setError("No se pudieron cargar los repuestos. Intenta nuevamente.");
         }
       } finally {
-        if (activo) setCargando(false);
+        consultando = false;
+
+        if (activo && cargaInicial) {
+          setCargando(false);
+        }
       }
     };
 
-    cargarDatos();
+    const cargarCategorias = async () => {
+      try {
+        const categoriasData = await obtenerCategoriasRepuesto();
+
+        if (!activo) return;
+
+        setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
+      } catch (err) {
+        console.error("Error cargando categorías:", err);
+      }
+    };
+
+    // Primera consulta al abrir la página.
+    actualizarRepuestos(true);
+    cargarCategorias();
+
+    // Actualizar el inventario cada 15 segundos.
+    const intervalo = window.setInterval(() => {
+      actualizarRepuestos();
+    }, INTERVALO_STOCK);
+
+    // Consultar inmediatamente al regresar a la pestaña.
+    const actualizarAlVolver = () => {
+      if (!document.hidden) {
+        actualizarRepuestos();
+      }
+    };
+
+    document.addEventListener("visibilitychange", actualizarAlVolver);
 
     return () => {
       activo = false;
+
+      window.clearInterval(intervalo);
+
+      document.removeEventListener("visibilitychange", actualizarAlVolver);
     };
   }, []);
 

@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+import { obtenerProductos } from "../Services/productoService";
+import { obtenerRepuestos } from "../Services/repuestoService";
 
 // ========================================
 // CONFIGURACIÓN
 // ========================================
 
 const CLAVE_CARRITO = "jg_carrito";
+const INTERVALO_ACTUALIZACION = 15000;
 
 const imagenFallback =
   "https://placehold.co/600x450/f3f4f6/6b7280?text=Producto";
@@ -55,13 +59,102 @@ function obtenerClave(item) {
   return String(item.carritoId || `${item.tipo || "producto"}-${item.id}`);
 }
 
+function obtenerTipo(item) {
+  return item.tipo === "repuesto" ? "repuesto" : "producto";
+}
+
+function obtenerCantidad(item) {
+  return Math.max(1, Math.floor(Number(item.cantidad) || 1));
+}
+
+function obtenerStockValido(valor) {
+  if (valor === null || valor === undefined || valor === "") {
+    return null;
+  }
+
+  const numero = Number(valor);
+
+  if (!Number.isFinite(numero) || numero < 0) {
+    return null;
+  }
+
+  return Math.floor(numero);
+}
+
+// ========================================
+// CONSULTAR INVENTARIO ACTUAL
+// ========================================
+
+async function consultarInventario(carritoActual) {
+  const necesitaProductos = carritoActual.some(
+    (item) => obtenerTipo(item) === "producto",
+  );
+
+  const necesitaRepuestos = carritoActual.some(
+    (item) => obtenerTipo(item) === "repuesto",
+  );
+
+  const [productos, repuestos] = await Promise.all([
+    necesitaProductos ? obtenerProductos() : Promise.resolve([]),
+
+    necesitaRepuestos ? obtenerRepuestos() : Promise.resolve([]),
+  ]);
+
+  if (
+    (necesitaProductos && !Array.isArray(productos)) ||
+    (necesitaRepuestos && !Array.isArray(repuestos))
+  ) {
+    throw new Error("El servidor no devolvió un inventario válido.");
+  }
+
+  const inventario = {};
+
+  carritoActual.forEach((item) => {
+    const clave = obtenerClave(item);
+
+    const lista = obtenerTipo(item) === "repuesto" ? repuestos : productos;
+
+    const encontrado = lista.find(
+      (articulo) => String(articulo.id) === String(item.id),
+    );
+
+    inventario[clave] = encontrado
+      ? {
+          encontrado: true,
+          stock: obtenerStockValido(encontrado.stock),
+          precio: encontrado.precio,
+        }
+      : {
+          encontrado: false,
+          stock: null,
+          precio: null,
+        };
+  });
+
+  return inventario;
+}
+
 // ========================================
 // COMPONENTE PRINCIPAL
 // ========================================
 
 function Carrito() {
+  const navigate = useNavigate();
+
   const [carrito, setCarrito] = useState(leerCarrito);
   const [mensaje, setMensaje] = useState("");
+
+  const [inventario, setInventario] = useState({});
+  const [verificando, setVerificando] = useState(true);
+  const [errorInventario, setErrorInventario] = useState(false);
+  const [continuando, setContinuando] = useState(false);
+
+  const carritoRef = useRef(carrito);
+  const consultaRef = useRef(false);
+  const versionRef = useRef(0);
+  const montadoRef = useRef(true);
+
+  carritoRef.current = carrito;
 
   // ========================================
   // SINCRONIZAR CAMBIOS DEL CARRITO
@@ -69,7 +162,15 @@ function Carrito() {
 
   useEffect(() => {
     const actualizar = () => {
-      setCarrito(leerCarrito());
+      const actualizado = leerCarrito();
+
+      versionRef.current += 1;
+      carritoRef.current = actualizado;
+
+      setCarrito(actualizado);
+      setInventario({});
+      setVerificando(actualizado.length > 0);
+      setErrorInventario(false);
     };
 
     window.addEventListener("storage", actualizar);
@@ -82,6 +183,88 @@ function Carrito() {
   }, []);
 
   // ========================================
+  // ACTUALIZAR INVENTARIO DESDE EL SERVIDOR
+  // ========================================
+
+  const actualizarInventario = useCallback(async (forzar = false) => {
+    if (consultaRef.current) return false;
+
+    if (!forzar && document.hidden) return false;
+
+    const actual = carritoRef.current;
+
+    if (actual.length === 0) {
+      if (montadoRef.current) {
+        setInventario({});
+        setVerificando(false);
+        setErrorInventario(false);
+      }
+
+      return true;
+    }
+
+    consultaRef.current = true;
+
+    const version = versionRef.current;
+
+    if (montadoRef.current) {
+      setVerificando(true);
+    }
+
+    try {
+      const datos = await consultarInventario(actual);
+
+      if (!montadoRef.current || version !== versionRef.current) {
+        return false;
+      }
+
+      setInventario(datos);
+      setErrorInventario(false);
+
+      return true;
+    } catch (error) {
+      console.error("Error verificando inventario:", error);
+
+      if (montadoRef.current && version === versionRef.current) {
+        setErrorInventario(true);
+      }
+
+      return false;
+    } finally {
+      consultaRef.current = false;
+
+      if (montadoRef.current) {
+        setVerificando(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    montadoRef.current = true;
+
+    actualizarInventario();
+
+    const intervalo = window.setInterval(() => {
+      actualizarInventario();
+    }, INTERVALO_ACTUALIZACION);
+
+    const actualizarAlVolver = () => {
+      if (!document.hidden) {
+        actualizarInventario();
+      }
+    };
+
+    document.addEventListener("visibilitychange", actualizarAlVolver);
+
+    return () => {
+      montadoRef.current = false;
+      window.clearInterval(intervalo);
+
+      document.removeEventListener("visibilitychange", actualizarAlVolver);
+    };
+  }, [actualizarInventario]);
+
+  // ========================================
   // GUARDAR CARRITO
   // ========================================
 
@@ -89,12 +272,20 @@ function Carrito() {
     try {
       localStorage.setItem(CLAVE_CARRITO, JSON.stringify(nuevoCarrito));
 
+      versionRef.current += 1;
+      carritoRef.current = nuevoCarrito;
+
       setCarrito(nuevoCarrito);
       setMensaje("");
+
+      // Conservamos los datos ya consultados para mostrar
+      // el stock mientras se realiza otra verificación.
+      setVerificando(nuevoCarrito.length > 0);
 
       window.dispatchEvent(new Event("jg-carrito-actualizado"));
     } catch (error) {
       console.error("Error guardando carrito:", error);
+
       setMensaje("No se pudieron guardar los cambios del carrito.");
     }
   };
@@ -109,20 +300,25 @@ function Carrito() {
         return item;
       }
 
-      const actual = Math.max(1, Math.floor(Number(item.cantidad) || 1));
-
+      const actual = obtenerCantidad(item);
       const nuevaCantidad = Math.max(1, actual + cambio);
 
-      const stock =
-        item.stock !== null &&
-        item.stock !== undefined &&
-        item.stock !== "" &&
-        Number.isFinite(Number(item.stock))
-          ? Number(item.stock)
-          : null;
+      const datos = inventario[clave];
 
-      if (stock !== null && nuevaCantidad > stock) {
-        return item;
+      const stock = datos ? datos.stock : obtenerStockValido(item.stock);
+
+      if (cambio > 0) {
+        if (!datos || !datos.encontrado) {
+          setMensaje(
+            "Espera a que se verifique el stock antes de aumentar la cantidad.",
+          );
+          return item;
+        }
+
+        if (stock === null || nuevaCantidad > stock) {
+          setMensaje("No hay suficientes unidades disponibles.");
+          return item;
+        }
       }
 
       return {
@@ -154,7 +350,47 @@ function Carrito() {
     }
 
     guardarCarrito([]);
+    setInventario({});
+    setErrorInventario(false);
   };
+
+  // ========================================
+  // ARTÍCULOS CON INVENTARIO ACTUALIZADO
+  // ========================================
+
+  const articulos = useMemo(() => {
+    return carrito.map((item) => {
+      const clave = obtenerClave(item);
+      const datos = inventario[clave];
+
+      const cantidad = obtenerCantidad(item);
+
+      const stock = datos ? datos.stock : null;
+
+      const encontrado = datos?.encontrado === true;
+
+      const sinStock = encontrado && stock !== null && stock <= 0;
+
+      const cantidadExcedida = encontrado && stock !== null && cantidad > stock;
+
+      const noDisponible = datos && !encontrado;
+
+      const stockDesconocido = encontrado && stock === null;
+
+      return {
+        ...item,
+        clave,
+        cantidad,
+        stockActual: stock,
+        encontrado,
+        sinStock,
+        cantidadExcedida,
+        noDisponible,
+        stockDesconocido,
+        verificado: Boolean(datos),
+      };
+    });
+  }, [carrito, inventario]);
 
   // ========================================
   // RESUMEN DEL CARRITO
@@ -164,11 +400,10 @@ function Carrito() {
     let unidades = 0;
     let subtotal = 0;
     let productosSinPrecio = 0;
+    let articulosConProblemas = 0;
 
-    carrito.forEach((item) => {
-      const cantidad = Math.max(1, Math.floor(Number(item.cantidad) || 1));
-
-      unidades += cantidad;
+    articulos.forEach((item) => {
+      unidades += item.cantidad;
 
       const precioValido =
         item.precio !== null &&
@@ -178,9 +413,19 @@ function Carrito() {
         Number(item.precio) >= 0;
 
       if (precioValido) {
-        subtotal += Number(item.precio) * cantidad;
+        subtotal += Number(item.precio) * item.cantidad;
       } else {
         productosSinPrecio++;
+      }
+
+      if (
+        !item.verificado ||
+        item.noDisponible ||
+        item.sinStock ||
+        item.cantidadExcedida ||
+        item.stockDesconocido
+      ) {
+        articulosConProblemas++;
       }
     });
 
@@ -188,8 +433,86 @@ function Carrito() {
       unidades,
       subtotal,
       productosSinPrecio,
+      articulosConProblemas,
     };
-  }, [carrito]);
+  }, [articulos]);
+
+  const puedeContinuar =
+    carrito.length > 0 &&
+    !verificando &&
+    !continuando &&
+    !errorInventario &&
+    resumen.articulosConProblemas === 0;
+
+  // ========================================
+  // VERIFICAR ANTES DE CONTINUAR
+  // ========================================
+
+  const continuarPedido = async () => {
+    if (continuando || carritoRef.current.length === 0) {
+      return;
+    }
+
+    setContinuando(true);
+    setMensaje("");
+
+    try {
+      // Comprobación nueva, sin depender de la última
+      // actualización automática de 15 segundos.
+      const actual = leerCarrito();
+
+      if (actual.length === 0) {
+        setMensaje("Tu carrito está vacío.");
+        return;
+      }
+
+      const datos = await consultarInventario(actual);
+
+      const problemas = actual.filter((item) => {
+        const info = datos[obtenerClave(item)];
+
+        return (
+          !info ||
+          !info.encontrado ||
+          info.stock === null ||
+          info.stock < obtenerCantidad(item)
+        );
+      });
+
+      setInventario(datos);
+      setErrorInventario(false);
+
+      if (problemas.length > 0) {
+        setMensaje(
+          "Hay artículos agotados, no disponibles o con cantidades superiores al stock. Revisa tu carrito antes de continuar.",
+        );
+        return;
+      }
+
+      // Evita continuar si el carrito cambió
+      // mientras se consultaba el servidor.
+      if (JSON.stringify(actual) !== JSON.stringify(leerCarrito())) {
+        setMensaje(
+          "Tu carrito cambió durante la verificación. Inténtalo nuevamente.",
+        );
+        return;
+      }
+
+      navigate("/checkout");
+    } catch (error) {
+      console.error("Error verificando pedido:", error);
+
+      setErrorInventario(true);
+
+      setMensaje(
+        "No pudimos verificar el inventario. Inténtalo nuevamente antes de continuar.",
+      );
+    } finally {
+      if (montadoRef.current) {
+        setContinuando(false);
+      }
+    }
+  };
 
   // ========================================
   // INTERFAZ DEL CARRITO
@@ -198,9 +521,7 @@ function Carrito() {
   return (
     <main className="min-h-[75vh] bg-[#F4F7F5] px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-6xl">
-        {/* ========================================
-            ENCABEZADO
-        ======================================== */}
+        {/* ENCABEZADO */}
 
         <div className="mb-8">
           <p className="text-xs font-black uppercase tracking-[0.15em] text-[#009E49]">
@@ -218,9 +539,47 @@ function Carrito() {
           </p>
         </div>
 
-        {/* ========================================
-            CARRITO VACÍO
-        ======================================== */}
+        {/* ESTADO DE INVENTARIO */}
+
+        {carrito.length > 0 && (
+          <div className="mb-6">
+            {errorInventario ? (
+              <div
+                role="alert"
+                className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-800"
+              >
+                No se pudo verificar el inventario actual. Comprueba tu conexión
+                y vuelve a intentarlo.
+                <button
+                  type="button"
+                  onClick={() => actualizarInventario(true)}
+                  className="ml-2 underline"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : verificando ? (
+              <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-semibold text-blue-700">
+                Consultando disponibilidad actual...
+              </div>
+            ) : resumen.articulosConProblemas > 0 ? (
+              <div
+                role="alert"
+                className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700"
+              >
+                Algunos artículos necesitan atención. Revisa el stock disponible
+                y ajusta las cantidades antes de continuar.
+              </div>
+            ) : (
+              <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-sm font-semibold text-green-800">
+                ✓ Inventario verificado. Las cantidades seleccionadas están
+                disponibles según la última consulta.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CARRITO VACÍO */}
 
         {carrito.length === 0 ? (
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-10">
@@ -255,9 +614,7 @@ function Carrito() {
           </div>
         ) : (
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-            {/* ========================================
-                LISTADO DE PRODUCTOS
-            ======================================== */}
+            {/* LISTADO DE PRODUCTOS */}
 
             <section className="min-w-0 space-y-4 lg:col-span-2">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -274,25 +631,12 @@ function Carrito() {
                 </button>
               </div>
 
-              {/* ========================================
-                  ARTÍCULOS DEL CARRITO
-              ======================================== */}
+              {/* ARTÍCULOS DEL CARRITO */}
 
-              {carrito.map((item) => {
-                const clave = obtenerClave(item);
-
-                const cantidad = Math.max(
-                  1,
-                  Math.floor(Number(item.cantidad) || 1),
-                );
-
-                const stockValido =
-                  item.stock !== null &&
-                  item.stock !== undefined &&
-                  item.stock !== "" &&
-                  Number.isFinite(Number(item.stock));
-
-                const stock = stockValido ? Number(item.stock) : null;
+              {articulos.map((item) => {
+                const clave = item.clave;
+                const cantidad = item.cantidad;
+                const stock = item.stockActual;
 
                 const precioValido =
                   item.precio !== null &&
@@ -304,6 +648,13 @@ function Carrito() {
                 const subtotal = precioValido
                   ? Number(item.precio) * cantidad
                   : null;
+
+                const puedeAumentar =
+                  !verificando &&
+                  !errorInventario &&
+                  item.encontrado &&
+                  stock !== null &&
+                  cantidad < stock;
 
                 return (
                   <article
@@ -384,7 +735,7 @@ function Carrito() {
                               <button
                                 type="button"
                                 onClick={() => cambiarCantidad(clave, 1)}
-                                disabled={stock !== null && cantidad >= stock}
+                                disabled={!puedeAumentar}
                                 className="h-10 w-10 font-black text-[#063D2A] transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
                                 aria-label="Aumentar cantidad"
                               >
@@ -392,9 +743,38 @@ function Carrito() {
                               </button>
                             </div>
 
-                            {stockValido && (
-                              <p className="mt-2 text-xs text-gray-500">
-                                Stock registrado: {stock}
+                            {item.verificado &&
+                              item.encontrado &&
+                              stock !== null && (
+                                <p className="mt-2 text-xs text-gray-500">
+                                  Stock actualizado: {stock}
+                                </p>
+                              )}
+
+                            {item.noDisponible && (
+                              <p className="mt-2 text-xs font-bold text-red-600">
+                                Artículo no encontrado en el inventario.
+                              </p>
+                            )}
+
+                            {item.sinStock && (
+                              <p className="mt-2 text-xs font-bold text-red-600">
+                                Producto agotado.
+                              </p>
+                            )}
+
+                            {item.cantidadExcedida &&
+                              stock !== null &&
+                              stock > 0 && (
+                                <p className="mt-2 text-xs font-bold text-red-600">
+                                  Solicitaste {cantidad} unidades, pero solo
+                                  quedan {stock}. Reduce la cantidad.
+                                </p>
+                              )}
+
+                            {item.stockDesconocido && (
+                              <p className="mt-2 text-xs font-bold text-amber-700">
+                                Disponibilidad por consultar.
                               </p>
                             )}
                           </div>
@@ -425,9 +805,7 @@ function Carrito() {
                 );
               })}
 
-              {/* ========================================
-                  AGREGAR MÁS ARTÍCULOS
-              ======================================== */}
+              {/* AGREGAR MÁS ARTÍCULOS */}
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link
@@ -446,9 +824,7 @@ function Carrito() {
               </div>
             </section>
 
-            {/* ========================================
-                RESUMEN DEL CARRITO
-            ======================================== */}
+            {/* RESUMEN DEL CARRITO */}
 
             <aside className="min-w-0 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-28">
               <h2 className="text-xl font-black text-[#063D2A]">
@@ -496,45 +872,42 @@ function Carrito() {
                 </div>
               </div>
 
-              {/* ========================================
-                  ÚNICO BOTÓN: CONTINUAR PEDIDO
-              ======================================== */}
+              {/* CONTINUAR PEDIDO */}
 
-              <Link
-                to="/checkout"
-                className="
-                  mt-6
-                  flex
-                  w-full
-                  items-center
-                  justify-center
-                  gap-3
-                  rounded-xl
-                  bg-[#FF6600]
-                  px-5
-                  py-4
-                  text-center
-                  text-sm
-                  font-black
-                  text-white
-                  shadow-sm
-                  transition-all
-                  duration-300
-                  hover:bg-[#E65C00]
-                  hover:shadow-lg
-                  active:scale-[0.98]
-                "
+              <button
+                type="button"
+                onClick={continuarPedido}
+                disabled={!puedeContinuar}
+                className={`mt-6 flex w-full items-center justify-center gap-3 rounded-xl px-5 py-4 text-center text-sm font-black text-white shadow-sm transition-all duration-300 ${
+                  puedeContinuar
+                    ? "bg-[#FF6600] hover:bg-[#E65C00] hover:shadow-lg active:scale-[0.98]"
+                    : "cursor-not-allowed bg-gray-400"
+                }`}
               >
                 <span aria-hidden="true">🛒</span>
 
-                <span>Continuar con mi pedido</span>
+                <span>
+                  {continuando
+                    ? "Verificando pedido..."
+                    : verificando
+                      ? "Verificando inventario..."
+                      : "Continuar con mi pedido"}
+                </span>
 
                 <span aria-hidden="true">→</span>
-              </Link>
+              </button>
 
-              {/* ========================================
-                  AVISO DE COMPRA
-              ======================================== */}
+              {!puedeContinuar && !verificando && !continuando && (
+                <button
+                  type="button"
+                  onClick={() => actualizarInventario(true)}
+                  className="mt-3 w-full rounded-xl border border-[#009E49] px-4 py-3 text-sm font-bold text-[#009E49] transition hover:bg-green-50"
+                >
+                  Actualizar disponibilidad
+                </button>
+              )}
+
+              {/* AVISO DE COMPRA */}
 
               <p className="mt-4 text-center text-xs leading-relaxed text-gray-500">
                 Los precios y la disponibilidad serán confirmados por Grupo
