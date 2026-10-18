@@ -14,9 +14,9 @@ import logoShalom from "../assets/shalom.png";
 import logoEmtrafesa from "../assets/emtrafesa.png";
 import logoOlva from "../assets/olva.png";
 
-// ==========================================
+// ======================================================
 // CONFIGURACIÓN
-// ==========================================
+// ======================================================
 
 const API_URL = (
   import.meta.env.VITE_API_URL ||
@@ -116,14 +116,13 @@ const DATOS_INICIALES = {
   referencia: "",
 };
 
-// ==========================================
-// FUNCIONES AUXILIARES
-// ==========================================
+// ======================================================
+// UTILIDADES
+// ======================================================
 
 function leerCarrito() {
   try {
     const datos = JSON.parse(localStorage.getItem(CLAVE_CARRITO) || "[]");
-
     return Array.isArray(datos) ? datos : [];
   } catch {
     return [];
@@ -218,9 +217,9 @@ function obtenerDetalles(carrito) {
   });
 }
 
-// ==========================================
-// VERIFICACIÓN DE STOCK ACTUALIZADO
-// ==========================================
+// ======================================================
+// VERIFICACIÓN DE INVENTARIO
+// ======================================================
 
 async function verificarInventarioCheckout(carrito) {
   if (!Array.isArray(carrito) || carrito.length === 0) {
@@ -244,8 +243,6 @@ async function verificarInventarioCheckout(carrito) {
     throw new Error("No se pudo verificar el inventario. Intenta nuevamente.");
   }
 
-  // Acumular cantidades por artículo para impedir
-  // superar el stock con entradas duplicadas.
   const cantidades = new Map();
 
   for (const item of carrito) {
@@ -265,7 +262,6 @@ async function verificarInventarioCheckout(carrito) {
     }
 
     const clave = `${tipo}-${id}`;
-
     const anterior = cantidades.get(clave);
 
     cantidades.set(clave, {
@@ -304,8 +300,8 @@ async function verificarInventarioCheckout(carrito) {
     if (stock < item.cantidad) {
       throw new Error(
         `Stock insuficiente para "${item.nombre}". ` +
-          `Solicitaste ${item.cantidad} y solo quedan ` +
-          `${stock} unidades. Regresa al carrito para modificarlo.`,
+          `Solicitaste ${item.cantidad} y solo quedan ${stock} unidades. ` +
+          "Regresa al carrito para modificarlo.",
       );
     }
   }
@@ -313,9 +309,9 @@ async function verificarInventarioCheckout(carrito) {
   return true;
 }
 
-// ==========================================
+// ======================================================
 // SEGURIDAD CSRF
-// ==========================================
+// ======================================================
 
 async function obtenerCsrf() {
   const respuesta = await fetch(`${API_URL}/api/auth/csrf`, {
@@ -347,13 +343,13 @@ async function leerError(respuesta) {
 
     mensaje = datos.detail || datos.message || datos.error || mensaje;
   } catch {
-    // Mantener mensaje general.
+    // Mantener el mensaje general.
   }
 
   if (respuesta.status === 403) {
     return (
       "El servidor rechazó la solicitud de seguridad. " +
-      "Verifica la sesión, las cookies, CORS y CSRF."
+      "Verifica los permisos del endpoint, las cookies, CORS y CSRF."
     );
   }
 
@@ -364,9 +360,9 @@ async function leerError(respuesta) {
   return mensaje;
 }
 
-// ==========================================
-// DATOS COPIABLES
-// ==========================================
+// ======================================================
+// DATOS BANCARIOS COPIABLES
+// ======================================================
 
 function DatoCopiable({ etiqueta, valor }) {
   const [copiado, setCopiado] = useState(false);
@@ -401,9 +397,9 @@ function DatoCopiable({ etiqueta, valor }) {
   );
 }
 
-// ==========================================
-// DATOS DE PAGO
-// ==========================================
+// ======================================================
+// INFORMACIÓN PARA REALIZAR EL PAGO
+// ======================================================
 
 function DatosPago({ metodoPago, importe }) {
   const metodo = PAGOS.find((opcion) => opcion.id === metodoPago);
@@ -437,8 +433,8 @@ function DatosPago({ metodoPago, importe }) {
           </p>
 
           <p className="mt-2 text-xs text-gray-600">
-            Este pago corresponde únicamente a los productos comprados en J&G.
-            No incluye el flete contra entrega.
+            Este importe corresponde a los productos comprados en J&G. No
+            incluye el flete contra entrega.
           </p>
         </div>
 
@@ -486,13 +482,125 @@ function DatosPago({ metodoPago, importe }) {
   );
 }
 
-// ==========================================
-// REPORTAR PAGO
-// ==========================================
+// ======================================================
+// SELECCIONAR COMPROBANTE DE PAGO
+// ======================================================
+
+function SelectorComprobante({
+  archivo,
+  onSeleccionar,
+  deshabilitado = false,
+}) {
+  const [vistaPrevia, setVistaPrevia] = useState("");
+
+  useEffect(() => {
+    if (!archivo) {
+      setVistaPrevia("");
+      return;
+    }
+
+    const url = URL.createObjectURL(archivo);
+    setVistaPrevia(url);
+
+    return () => URL.revokeObjectURL(url);
+  }, [archivo]);
+
+  const seleccionar = (evento) => {
+    const seleccionado = evento.target.files?.[0] || null;
+
+    if (!seleccionado) return;
+
+    const formatosPermitidos = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!formatosPermitidos.includes(seleccionado.type)) {
+      evento.target.value = "";
+      alert("Solo se permiten imágenes JPG, PNG o WebP.");
+      return;
+    }
+
+    if (seleccionado.size > 5 * 1024 * 1024) {
+      evento.target.value = "";
+      alert("La imagen no puede superar los 5 MB.");
+      return;
+    }
+
+    onSeleccionar(seleccionado);
+  };
+
+  return (
+    <div className="mt-5 rounded-2xl border border-dashed border-green-300 bg-green-50 p-5">
+      <h4 className="font-black text-[#063D2A]">
+        📸 Adjuntar comprobante de pago
+      </h4>
+
+      <p className="mt-2 text-sm text-gray-600">
+        Selecciona una captura o fotografía de tu transferencia para que podamos
+        verificar el pago.
+      </p>
+
+      <label
+        className={`mt-4 block rounded-xl border border-green-300 bg-white p-4 text-center transition ${
+          deshabilitado
+            ? "cursor-not-allowed opacity-60"
+            : "cursor-pointer hover:bg-green-100"
+        }`}
+      >
+        <span className="text-sm font-bold text-[#009E49]">
+          {archivo ? "Cambiar imagen" : "Seleccionar imagen del comprobante"}
+        </span>
+
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={seleccionar}
+          disabled={deshabilitado}
+          className="sr-only"
+        />
+      </label>
+
+      <p className="mt-2 text-center text-xs text-gray-500">
+        JPG, PNG o WebP. Máximo 5 MB.
+      </p>
+
+      {vistaPrevia && (
+        <div className="mt-5">
+          <img
+            src={vistaPrevia}
+            alt="Vista previa del comprobante"
+            className="mx-auto max-h-80 w-full rounded-xl border border-gray-200 bg-white object-contain"
+          />
+
+          <p className="mt-3 break-all text-center text-xs text-gray-600">
+            {archivo.name}
+          </p>
+
+          <button
+            type="button"
+            disabled={deshabilitado}
+            onClick={() => onSeleccionar(null)}
+            className="mt-3 w-full rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-600 disabled:opacity-50"
+          >
+            Quitar imagen
+          </button>
+        </div>
+      )}
+
+      <p className="mt-4 text-xs text-green-800">
+        La imagen se enviará al servidor cuando reportes tu pago. Nuestro equipo
+        verificará la operación antes de aprobarla.
+      </p>
+    </div>
+  );
+}
+
+// ======================================================
+// REPORTAR PAGO CON COMPROBANTE A CLOUDINARY
+// ======================================================
 
 function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
   const [numeroOperacion, setNumeroOperacion] = useState("");
 
+  const [archivo, setArchivo] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 
@@ -506,9 +614,29 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
     const operacion = numeroOperacion.trim();
 
     if (!/^[A-Za-z0-9-]{4,50}$/.test(operacion)) {
-      setError(
-        "Ingresa un número de operación válido de 4 a 50 caracteres, usando letras, números o guiones.",
-      );
+      setError("Ingresa un número de operación válido de 4 a 50 caracteres.");
+      return;
+    }
+
+    if (!pedido?.id || !tokenSeguimiento) {
+      setError("No se encontraron los datos del pedido.");
+      return;
+    }
+
+    if (!archivo) {
+      setError("Debes adjuntar una imagen del comprobante de pago.");
+      return;
+    }
+
+    const formatosPermitidos = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!formatosPermitidos.includes(archivo.type)) {
+      setError("El comprobante debe ser JPG, PNG o WebP.");
+      return;
+    }
+
+    if (archivo.size > 5 * 1024 * 1024) {
+      setError("El comprobante no puede superar los 5 MB.");
       return;
     }
 
@@ -517,22 +645,36 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
     setError("");
 
     try {
+      // Obtener token CSRF
       const csrf = await obtenerCsrf();
 
-      const respuesta = await fetch(`${API_URL}/api/pagos/reportar`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          [csrf.headerName]: csrf.token,
+      // Preparar el archivo y los datos del pedido
+      const formData = new FormData();
+
+      formData.append("pedidoId", String(pedido.id));
+
+      formData.append("tokenSeguimiento", tokenSeguimiento);
+
+      formData.append("numeroOperacion", operacion);
+
+      formData.append("comprobante", archivo, archivo.name);
+
+      // Enviar al backend Spring Boot
+      const respuesta = await fetch(
+        `${API_URL}/api/pagos/reportar-comprobante`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+            [csrf.headerName]: csrf.token,
+          },
+          body: formData,
         },
-        body: JSON.stringify({
-          pedidoId: pedido.id,
-          tokenSeguimiento,
-          numeroOperacion: operacion,
-        }),
-      });
+      );
+
+      // No establecer Content-Type:
+      // el navegador configura multipart/form-data.
 
       if (!respuesta.ok) {
         throw new Error(await leerError(respuesta));
@@ -541,14 +683,21 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
       const resultado = await respuesta.json();
 
       if (resultado.estadoPago !== "EN_REVISION") {
-        throw new Error("El servidor no confirmó el estado del reporte.");
+        throw new Error(
+          "El servidor no confirmó el estado de revisión. " +
+            "Verifica el pedido antes de intentar enviarlo otra vez.",
+        );
       }
 
+      // Mostrar confirmación solamente
+      // cuando el backend confirme el reporte.
       onPagoReportado(resultado);
     } catch (err) {
+      console.error("Error reportando pago:", err);
+
       setError(
         err instanceof TypeError
-          ? "No se pudo conectar con el servidor. Verifica Render y la conexión."
+          ? "No se pudo conectar con el backend. Verifica Render, CORS y la conexión."
           : err.message || "No se pudo reportar el pago.",
       );
     } finally {
@@ -565,8 +714,8 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
       <h3 className="text-lg font-black text-[#063D2A]">Reportar mi pago</h3>
 
       <p className="mt-2 text-sm text-gray-600">
-        Después de transferir el importe de los productos a J&G, introduce el
-        número de operación de tu comprobante.
+        Después de realizar la transferencia, ingresa el número de operación y
+        adjunta la imagen de tu comprobante.
       </p>
 
       <div className="mt-5">
@@ -583,6 +732,15 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
         />
       </div>
 
+      <SelectorComprobante
+        archivo={archivo}
+        onSeleccionar={(seleccionado) => {
+          setArchivo(seleccionado);
+          setError("");
+        }}
+        deshabilitado={enviando}
+      />
+
       {error && (
         <div
           role="alert"
@@ -594,10 +752,12 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
 
       <button
         type="submit"
-        disabled={enviando}
-        className="mt-5 w-full rounded-xl bg-[#009E49] px-5 py-4 font-black text-white transition hover:bg-green-700 disabled:bg-gray-400"
+        disabled={enviando || !archivo}
+        className="mt-5 w-full rounded-xl bg-[#009E49] px-5 py-4 font-black text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
       >
-        {enviando ? "Enviando reporte..." : "Ya pagué, reportar operación →"}
+        {enviando
+          ? "Subiendo comprobante y reportando pago..."
+          : "Enviar comprobante y reportar pago →"}
       </button>
 
       <p className="mt-3 text-xs text-gray-500">
@@ -608,9 +768,9 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
   );
 }
 
-// ==========================================
+// ======================================================
 // RESUMEN DEL FLETE
-// ==========================================
+// ======================================================
 
 function ResumenFlete({ pedido }) {
   const esRecojo = pedido.metodoEntrega === "RECOJO";
@@ -628,6 +788,7 @@ function ResumenFlete({ pedido }) {
 
       <div className="mt-4 flex justify-between gap-3 text-sm">
         <span className="text-gray-600">Productos</span>
+
         <strong>{formatearPrecio(pedido.subtotal)}</strong>
       </div>
 
@@ -677,9 +838,9 @@ function ResumenFlete({ pedido }) {
   );
 }
 
-// ==========================================
+// ======================================================
 // COMPONENTE PRINCIPAL
-// ==========================================
+// ======================================================
 
 export default function Checkout() {
   const [carrito, setCarrito] = useState(leerCarrito);
@@ -706,16 +867,12 @@ export default function Checkout() {
     (opcion) => opcion.id === datos.metodoEntrega,
   );
 
-  const pagoSeleccionado = PAGOS.find((opcion) => opcion.id === metodoPago);
-
-  // ========================================
-  // SINCRONIZACIÓN DEL CARRITO
-  // ========================================
+  // ====================================================
+  // SINCRONIZAR CARRITO
+  // ====================================================
 
   useEffect(() => {
-    const actualizar = () => {
-      setCarrito(leerCarrito());
-    };
+    const actualizar = () => setCarrito(leerCarrito());
 
     window.addEventListener("storage", actualizar);
 
@@ -728,9 +885,9 @@ export default function Checkout() {
     };
   }, []);
 
-  // ========================================
+  // ====================================================
   // RESUMEN DE COMPRA
-  // ========================================
+  // ====================================================
 
   const resumen = useMemo(() => {
     let subtotal = 0;
@@ -761,10 +918,6 @@ export default function Checkout() {
     };
   }, [carrito]);
 
-  // ========================================
-  // FORMULARIO
-  // ========================================
-
   const cambiarCampo = (evento) => {
     const { name, value } = evento.target;
 
@@ -776,9 +929,9 @@ export default function Checkout() {
     setErrorPedido("");
   };
 
-  // ========================================
+  // ====================================================
   // REGISTRAR PEDIDO
-  // ========================================
+  // ====================================================
 
   const manejarEnvio = async (evento) => {
     evento.preventDefault();
@@ -843,41 +996,33 @@ export default function Checkout() {
     setRegistrando(true);
 
     try {
-      // =====================================
-      // NUEVA VALIDACIÓN DE INVENTARIO
-      // =====================================
-
       const carritoActual = leerCarrito();
 
       if (JSON.stringify(carritoActual) !== JSON.stringify(carrito)) {
         setCarrito(carritoActual);
 
         throw new Error(
-          "Tu carrito cambió mientras completabas el formulario. Revisa las cantidades antes de continuar.",
+          "Tu carrito cambió mientras completabas el formulario. " +
+            "Revisa las cantidades antes de continuar.",
         );
       }
 
-      // Consultar stock real de productos y repuestos
-      // antes de enviar el pedido al backend.
+      // Verificar el stock actualizado
       await verificarInventarioCheckout(carritoActual);
 
-      // Obtener token CSRF.
+      // Obtener token CSRF
       const csrf = await obtenerCsrf();
 
-      // Comprobar nuevamente que el carrito no cambió
-      // durante la consulta de inventario.
       if (JSON.stringify(leerCarrito()) !== JSON.stringify(carritoActual)) {
         setCarrito(leerCarrito());
 
         throw new Error(
-          "El carrito cambió durante la verificación. Revisa tu pedido e inténtalo nuevamente.",
+          "El carrito cambió durante la verificación. " +
+            "Revisa tu pedido e inténtalo nuevamente.",
         );
       }
 
-      // =====================================
-      // CREAR PEDIDO EN EL BACKEND
-      // =====================================
-
+      // Crear pedido en Spring Boot
       const respuesta = await fetch(`${API_URL}/api/pedidos`, {
         method: "POST",
         credentials: "include",
@@ -900,15 +1045,14 @@ export default function Checkout() {
 
       if (!pedido?.id || !token) {
         throw new Error(
-          "El servidor respondió sin la confirmación completa. No registres otro pedido sin verificarlo primero.",
+          "El servidor respondió sin la confirmación completa. " +
+            "No registres otro pedido sin verificarlo primero.",
         );
       }
 
-      // Confirmar pedido registrado.
       setPedidoConfirmado(pedido);
       setTokenSeguimiento(token);
 
-      // Guardar seguimiento.
       try {
         sessionStorage.setItem(
           CLAVE_PEDIDO,
@@ -921,7 +1065,6 @@ export default function Checkout() {
         console.warn("No se pudo guardar temporalmente el seguimiento.");
       }
 
-      // Limpiar carrito tras confirmación del backend.
       try {
         localStorage.removeItem(CLAVE_CARRITO);
 
@@ -948,9 +1091,9 @@ export default function Checkout() {
     }
   };
 
-  // ========================================
+  // ====================================================
   // CONFIRMAR REPORTE DE PAGO
-  // ========================================
+  // ====================================================
 
   const manejarReporteConfirmado = (resultado) => {
     setReporteConfirmado(resultado);
@@ -966,9 +1109,9 @@ export default function Checkout() {
     });
   };
 
-  // ========================================
-  // PANTALLA DE PEDIDO REGISTRADO
-  // ========================================
+  // ====================================================
+  // PANTALLA DE PEDIDO CONFIRMADO
+  // ====================================================
 
   if (pedidoConfirmado) {
     const entrega = ENTREGAS.find(
@@ -1080,8 +1223,8 @@ export default function Checkout() {
               </h2>
 
               <p className="mt-3 text-sm text-gray-700">
-                Recibimos tu número de operación. El pago se encuentra en
-                revisión.
+                Recibimos tu número de operación y comprobante. El pago se
+                encuentra en revisión.
               </p>
 
               {reporteConfirmado?.numeroOperacion && (
@@ -1169,9 +1312,9 @@ export default function Checkout() {
     );
   }
 
-  // ========================================
+  // ====================================================
   // FORMULARIO DE CHECKOUT
-  // ========================================
+  // ====================================================
 
   return (
     <main className="min-h-[75vh] bg-[#F4F7F5] px-4 py-8 sm:px-6 sm:py-12">
@@ -1218,10 +1361,8 @@ export default function Checkout() {
           </div>
         ) : (
           <div className="grid items-start gap-6 lg:grid-cols-3">
-            {/* FORMULARIO */}
-
             <form onSubmit={manejarEnvio} className="space-y-6 lg:col-span-2">
-              {/* 1. INFORMACIÓN DEL CLIENTE */}
+              {/* INFORMACIÓN DEL CLIENTE */}
 
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
@@ -1265,7 +1406,7 @@ export default function Checkout() {
                 </div>
               </section>
 
-              {/* 2. MÉTODO DE ENTREGA */}
+              {/* MÉTODO DE ENTREGA */}
 
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
@@ -1438,7 +1579,7 @@ export default function Checkout() {
                 )}
               </section>
 
-              {/* 3. MÉTODO DE PAGO */}
+              {/* MÉTODO DE PAGO */}
 
               <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
                 <h2 className="text-xl font-black text-[#063D2A]">
@@ -1486,17 +1627,17 @@ export default function Checkout() {
                           />
                         </div>
 
-                        <div className="mb-3 flex h-16 items-center">
+                        <div className="flex h-16 items-center justify-center">
                           <Logo src={opcion.logo} alt={opcion.nombre} grande />
                         </div>
 
-                        <span className="text-sm font-black text-[#063D2A]">
+                        <p className="mt-3 text-center text-sm font-black text-[#063D2A]">
                           {opcion.nombre}
-                        </span>
+                        </p>
 
-                        <span className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-center text-xs text-gray-500">
                           {opcion.descripcion}
-                        </span>
+                        </p>
                       </label>
                     );
                   })}
@@ -1504,37 +1645,18 @@ export default function Checkout() {
 
                 <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
                   <p className="text-sm font-bold text-[#063D2A]">
-                    Método seleccionado: {pagoSeleccionado?.nombre}
+                    ¿Cómo funciona el pago?
+                  </p>
+
+                  <p className="mt-2 text-sm text-gray-700">
+                    Primero registras tu pedido. Luego recibirás los datos para
+                    realizar tu transferencia. Finalmente, podrás enviar tu
+                    número de operación y una imagen del comprobante.
                   </p>
 
                   <p className="mt-2 text-xs text-gray-600">
-                    Los datos oficiales para transferir aparecerán después de
-                    registrar tu pedido.
-                  </p>
-
-                  <p className="mt-2 text-sm font-semibold text-[#063D2A]">
-                    Solo pagarás a J&G el importe de los productos.
-                  </p>
-                </div>
-
-                {!esRecojo && (
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-sm font-bold text-amber-800">
-                      Transporte contra entrega
-                    </p>
-
-                    <p className="mt-2 text-xs text-amber-700">
-                      Puedes pagar tus productos a J&G después de registrar el
-                      pedido, aunque el flete todavía no esté cotizado. El
-                      transporte se paga directamente a la agencia.
-                    </p>
-                  </div>
-                )}
-
-                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-xs text-gray-600">
-                    Los pagos se verifican manualmente. Registrar el pedido no
-                    genera ningún cobro automático.
+                    El pago quedará pendiente de verificación por nuestro
+                    equipo.
                   </p>
                 </div>
               </section>
@@ -1544,78 +1666,99 @@ export default function Checkout() {
               {errorPedido && (
                 <div
                   role="alert"
-                  className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700"
+                  className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm font-semibold text-red-700"
                 >
                   {errorPedido}
                 </div>
               )}
 
-              {/* BOTÓN DE REGISTRO */}
+              {/* CONFIRMAR PEDIDO */}
 
               <button
                 type="submit"
                 disabled={registrando}
-                className="w-full rounded-xl bg-[#FF6600] px-6 py-4 font-black text-white shadow-sm transition hover:bg-[#E65C00] disabled:bg-gray-400"
+                className="w-full rounded-xl bg-[#009E49] px-6 py-4 text-base font-black text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
               >
                 {registrando
-                  ? "Verificando stock y registrando pedido..."
-                  : "Registrar mi pedido →"}
+                  ? "Verificando inventario y registrando pedido..."
+                  : "Confirmar y registrar mi pedido →"}
               </button>
 
               <p className="text-center text-xs text-gray-500">
-                Tu pedido quedará pendiente de revisión. No se realizará ningún
-                cobro al registrarlo.
+                El servidor verificará la disponibilidad y confirmará los
+                importes. Registrar un pedido no aprueba el pago.
               </p>
             </form>
 
-            {/* RESUMEN DEL PEDIDO */}
+            {/* RESUMEN LATERAL */}
 
-            <aside className="rounded-2xl bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-28">
+            <aside className="rounded-2xl bg-white p-5 shadow-sm lg:sticky lg:top-24">
               <h2 className="text-xl font-black text-[#063D2A]">
                 Resumen de tu pedido
               </h2>
 
-              <div className="mt-5 space-y-4">
+              <p className="mt-2 text-sm text-gray-500">
+                {resumen.unidades}{" "}
+                {resumen.unidades === 1 ? "unidad" : "unidades"}
+              </p>
+
+              <div className="mt-5 space-y-4 border-y border-gray-100 py-5">
                 {carrito.map((item, indice) => {
                   const cantidad = Math.max(
                     1,
                     Math.floor(Number(item.cantidad) || 1),
                   );
 
+                  const precio =
+                    item.precio != null &&
+                    item.precio !== "" &&
+                    Number.isFinite(Number(item.precio))
+                      ? Number(item.precio)
+                      : null;
+
                   return (
                     <div
-                      key={`${item.carritoId || item.id}-${indice}`}
-                      className="flex justify-between gap-3 border-b border-gray-100 pb-4"
+                      key={`${item.tipo || "producto"}-${item.id}-${indice}`}
+                      className="flex justify-between gap-4"
                     >
                       <div className="min-w-0">
-                        <p className="break-words text-sm font-bold text-[#063D2A]">
+                        <p className="text-sm font-bold text-[#063D2A]">
                           {item.nombre || "Artículo"}
                         </p>
 
                         <p className="mt-1 text-xs text-gray-500">
                           Cantidad: {cantidad}
                         </p>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                          {String(item.tipo || "producto").toLowerCase() ===
+                          "repuesto"
+                            ? "Repuesto"
+                            : "Producto"}
+                        </p>
                       </div>
 
                       <p className="shrink-0 text-sm font-black text-[#063D2A]">
-                        {item.precio != null && item.precio !== ""
-                          ? formatearPrecio(Number(item.precio) * cantidad)
-                          : "Consultar"}
+                        {precio !== null
+                          ? formatearPrecio(precio * cantidad)
+                          : "Por confirmar"}
                       </p>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="mt-5 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Unidades</span>
+              <div className="mt-5 space-y-4">
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-gray-600">Subtotal</span>
 
-                  <strong>{resumen.unidades}</strong>
+                  <strong className="text-[#063D2A]">
+                    {formatearPrecio(resumen.subtotal)}
+                  </strong>
                 </div>
 
                 <div className="flex justify-between gap-3 text-sm">
-                  <span className="text-gray-500">Método de entrega</span>
+                  <span className="text-gray-600">Método de entrega</span>
 
                   <strong className="text-right text-[#063D2A]">
                     {entregaSeleccionada?.nombre}
@@ -1623,35 +1766,21 @@ export default function Checkout() {
                 </div>
 
                 <div className="flex justify-between gap-3 text-sm">
-                  <span className="text-gray-500">Método de pago</span>
+                  <span className="text-gray-600">Flete</span>
 
                   <strong className="text-right text-[#063D2A]">
-                    {pagoSeleccionado?.nombre}
+                    {esRecojo ? "Gratis" : "Contra entrega"}
                   </strong>
                 </div>
 
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Subtotal de productos</span>
+                <div className="flex justify-between gap-3 border-t border-gray-200 pt-4">
+                  <span className="font-black text-[#063D2A]">
+                    Total de productos
+                  </span>
 
-                  <strong>{formatearPrecio(resumen.subtotal)}</strong>
-                </div>
-
-                <div className="flex justify-between gap-3 text-sm">
-                  <span className="text-gray-500">Flete</span>
-
-                  <strong
-                    className={esRecojo ? "text-[#009E49]" : "text-amber-700"}
-                  >
-                    {esRecojo ? "No aplica" : "Contra entrega"}
-                  </strong>
-                </div>
-
-                <div className="border-t border-gray-100 pt-4">
-                  <p className="text-xs text-gray-500">Total a pagar a J&G</p>
-
-                  <p className="mt-2 text-3xl font-black text-[#FF6600]">
+                  <strong className="text-xl text-[#FF6600]">
                     {formatearPrecio(resumen.subtotal)}
-                  </p>
+                  </strong>
                 </div>
 
                 {!esRecojo && (

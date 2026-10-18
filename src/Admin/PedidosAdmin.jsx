@@ -28,10 +28,13 @@ function moneda(valor) {
 function fecha(valor) {
   if (!valor) return "Sin registrar";
 
-  const convertida = new Date(valor);
-  if (Number.isNaN(convertida.getTime())) return "Sin registrar";
+  const fechaConvertida = new Date(valor);
 
-  return convertida.toLocaleString("es-PE", {
+  if (Number.isNaN(fechaConvertida.getTime())) {
+    return "Sin registrar";
+  }
+
+  return fechaConvertida.toLocaleString("es-PE", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -130,9 +133,7 @@ function notificarWhatsApp(pedido, estadoPago, observacionPago) {
   const numero = numeroWhatsApp(pedido.telefonoCliente);
 
   if (!numero) {
-    alert(
-      "El cliente no tiene un número de celular peruano válido. Revisa el teléfono registrado.",
-    );
+    alert("El cliente no tiene un número de celular peruano válido.");
     return;
   }
 
@@ -216,6 +217,7 @@ async function obtenerCsrf() {
   }
 
   const datos = await respuesta.json();
+
   const token = datos.token || datos.csrfToken || datos._csrf?.token;
 
   const nombreHeader =
@@ -242,6 +244,180 @@ async function leerError(respuesta) {
     return `Error HTTP ${respuesta.status}`;
   }
 }
+
+/*
+========================================
+VISUALIZADOR PRIVADO DE COMPROBANTES
+========================================
+*/
+
+function VisorComprobante({ pedidoId, disponible }) {
+  const [mostrar, setMostrar] = useState(false);
+  const [imagenUrl, setImagenUrl] = useState(null);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setMostrar(false);
+    setError("");
+    setImagenUrl(null);
+  }, [pedidoId]);
+
+  useEffect(() => {
+    if (!mostrar || !disponible) return;
+
+    const controlador = new AbortController();
+    let urlTemporal = null;
+
+    async function cargarImagen() {
+      setCargando(true);
+      setError("");
+      setImagenUrl(null);
+
+      try {
+        const respuesta = await fetch(
+          `${API_URL}/api/admin/pagos/${pedidoId}/comprobante`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              Accept: "image/jpeg,image/png,image/webp",
+            },
+            signal: controlador.signal,
+          },
+        );
+
+        if (!respuesta.ok) {
+          if (respuesta.status === 401 || respuesta.status === 403) {
+            throw new Error(
+              "No tienes autorización para visualizar el comprobante. Inicia sesión nuevamente.",
+            );
+          }
+
+          if (respuesta.status === 404) {
+            throw new Error("No se encontró un comprobante para este pedido.");
+          }
+
+          throw new Error(
+            `No se pudo cargar la imagen. HTTP ${respuesta.status}.`,
+          );
+        }
+
+        const tipo = respuesta.headers.get("content-type") || "";
+
+        if (!tipo.startsWith("image/")) {
+          throw new Error("El servidor no devolvió una imagen válida.");
+        }
+
+        const archivo = await respuesta.blob();
+
+        if (archivo.size === 0 || archivo.size > 5 * 1024 * 1024) {
+          throw new Error("El comprobante recibido tiene un tamaño inválido.");
+        }
+
+        if (controlador.signal.aborted) return;
+
+        urlTemporal = URL.createObjectURL(archivo);
+        setImagenUrl(urlTemporal);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setError(err.message || "No se pudo recuperar el comprobante.");
+        }
+      } finally {
+        if (!controlador.signal.aborted) {
+          setCargando(false);
+        }
+      }
+    }
+
+    cargarImagen();
+
+    return () => {
+      controlador.abort();
+
+      if (urlTemporal) {
+        URL.revokeObjectURL(urlTemporal);
+      }
+    };
+  }, [mostrar, disponible, pedidoId]);
+
+  if (!disponible) {
+    return (
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <p className="text-sm font-semibold text-amber-800">
+          Este pedido no tiene un comprobante de pago adjunto.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="mt-5 rounded-2xl border border-blue-200 bg-blue-50/60 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h4 className="font-black text-[#063D2A]">Comprobante de pago</h4>
+
+          <p className="mt-1 text-xs text-gray-600">
+            Imagen privada almacenada en Cloudinary.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMostrar((anterior) => !anterior)}
+          className="rounded-xl bg-[#063D2A] px-5 py-3 text-sm font-black text-white transition hover:bg-[#009E49]"
+        >
+          {mostrar ? "Ocultar comprobante" : "Ver comprobante"}
+        </button>
+      </div>
+
+      {mostrar && (
+        <div className="mt-4 rounded-xl bg-white p-4">
+          {cargando && (
+            <p className="py-8 text-center text-sm text-gray-500">
+              Cargando comprobante desde Cloudinary...
+            </p>
+          )}
+
+          {error && (
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+            >
+              {error}
+            </div>
+          )}
+
+          {imagenUrl && !cargando && (
+            <div className="space-y-3">
+              <img
+                src={imagenUrl}
+                alt={`Comprobante de pago del pedido ${pedidoId}`}
+                className="mx-auto max-h-[550px] w-auto max-w-full rounded-xl border border-gray-200 object-contain"
+              />
+
+              <p className="text-center text-xs text-gray-500">
+                Verifica el importe, número de operación, fecha y cuenta
+                receptora.
+              </p>
+
+              <p className="text-center text-xs font-semibold text-amber-700">
+                La imagen no demuestra por sí sola que el dinero haya ingresado
+                a la cuenta.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/*
+========================================
+FORMULARIO DE FLETE
+========================================
+*/
 
 function FormularioFlete({ pedido, guardar, guardando }) {
   const [costo, setCosto] = useState("");
@@ -296,8 +472,8 @@ function FormularioFlete({ pedido, guardar, guardando }) {
         estadoCotizacion: estado,
         observacion: observacion.trim(),
       });
-    } catch (error) {
-      setErrorFormulario(error.message || "No se pudo guardar el flete.");
+    } catch (err) {
+      setErrorFormulario(err.message || "No se pudo guardar el flete.");
     }
   };
 
@@ -398,6 +574,7 @@ function FormularioFlete({ pedido, guardar, guardando }) {
         <div className="rounded-xl bg-white p-4">
           <div className="flex justify-between gap-3 text-sm">
             <span className="text-gray-600">Productos (pago a J&G)</span>
+
             <strong className="text-[#063D2A]">{moneda(pedido.total)}</strong>
           </div>
 
@@ -405,6 +582,7 @@ function FormularioFlete({ pedido, guardar, guardando }) {
             <span className="text-gray-600">
               Flete (pago a {pedido.metodoEntrega})
             </span>
+
             <strong className="text-[#C94E14]">
               {costo && Number(costo) > 0 ? moneda(costo) : "Por definir"}
             </strong>
@@ -414,6 +592,7 @@ function FormularioFlete({ pedido, guardar, guardando }) {
             <span className="text-sm font-bold text-[#063D2A]">
               Costo total para el cliente
             </span>
+
             <strong className="text-[#063D2A]">
               {costo && Number(costo) > 0
                 ? moneda(Number(pedido.total) + Number(costo))
@@ -437,6 +616,12 @@ function FormularioFlete({ pedido, guardar, guardando }) {
     </section>
   );
 }
+
+/*
+========================================
+GESTIÓN DE PAGOS
+========================================
+*/
 
 function GestionPago({
   pedido,
@@ -469,6 +654,8 @@ function GestionPago({
 
   const observacion = informacionPago?.observacion ?? pedido.observacionPago;
 
+  const comprobanteDisponible = informacionPago?.comprobanteDisponible === true;
+
   const puedeDecidir =
     estado === "EN_REVISION" && pedido.estadoPedido !== "CANCELADO";
 
@@ -488,8 +675,8 @@ function GestionPago({
 
     try {
       await aprobarPago(pedido.id);
-    } catch (error) {
-      setErrorFormulario(error.message);
+    } catch (err) {
+      setErrorFormulario(err.message);
     }
   };
 
@@ -510,10 +697,11 @@ function GestionPago({
 
     try {
       await rechazarPago(pedido.id, motivo.trim());
+
       setMostrarRechazo(false);
       setMotivo("");
-    } catch (error) {
-      setErrorFormulario(error.message);
+    } catch (err) {
+      setErrorFormulario(err.message);
     }
   };
 
@@ -559,8 +747,11 @@ function GestionPago({
         </div>
 
         <Dato etiqueta="Número de operación" valor={numeroOperacion} />
+
         <Dato etiqueta="Importe a verificar" valor={moneda(pedido.total)} />
+
         <Dato etiqueta="Fecha de reporte" valor={fecha(fechaReporte)} />
+
         <Dato
           etiqueta="Fecha de verificación"
           valor={fecha(fechaVerificacion)}
@@ -573,6 +764,11 @@ function GestionPago({
         )}
       </div>
 
+      <VisorComprobante
+        pedidoId={pedido.id}
+        disponible={comprobanteDisponible}
+      />
+
       {estado === "APROBADO" && (
         <div className="mt-4 rounded-xl border border-green-200 bg-green-100 p-4 text-sm font-semibold text-green-800">
           ✓ Pago aprobado. El abono fue marcado como verificado por el
@@ -582,15 +778,15 @@ function GestionPago({
 
       {estado === "RECHAZADO" && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          El pago fue rechazado. El cliente podrá reportar nuevamente una
-          operación válida.
+          El pago fue rechazado. El cliente deberá comunicarse con J&G para
+          solucionar el inconveniente.
         </div>
       )}
 
       {estado === "PENDIENTE" && (
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           El cliente todavía no tiene un pago en revisión. Espera a que reporte
-          su número de operación.
+          su número de operación y adjunte su comprobante.
         </div>
       )}
 
@@ -713,6 +909,12 @@ function GestionPago({
   );
 }
 
+/*
+========================================
+DETALLE DEL PEDIDO
+========================================
+*/
+
 function DetallePedido({
   pedido,
   cerrar,
@@ -728,10 +930,12 @@ function DetallePedido({
   if (!pedido) return null;
 
   const detalles = Array.isArray(pedido.detalles) ? pedido.detalles : [];
+
   const esAgencia = tieneAgencia(pedido);
   const cotizado = fleteCotizado(pedido);
   const subtotal = Number(pedido.subtotal) || 0;
   const flete = cotizado ? Number(pedido.costoEnvio) || 0 : 0;
+
   const ocupado = guardandoFlete || procesandoPago;
 
   return (
@@ -751,6 +955,7 @@ function DetallePedido({
             <p className="text-xs font-bold uppercase tracking-widest text-green-200">
               Grupo Comercial J&G
             </p>
+
             <h2 className="mt-2 text-xl font-black">Pedido #{pedido.id}</h2>
           </div>
 
@@ -848,6 +1053,7 @@ function DetallePedido({
                   <p className="mb-2 text-xs font-semibold text-gray-500">
                     Estado de cotización
                   </p>
+
                   <EtiquetaEstado
                     estado={pedido.estadoCotizacionFlete || "PENDIENTE"}
                   />
@@ -934,7 +1140,7 @@ function DetallePedido({
                 <strong>{moneda(subtotal)}</strong>
               </div>
 
-              <div className="flex justify-between gap-3 text-sm">
+              <div className="mt-3 flex justify-between gap-3 text-sm">
                 <span className="text-gray-500">
                   {esAgencia
                     ? `Flete contra entrega (${pedido.metodoEntrega})`
@@ -1009,20 +1215,37 @@ function DetallePedido({
   );
 }
 
+/*
+========================================
+PÁGINA PRINCIPAL DE PEDIDOS
+========================================
+*/
+
 export default function PedidosAdmin() {
   const [pedidos, setPedidos] = useState([]);
   const [pagosAdmin, setPagosAdmin] = useState([]);
+
   const [cargando, setCargando] = useState(true);
   const [actualizando, setActualizando] = useState(false);
   const [guardandoFlete, setGuardandoFlete] = useState(false);
   const [procesandoPago, setProcesandoPago] = useState(false);
   const [cargandoPago, setCargandoPago] = useState(false);
+
   const [error, setError] = useState("");
   const [errorPago, setErrorPago] = useState("");
+
   const [busqueda, setBusqueda] = useState("");
   const [filtroPago, setFiltroPago] = useState("TODOS");
+
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+
   const [mensajeExito, setMensajeExito] = useState("");
+
+  /*
+  ========================================
+  CARGAR PEDIDOS
+  ========================================
+  */
 
   const cargarPedidos = useCallback(async (manual = false) => {
     if (manual) {
@@ -1045,8 +1268,7 @@ export default function PedidosAdmin() {
       if (!respuesta.ok) {
         if (respuesta.status === 401 || respuesta.status === 403) {
           throw new Error(
-            "No se pudo validar la sesión administrativa. " +
-              "Inicia sesión nuevamente.",
+            "No se pudo validar la sesión administrativa. Inicia sesión nuevamente.",
           );
         }
 
@@ -1065,16 +1287,24 @@ export default function PedidosAdmin() {
 
       setPedidoSeleccionado((anterior) => {
         if (!anterior) return null;
+
         return datos.find((pedido) => pedido.id === anterior.id) || null;
       });
     } catch (err) {
       console.error("Error cargando pedidos:", err);
+
       setError(err.message || "No se pudieron cargar los pedidos.");
     } finally {
       setCargando(false);
       setActualizando(false);
     }
   }, []);
+
+  /*
+  ========================================
+  CARGAR PAGOS ADMINISTRATIVOS
+  ========================================
+  */
 
   const cargarPagosAdmin = useCallback(async () => {
     setCargandoPago(true);
@@ -1092,8 +1322,7 @@ export default function PedidosAdmin() {
       if (!respuesta.ok) {
         if (respuesta.status === 401 || respuesta.status === 403) {
           throw new Error(
-            "No tienes acceso a la administración de pagos. " +
-              "Revisa tu sesión y los permisos del backend.",
+            "No tienes acceso a la administración de pagos. Revisa tu sesión y los permisos del backend.",
           );
         }
 
@@ -1111,6 +1340,7 @@ export default function PedidosAdmin() {
       setPagosAdmin(datos);
     } catch (err) {
       console.error("Error cargando pagos:", err);
+
       setErrorPago(err.message || "No se pudieron cargar los pagos.");
     } finally {
       setCargandoPago(false);
@@ -1121,6 +1351,12 @@ export default function PedidosAdmin() {
     cargarPedidos();
     cargarPagosAdmin();
   }, [cargarPedidos, cargarPagosAdmin]);
+
+  /*
+  ========================================
+  GUARDAR COTIZACIÓN DE FLETE
+  ========================================
+  */
 
   const guardarCotizacionFlete = async (datosFlete) => {
     if (!pedidoSeleccionado) {
@@ -1167,11 +1403,18 @@ export default function PedidosAdmin() {
       );
     } catch (err) {
       console.error("Error guardando flete:", err);
+
       throw err;
     } finally {
       setGuardandoFlete(false);
     }
   };
+
+  /*
+  ========================================
+  ACTUALIZAR DATOS LOCALES DEL PAGO
+  ========================================
+  */
 
   const actualizarPagoLocal = (pagoActualizado) => {
     setPagosAdmin((anteriores) => {
@@ -1219,6 +1462,12 @@ export default function PedidosAdmin() {
     });
   };
 
+  /*
+  ========================================
+  APROBAR O RECHAZAR PAGO
+  ========================================
+  */
+
   const ejecutarAccionPago = async (pedidoId, accion, motivo = null) => {
     setProcesandoPago(true);
     setErrorPago("");
@@ -1234,12 +1483,18 @@ export default function PedidosAdmin() {
           credentials: "include",
           headers: {
             Accept: "application/json",
-            ...(motivo !== null ? { "Content-Type": "application/json" } : {}),
+            ...(motivo !== null
+              ? {
+                  "Content-Type": "application/json",
+                }
+              : {}),
             [csrf.nombreHeader]: csrf.token,
           },
           ...(motivo !== null
             ? {
-                body: JSON.stringify({ motivo }),
+                body: JSON.stringify({
+                  motivo,
+                }),
               }
             : {}),
         },
@@ -1250,8 +1505,7 @@ export default function PedidosAdmin() {
 
         if (respuesta.status === 401 || respuesta.status === 403) {
           throw new Error(
-            "No se pudo autorizar la operación. " +
-              "Inicia sesión nuevamente y verifica los permisos. " +
+            "No se pudo autorizar la operación. Inicia sesión nuevamente y verifica los permisos. " +
               mensaje,
           );
         }
@@ -1260,6 +1514,7 @@ export default function PedidosAdmin() {
       }
 
       const pagoActualizado = await respuesta.json();
+
       actualizarPagoLocal(pagoActualizado);
 
       setMensajeExito(
@@ -1269,6 +1524,7 @@ export default function PedidosAdmin() {
       );
     } catch (err) {
       console.error(`Error al ${accion} pago:`, err);
+
       throw err;
     } finally {
       setProcesandoPago(false);
@@ -1279,6 +1535,12 @@ export default function PedidosAdmin() {
 
   const rechazarPago = (pedidoId, motivo) =>
     ejecutarAccionPago(pedidoId, "rechazar", motivo);
+
+  /*
+  ========================================
+  RELACIONAR PEDIDOS Y PAGOS
+  ========================================
+  */
 
   const pagosPorPedido = useMemo(() => {
     const mapa = new Map();
@@ -1306,21 +1568,36 @@ export default function PedidosAdmin() {
     [pedidos, pagosPorPedido],
   );
 
+  /*
+  ========================================
+  ESTADÍSTICAS
+  ========================================
+  */
+
   const estadisticas = useMemo(
     () => ({
       total: pedidosConPago.length,
+
       pendientes: pedidosConPago.filter(
         (pedido) => pedido.estadoPago === "PENDIENTE",
       ).length,
+
       revision: pedidosConPago.filter(
         (pedido) => pedido.estadoPago === "EN_REVISION",
       ).length,
+
       aprobados: pedidosConPago.filter(
         (pedido) => pedido.estadoPago === "APROBADO",
       ).length,
     }),
     [pedidosConPago],
   );
+
+  /*
+  ========================================
+  FILTRAR PEDIDOS
+  ========================================
+  */
 
   const pedidosFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLowerCase();
@@ -1355,6 +1632,12 @@ export default function PedidosAdmin() {
     cargarPagosAdmin();
   };
 
+  /*
+  ========================================
+  INTERFAZ PRINCIPAL
+  ========================================
+  */
+
   return (
     <main className="min-h-screen bg-[#F4F7F5]">
       <header className="bg-gradient-to-r from-[#063D2A] to-[#009E49] px-5 py-9 text-white sm:px-8">
@@ -1366,8 +1649,8 @@ export default function PedidosAdmin() {
           <h1 className="mt-3 text-3xl font-black">Gestión de pedidos</h1>
 
           <p className="mt-2 text-sm text-green-50">
-            Consulta las órdenes, verifica pagos, notifica por WhatsApp y
-            gestiona el flete contra entrega de cada envío.
+            Consulta las órdenes, verifica pagos, revisa comprobantes, notifica
+            por WhatsApp y gestiona el flete contra entrega.
           </p>
         </div>
       </header>
@@ -1378,14 +1661,17 @@ export default function PedidosAdmin() {
             titulo="Total pedidos"
             valor={estadisticas.total}
           />
+
           <TarjetaEstadistica
             titulo="Pagos pendientes"
             valor={estadisticas.pendientes}
           />
+
           <TarjetaEstadistica
             titulo="Por verificar"
             valor={estadisticas.revision}
           />
+
           <TarjetaEstadistica
             titulo="Pagos aprobados"
             valor={estadisticas.aprobados}
@@ -1398,6 +1684,7 @@ export default function PedidosAdmin() {
               <h2 className="text-lg font-black text-[#063D2A]">
                 Órdenes registradas
               </h2>
+
               <p className="mt-1 text-xs text-gray-500">
                 Información obtenida del backend.
               </p>
@@ -1419,6 +1706,7 @@ export default function PedidosAdmin() {
               className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800"
             >
               <span>{mensajeExito}</span>
+
               <button
                 type="button"
                 onClick={() => setMensajeExito("")}
@@ -1485,11 +1773,17 @@ export default function PedidosAdmin() {
                 <thead>
                   <tr className="border-b border-gray-200 text-xs uppercase text-gray-500">
                     <th className="px-3 py-4">Pedido</th>
+
                     <th className="px-3 py-4">Cliente</th>
+
                     <th className="px-3 py-4">Entrega</th>
+
                     <th className="px-3 py-4">Pago</th>
+
                     <th className="px-3 py-4">Total J&G</th>
+
                     <th className="px-3 py-4">Fecha</th>
+
                     <th className="px-3 py-4">Acción</th>
                   </tr>
                 </thead>
@@ -1508,6 +1802,7 @@ export default function PedidosAdmin() {
                         <p className="font-bold text-[#063D2A]">
                           {pedido.nombreCliente}
                         </p>
+
                         <p className="mt-1 text-xs text-gray-500">
                           {pedido.telefonoCliente}
                         </p>
@@ -1530,6 +1825,7 @@ export default function PedidosAdmin() {
                           <p className="text-xs font-semibold text-gray-500">
                             {pedido.metodoPago}
                           </p>
+
                           <EtiquetaEstado estado={pedido.estadoPago} />
                         </div>
                       </td>
@@ -1575,20 +1871,20 @@ export default function PedidosAdmin() {
         </div>
       </div>
 
-      <DetallePedido
-        pedido={pedidoSeleccionado}
-        cerrar={() => setPedidoSeleccionado(null)}
-        guardarFlete={guardarCotizacionFlete}
-        guardandoFlete={guardandoFlete}
-        informacionPago={
-          pedidoSeleccionado ? pagosPorPedido.get(pedidoSeleccionado.id) : null
-        }
-        aprobarPago={aprobarPago}
-        rechazarPago={rechazarPago}
-        procesandoPago={procesandoPago}
-        cargandoPago={cargandoPago}
-        errorPago={errorPago}
-      />
+      {pedidoSeleccionado && (
+        <DetallePedido
+          pedido={pedidoSeleccionado}
+          cerrar={() => setPedidoSeleccionado(null)}
+          guardarFlete={guardarCotizacionFlete}
+          guardandoFlete={guardandoFlete}
+          informacionPago={pagosPorPedido.get(pedidoSeleccionado.id) || null}
+          aprobarPago={aprobarPago}
+          rechazarPago={rechazarPago}
+          procesandoPago={procesandoPago}
+          cargandoPago={cargandoPago}
+          errorPago={errorPago}
+        />
+      )}
     </main>
   );
 }
