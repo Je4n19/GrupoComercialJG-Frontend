@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-
+import { Link } from "react-router-dom";
 const API_URL = (
   import.meta.env.VITE_API_URL ||
   "https://grupocomercialjg-backend.onrender.com"
@@ -1640,18 +1640,32 @@ export default function PedidosAdmin() {
 
   return (
     <main className="min-h-screen bg-[#F4F7F5]">
-      <header className="bg-gradient-to-r from-[#063D2A] to-[#009E49] px-5 py-9 text-white sm:px-8">
+      <header className="bg-gradient-to-r from-[#063D2A] to-[#009E49] px-5 py-7 text-white sm:px-8">
         <div className="mx-auto max-w-6xl">
-          <p className="text-xs font-black uppercase tracking-widest text-green-100">
-            Grupo Comercial J&G
-          </p>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-green-100">
+                Grupo Comercial J&G
+              </p>
 
-          <h1 className="mt-3 text-3xl font-black">Gestión de pedidos</h1>
+              <h1 className="mt-3 text-2xl font-black sm:text-3xl">
+                Gestión de pedidos
+              </h1>
 
-          <p className="mt-2 text-sm text-green-50">
-            Consulta las órdenes, verifica pagos, revisa comprobantes, notifica
-            por WhatsApp y gestiona el flete contra entrega.
-          </p>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-green-50">
+                Consulta las órdenes, verifica pagos, revisa comprobantes,
+                notifica por WhatsApp y gestiona el flete contra entrega.
+              </p>
+            </div>
+
+            <Link
+              to="/admin"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/30 bg-white px-5 py-3 text-sm font-black text-[#063D2A] shadow-sm transition hover:bg-green-50"
+            >
+              <span aria-hidden="true">←</span>
+              Volver al panel
+            </Link>
+          </div>
         </div>
       </header>
 
