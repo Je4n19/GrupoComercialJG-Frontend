@@ -14,7 +14,8 @@ function TarjetaProducto({ producto }) {
     producto.precio !== null &&
     producto.precio !== undefined &&
     producto.precio !== "" &&
-    Number.isFinite(precio)
+    Number.isFinite(precio) &&
+    precio >= 0
       ? precio.toLocaleString("es-PE", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
@@ -27,13 +28,18 @@ function TarjetaProducto({ producto }) {
     producto.stock !== null &&
     producto.stock !== undefined &&
     producto.stock !== "" &&
-    Number.isFinite(stock) &&
+    Number.isSafeInteger(stock) &&
     stock >= 0;
 
   const disponible = stockValido && stock > 0;
 
   const imagenFallback =
     "https://placehold.co/600x450/f3f4f6/6b7280?text=Producto";
+
+  const nombreCategoria =
+    typeof producto.categoria === "string"
+      ? producto.categoria
+      : producto.categoria?.nombre || "";
 
   useEffect(() => {
     return () => {
@@ -42,10 +48,6 @@ function TarjetaProducto({ producto }) {
       }
     };
   }, []);
-
-  // ========================================
-  // MOSTRAR MENSAJE TEMPORAL
-  // ========================================
 
   const mostrarMensaje = (texto, fueAgregado = false) => {
     setMensaje(texto);
@@ -60,10 +62,6 @@ function TarjetaProducto({ producto }) {
       setAgregado(false);
     }, 2500);
   };
-
-  // ========================================
-  // AGREGAR PRODUCTO AL CARRITO
-  // ========================================
 
   const agregarAlCarrito = () => {
     if (!producto?.id) {
@@ -82,13 +80,9 @@ function TarjetaProducto({ producto }) {
 
     try {
       const guardado = localStorage.getItem(CLAVE_CARRITO);
-
       const datos = guardado ? JSON.parse(guardado) : [];
-
       const carrito = Array.isArray(datos) ? datos : [];
 
-      // Diferenciamos productos y repuestos
-      // para evitar conflictos entre sus IDs.
       const identificador = `producto-${producto.id}`;
 
       const indice = carrito.findIndex(
@@ -133,8 +127,6 @@ function TarjetaProducto({ producto }) {
 
       localStorage.setItem(CLAVE_CARRITO, JSON.stringify(carritoActualizado));
 
-      // Notificar al encabezado para actualizar
-      // el contador sin recargar la página.
       window.dispatchEvent(new Event("jg-carrito-actualizado"));
 
       mostrarMensaje("¡Agregado al carrito!", true);
@@ -148,39 +140,19 @@ function TarjetaProducto({ producto }) {
   return (
     <article
       className="
-        group
-        bg-white
-        rounded-[24px]
-        overflow-hidden
-        border
-        border-gray-100
-        shadow-sm
-        hover:shadow-xl
-        hover:border-[#009E49]/25
-        hover:-translate-y-1.5
-        transition-all
-        duration-300
-        flex
-        flex-col
-        h-full
+        group flex h-full flex-col overflow-hidden
+        rounded-[22px] border border-gray-100 bg-white
+        shadow-sm transition-all duration-300
+        hover:border-[#009E49]/25 hover:shadow-xl
+        sm:rounded-[24px] sm:hover:-translate-y-1
       "
     >
-      {/* ========================================
-          IMAGEN DEL PRODUCTO
-      ======================================== */}
-
+      {/* IMAGEN DEL PRODUCTO */}
       <div
         className="
-          relative
-          bg-[#F8FAF9]
-          overflow-hidden
-          h-60
-          sm:h-64
-          lg:h-72
-          flex
-          items-center
-          justify-center
-          p-5
+          relative flex h-44 items-center justify-center
+          overflow-hidden bg-[#F8FAF9] p-3
+          sm:h-64 sm:p-5 lg:h-72
         "
       >
         <img
@@ -192,66 +164,43 @@ function TarjetaProducto({ producto }) {
             e.currentTarget.src = imagenFallback;
           }}
           className="
-            w-full
-            h-full
-            object-contain
-            transition-transform
-            duration-500
+            h-full w-full object-contain
+            transition-transform duration-500
             group-hover:scale-105
           "
         />
 
         {/* CATEGORÍA */}
-
-        {producto.categoria && (
-          <div className="absolute top-4 left-4 right-4">
+        {nombreCategoria && (
+          <div className="absolute left-3 right-3 top-3 sm:left-4 sm:top-4">
             <span
               className="
-                inline-flex
-                items-center
-                max-w-full
-                bg-[#009E49]
-                text-white
-                px-3.5
-                py-2
-                rounded-full
-                text-xs
-                font-black
-                shadow-md
+                inline-flex max-w-full items-center
+                rounded-full bg-[#009E49] px-3 py-1.5
+                text-[10px] font-black text-white
+                shadow-sm sm:px-3.5 sm:py-2 sm:text-xs
               "
             >
-              <span className="truncate">{producto.categoria}</span>
+              <span className="truncate">{nombreCategoria}</span>
             </span>
           </div>
         )}
 
-        {/* ESTADO DE STOCK */}
-
+        {/* DISPONIBILIDAD */}
         {stockValido && (
-          <div className="absolute bottom-4 right-4">
+          <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4">
             <span
               className={`
-                inline-flex
-                items-center
-                gap-2
-                px-3
-                py-1.5
-                rounded-full
-                text-xs
-                font-bold
-                shadow-sm
-                ${
-                  disponible
-                    ? "bg-white text-[#009E49]"
-                    : "bg-white text-red-600"
-                }
+                inline-flex items-center gap-1.5 rounded-full
+                bg-white px-2.5 py-1.5 text-[11px]
+                font-bold shadow-sm sm:gap-2
+                sm:px-3 sm:text-xs
+                ${disponible ? "text-[#009E49]" : "text-red-600"}
               `}
             >
               <span
                 className={`
-                  w-2
-                  h-2
-                  rounded-full
+                  h-2 w-2 rounded-full
                   ${disponible ? "bg-[#009E49]" : "bg-red-500"}
                 `}
               />
@@ -263,26 +212,29 @@ function TarjetaProducto({ producto }) {
       </div>
 
       {/* LÍNEA DECORATIVA */}
+      <div
+        className="
+          h-1 bg-[#009E49] transition-colors
+          duration-300 group-hover:bg-[#FF6600]
+        "
+      />
 
-      <div className="h-1 bg-[#009E49] group-hover:bg-[#FF6600] transition-colors duration-300" />
-
-      {/* ========================================
-          INFORMACIÓN DEL PRODUCTO
-      ======================================== */}
-
-      <div className="p-5 sm:p-6 flex flex-col flex-1">
+      {/* INFORMACIÓN */}
+      <div
+        className="
+          flex flex-1 flex-col p-4
+          sm:p-6
+        "
+      >
         {/* MARCA */}
-
         <div className="flex items-center gap-2">
-          <span className="w-6 h-[3px] bg-[#FF6600] rounded-full" />
+          <span className="h-[3px] w-5 rounded-full bg-[#FF6600] sm:w-6" />
 
           <span
             className="
-              text-[#009E49]
-              font-black
-              uppercase
-              tracking-[0.12em]
-              text-xs
+              text-[11px] font-black uppercase
+              tracking-[0.12em] text-[#009E49]
+              sm:text-xs
             "
           >
             {producto.marca || "Grupo Comercial J&G"}
@@ -290,61 +242,44 @@ function TarjetaProducto({ producto }) {
         </div>
 
         {/* NOMBRE */}
-
         <h3
           className="
-            text-xl
-            sm:text-[22px]
-            font-black
-            text-[#1A1A1A]
-            mt-4
-            leading-snug
-            line-clamp-2
-            min-h-[54px]
+            mt-2 line-clamp-2 min-h-[48px]
+            text-lg font-black leading-snug
+            text-[#1A1A1A] transition-colors
             group-hover:text-[#009E49]
-            transition-colors
-            duration-300
+            sm:mt-4 sm:min-h-[54px]
+            sm:text-[22px]
           "
+          title={producto.nombre}
         >
           {producto.nombre}
         </h3>
 
         {/* DESCRIPCIÓN */}
-
         <p
           className="
-            text-gray-500
-            text-sm
-            leading-relaxed
-            mt-3
-            line-clamp-2
-            min-h-[42px]
+            mt-2 line-clamp-2 min-h-[36px]
+            text-xs leading-relaxed text-gray-500
+            sm:mt-3 sm:min-h-[42px] sm:text-sm
           "
         >
           {producto.descripcion || "Conoce más detalles sobre este producto."}
         </p>
 
         {/* SEPARADOR */}
-
-        <div className="h-px bg-gray-100 my-5" />
+        <div className="my-3 h-px bg-gray-100 sm:my-5" />
 
         {/* PRECIO Y STOCK */}
-
-        <div className="flex items-end justify-between gap-3">
-          {/* PRECIO */}
-
+        <div className="flex items-end justify-between gap-2 sm:gap-3">
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 font-medium">Precio</p>
+            <p className="text-xs font-medium text-gray-500">Precio</p>
 
             <p
               className="
-                text-2xl
+                mt-1 break-words text-[25px]
+                font-black tracking-tight text-[#FF6600]
                 sm:text-[28px]
-                font-black
-                text-[#FF6600]
-                mt-1
-                tracking-tight
-                break-words
               "
             >
               {precioFormateado !== null
@@ -353,16 +288,12 @@ function TarjetaProducto({ producto }) {
             </p>
           </div>
 
-          {/* STOCK */}
-
-          <div className="text-right shrink-0">
-            <p className="text-xs text-gray-500 font-medium">Stock</p>
+          <div className="shrink-0 text-right">
+            <p className="text-xs font-medium text-gray-500">Stock</p>
 
             <p
               className={`
-                text-sm
-                font-black
-                mt-1
+                mt-1 text-xs font-black sm:text-sm
                 ${
                   !stockValido
                     ? "text-gray-500"
@@ -377,41 +308,32 @@ function TarjetaProducto({ producto }) {
           </div>
         </div>
 
-        {/* ESPACIO FLEXIBLE */}
-
         <div className="flex-1" />
 
-        {/* ========================================
-            BOTONES DE ACCIÓN
-        ======================================== */}
-
-        <div className="mt-6 space-y-3">
-          {/* AGREGAR AL CARRITO */}
-
+        {/* BOTONES */}
+        <div className="mt-4 space-y-2.5 sm:mt-6 sm:space-y-3">
           <button
             type="button"
             onClick={agregarAlCarrito}
             disabled={!disponible}
             className={`
-              w-full
-              inline-flex
-              items-center
-              justify-center
-              gap-3
-              py-3.5
-              px-5
-              rounded-xl
-              font-black
-              text-sm
-              shadow-sm
-              transition-all
-              duration-300
+              inline-flex min-h-[46px] w-full
+              items-center justify-center gap-2
+              rounded-xl px-3 py-3
+              text-sm font-black shadow-sm
+              transition-all duration-300
+              sm:min-h-[50px] sm:gap-3
+              sm:px-5 sm:py-3.5
+              focus-visible:outline
+              focus-visible:outline-2
+              focus-visible:outline-offset-2
+              focus-visible:outline-[#009E49]
               ${
                 !disponible
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  ? "cursor-not-allowed bg-gray-200 text-gray-500"
                   : agregado
                     ? "bg-[#063D2A] text-white"
-                    : "bg-[#FF6600] hover:bg-[#E65C00] text-white hover:shadow-lg"
+                    : "bg-[#FF6600] text-white hover:bg-[#E65C00] hover:shadow-lg"
               }
             `}
           >
@@ -424,7 +346,7 @@ function TarjetaProducto({ producto }) {
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="w-5 h-5"
+                  className="h-5 w-5"
                   aria-hidden="true"
                 >
                   <path d="m5 12 4 4L19 6" />
@@ -440,7 +362,7 @@ function TarjetaProducto({ producto }) {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="w-5 h-5"
+                  className="h-5 w-5"
                   aria-hidden="true"
                 >
                   <circle cx="9" cy="21" r="1" />
@@ -457,16 +379,13 @@ function TarjetaProducto({ producto }) {
             )}
           </button>
 
-          {/* MENSAJE DE CONFIRMACIÓN */}
-
+          {/* MENSAJE */}
           {mensaje && (
             <p
               role="status"
               aria-live="polite"
               className={`
-                text-center
-                text-xs
-                font-bold
+                text-center text-xs font-bold
                 ${agregado ? "text-[#009E49]" : "text-red-600"}
               `}
             >
@@ -475,30 +394,25 @@ function TarjetaProducto({ producto }) {
           )}
 
           {/* VER DETALLES */}
-
           <Link
             to={`/producto/${producto.id}`}
             className="
-              w-full
-              inline-flex
-              items-center
-              justify-center
-              gap-3
-              bg-[#009E49]
-              hover:bg-[#00843D]
-              text-white
-              py-3.5
-              px-5
-              rounded-xl
-              font-black
-              text-sm
-              shadow-sm
-              hover:shadow-lg
-              transition-all
-              duration-300
+              inline-flex min-h-[46px] w-full
+              items-center justify-center gap-2
+              rounded-xl bg-[#009E49]
+              px-3 py-3 text-sm font-black
+              text-white shadow-sm
+              transition-all duration-300
+              hover:bg-[#00843D] hover:shadow-lg
+              sm:min-h-[50px] sm:gap-3
+              sm:px-5 sm:py-3.5
+              focus-visible:outline
+              focus-visible:outline-2
+              focus-visible:outline-offset-2
+              focus-visible:outline-[#009E49]
             "
           >
-            Ver Detalles
+            Ver detalles
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -507,11 +421,8 @@ function TarjetaProducto({ producto }) {
               strokeLinecap="round"
               strokeLinejoin="round"
               className="
-                w-5
-                h-5
-                transition-transform
-                duration-300
-                group-hover:translate-x-1
+                h-5 w-5 transition-transform
+                duration-300 group-hover:translate-x-1
               "
               aria-hidden="true"
             >
