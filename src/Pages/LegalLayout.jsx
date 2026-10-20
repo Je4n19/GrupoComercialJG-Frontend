@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 // Enlaces de las páginas legales
 const enlacesLegales = [
@@ -28,10 +29,21 @@ export function LegalLayout({
   rutaActual,
   children,
 }) {
+  const { pathname } = useLocation();
+
+  // Al cambiar de página legal, regresar al inicio.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    // Restablecer también el desplazamiento del documento.
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [pathname]);
+
   return (
     <main className="min-h-screen bg-[#F5F7FA] text-slate-800">
       {/* ENCABEZADO */}
-      <section className="relative overflow-hidden bg-[#081B33] text-white border-b-4 border-[#009E49]">
+      <section className="relative overflow-hidden border-b-4 border-[#009E49] bg-[#081B33] text-white">
         {/* Decoración */}
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#009E49]/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-orange-500/10 blur-3xl" />

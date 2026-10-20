@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { LegalLayout, Seccion, Aviso } from "./LegalLayout";
 
@@ -29,6 +30,14 @@ const pasos = [
 ];
 
 export default function CambiosDevoluciones() {
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  }, []);
+
   const whatsapp =
     "https://wa.me/51979501557?text=" +
     encodeURIComponent(
@@ -211,7 +220,7 @@ export default function CambiosDevoluciones() {
         </Link>
       </Seccion>
 
-      <div className="mt-10 rounded-2xl bg-[#0A2543] p-7 sm:p-8 text-white">
+      <div className="mt-10 rounded-2xl bg-[#0A2543] p-7 text-white sm:p-8">
         <h3 className="text-xl font-black">¿Necesitas ayuda con tu compra?</h3>
 
         <p className="mt-3 text-sm leading-7 text-slate-300">

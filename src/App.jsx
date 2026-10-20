@@ -1,7 +1,23 @@
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 import Encabezado from "./Components/Encabezado";
 import RutasApp from "./Routes/RutasApp";
+
+// Hace que cada página nueva comience desde arriba
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   const location = useLocation();
@@ -12,6 +28,9 @@ function App() {
 
   return (
     <>
+      {/* Restablecer desplazamiento al cambiar de página */}
+      <ScrollToTop />
+
       {/* Mostrar encabezado solo en la página pública */}
       {!esRutaAdmin && <Encabezado />}
 
