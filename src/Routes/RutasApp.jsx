@@ -62,6 +62,9 @@ import Configuracion from "../Admin/Configuracion";
 // GESTIÓN DE PEDIDOS
 import PedidosAdmin from "../Admin/PedidosAdmin";
 
+// GESTIÓN DE RECLAMACIONES
+import ReclamacionesAdmin from "../Admin/ReclamacionesAdmin";
+
 /* ========================================
    COMPONENTE DE RUTAS
 ======================================== */
@@ -292,6 +295,19 @@ function RutasApp() {
         element={
           <RutaProtegida>
             <PedidosAdmin />
+          </RutaProtegida>
+        }
+      />
+
+      {/* ========================================
+       GESTIÓN DE RECLAMACIONES
+      ======================================== */}
+
+      <Route
+        path="/admin/reclamaciones"
+        element={
+          <RutaProtegida>
+            <ReclamacionesAdmin />
           </RutaProtegida>
         }
       />

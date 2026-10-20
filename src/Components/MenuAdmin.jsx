@@ -58,6 +58,14 @@ function Icono({ tipo, className = "w-5 h-5" }) {
       </>
     ),
 
+    reclamaciones: (
+      <>
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <path d="M8 8h8M8 12h8M8 16h4" />
+        <path d="m15 17 2 2 4-4" />
+      </>
+    ),
+
     configuracion: (
       <>
         <circle cx="12" cy="12" r="3" />
@@ -223,6 +231,12 @@ function MenuAdmin() {
       nombre: "Pedidos",
       ruta: "/admin/pedidos",
       icono: "pedidos",
+    },
+
+    {
+      nombre: "Reclamaciones",
+      ruta: "/admin/reclamaciones",
+      icono: "reclamaciones",
     },
 
     {
