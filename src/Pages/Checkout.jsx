@@ -1,21 +1,31 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+
 import { Link } from "react-router-dom";
 
 import { obtenerProductos } from "../Services/productoService";
+
 import { obtenerRepuestos } from "../Services/repuestoService";
 
 import logoYape from "../assets/Pagos/yape.png";
+
 import logoPlin from "../assets/Pagos/plin.png";
+
 import logoBCP from "../assets/Pagos/bcp.png";
+
 import logoBBVA from "../assets/Pagos/bbva.png";
+
 import logoVisa from "../assets/Pagos/visa.png";
 
 import logoShalom from "../assets/shalom.png";
+
 import logoEmtrafesa from "../assets/emtrafesa.png";
+
 import logoOlva from "../assets/olva.png";
 
 // ======================================================
+
 // CONFIGURACIÓN
+
 // ======================================================
 
 const API_URL = (
@@ -24,17 +34,23 @@ const API_URL = (
 ).replace(/\/+$/, "");
 
 const CLAVE_CARRITO = "jg_carrito";
+
 const CLAVE_PEDIDO = "jg_ultimo_pedido";
 
 const DATOS_BANCARIOS = {
   titular: "Jesus Oliver Guevara Torres",
+
   celular: "943168545",
+
   bcp: {
     cuenta: "305-2469851-0-96",
+
     cci: "00230500246985109613",
   },
+
   bbva: {
     cuenta: "0011-0287-0200258047",
+
     cci: "0112870020025804706",
   },
 };
@@ -42,26 +58,41 @@ const DATOS_BANCARIOS = {
 const ENTREGAS = [
   {
     id: "SHALOM",
+
     nombre: "Shalom",
+
     descripcion: "Flete contra entrega en agencia",
+
     logo: logoShalom,
   },
+
   {
     id: "EMTRAFESA",
+
     nombre: "Emtrafesa",
+
     descripcion: "Flete contra entrega en agencia",
+
     logo: logoEmtrafesa,
   },
+
   {
     id: "OLVA",
+
     nombre: "Olva Courier",
+
     descripcion: "Flete contra entrega en agencia",
+
     logo: logoOlva,
   },
+
   {
     id: "RECOJO",
+
     nombre: "Recojo en tienda",
+
     descripcion: "Recoge tu pedido en nuestro local",
+
     logo: null,
   },
 ];
@@ -69,60 +100,95 @@ const ENTREGAS = [
 const PAGOS = [
   {
     id: "YAPE",
+
     nombre: "Yape",
+
     descripcion: "Billetera digital",
+
     logo: logoYape,
+
     habilitado: true,
   },
+
   {
     id: "PLIN",
+
     nombre: "Plin",
+
     descripcion: "Billetera digital",
+
     logo: logoPlin,
+
     habilitado: true,
   },
+
   {
     id: "BCP",
+
     nombre: "BCP",
+
     descripcion: "Transferencia bancaria",
+
     logo: logoBCP,
+
     habilitado: true,
   },
+
   {
     id: "BBVA",
+
     nombre: "BBVA",
+
     descripcion: "Transferencia bancaria",
+
     logo: logoBBVA,
+
     habilitado: true,
   },
+
   {
     id: "TARJETA",
+
     nombre: "Tarjeta",
+
     descripcion: "Crédito o débito",
+
     logo: logoVisa,
+
     habilitado: false,
   },
 ];
 
 const DATOS_INICIALES = {
   nombreCliente: "",
+
   telefonoCliente: "",
+
   correoCliente: "",
+
   metodoEntrega: "RECOJO",
+
   departamento: "Lambayeque",
+
   provincia: "Chiclayo",
+
   distrito: "",
+
   direccionEntrega: "",
+
   referencia: "",
 };
 
 // ======================================================
+
 // UTILIDADES
+
 // ======================================================
 
 function leerCarrito() {
   try {
     const datos = JSON.parse(localStorage.getItem(CLAVE_CARRITO) || "[]");
+
     return Array.isArray(datos) ? datos : [];
   } catch {
     return [];
@@ -142,6 +208,7 @@ function formatearPrecio(valor) {
 
   return `S/ ${numero.toLocaleString("es-PE", {
     minimumFractionDigits: 2,
+
     maximumFractionDigits: 2,
   })}`;
 }
@@ -163,12 +230,19 @@ function Logo({ src, alt, grande = false }) {
 
 function Campo({
   nombre,
+
   etiqueta,
+
   valor,
+
   onChange,
+
   type = "text",
+
   placeholder = "",
+
   required = true,
+
   maxLength,
 }) {
   return (
@@ -194,7 +268,9 @@ function Campo({
 function obtenerDetalles(carrito) {
   return carrito.map((item) => {
     const idArticulo = Number(item.id);
+
     const cantidad = Number(item.cantidad ?? 1);
+
     const tipo = String(item.tipo || "producto").toLowerCase();
 
     if (
@@ -211,14 +287,18 @@ function obtenerDetalles(carrito) {
 
     return {
       tipoArticulo: tipo.toUpperCase(),
+
       idArticulo,
+
       cantidad,
     };
   });
 }
 
 // ======================================================
+
 // VERIFICACIÓN DE INVENTARIO
+
 // ======================================================
 
 async function verificarInventarioCheckout(carrito) {
@@ -236,6 +316,7 @@ async function verificarInventarioCheckout(carrito) {
 
   const [productos, repuestos] = await Promise.all([
     necesitaProductos ? obtenerProductos() : Promise.resolve([]),
+
     necesitaRepuestos ? obtenerRepuestos() : Promise.resolve([]),
   ]);
 
@@ -249,6 +330,7 @@ async function verificarInventarioCheckout(carrito) {
     const tipo = String(item.tipo || "producto").toLowerCase();
 
     const id = Number(item.id);
+
     const cantidad = Number(item.cantidad ?? 1);
 
     if (
@@ -262,12 +344,16 @@ async function verificarInventarioCheckout(carrito) {
     }
 
     const clave = `${tipo}-${id}`;
+
     const anterior = cantidades.get(clave);
 
     cantidades.set(clave, {
       tipo,
+
       id,
+
       nombre: item.nombre || "Artículo",
+
       cantidad: (anterior?.cantidad || 0) + cantidad,
     });
   }
@@ -310,13 +396,17 @@ async function verificarInventarioCheckout(carrito) {
 }
 
 // ======================================================
+
 // SEGURIDAD CSRF
+
 // ======================================================
 
 async function obtenerCsrf() {
   const respuesta = await fetch(`${API_URL}/api/auth/csrf`, {
     method: "GET",
+
     credentials: "include",
+
     headers: {
       Accept: "application/json",
     },
@@ -361,7 +451,9 @@ async function leerError(respuesta) {
 }
 
 // ======================================================
+
 // DATOS BANCARIOS COPIABLES
+
 // ======================================================
 
 function DatoCopiable({ etiqueta, valor }) {
@@ -370,6 +462,7 @@ function DatoCopiable({ etiqueta, valor }) {
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(valor);
+
       setCopiado(true);
     } catch {
       setCopiado(false);
@@ -398,7 +491,9 @@ function DatoCopiable({ etiqueta, valor }) {
 }
 
 // ======================================================
+
 // INFORMACIÓN PARA REALIZAR EL PAGO
+
 // ======================================================
 
 function DatosPago({ metodoPago, importe }) {
@@ -483,12 +578,16 @@ function DatosPago({ metodoPago, importe }) {
 }
 
 // ======================================================
+
 // SELECCIONAR COMPROBANTE DE PAGO
+
 // ======================================================
 
 function SelectorComprobante({
   archivo,
+
   onSeleccionar,
+
   deshabilitado = false,
 }) {
   const [vistaPrevia, setVistaPrevia] = useState("");
@@ -496,10 +595,12 @@ function SelectorComprobante({
   useEffect(() => {
     if (!archivo) {
       setVistaPrevia("");
+
       return;
     }
 
     const url = URL.createObjectURL(archivo);
+
     setVistaPrevia(url);
 
     return () => URL.revokeObjectURL(url);
@@ -514,13 +615,17 @@ function SelectorComprobante({
 
     if (!formatosPermitidos.includes(seleccionado.type)) {
       evento.target.value = "";
+
       alert("Solo se permiten imágenes JPG, PNG o WebP.");
+
       return;
     }
 
     if (seleccionado.size > 5 * 1024 * 1024) {
       evento.target.value = "";
+
       alert("La imagen no puede superar los 5 MB.");
+
       return;
     }
 
@@ -594,14 +699,18 @@ function SelectorComprobante({
 }
 
 // ======================================================
+
 // REPORTAR PAGO CON COMPROBANTE A CLOUDINARY
+
 // ======================================================
 
 function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
   const [numeroOperacion, setNumeroOperacion] = useState("");
 
   const [archivo, setArchivo] = useState(null);
+
   const [enviando, setEnviando] = useState(false);
+
   const [error, setError] = useState("");
 
   const enviandoRef = useRef(false);
@@ -615,16 +724,19 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
 
     if (!/^[A-Za-z0-9-]{4,50}$/.test(operacion)) {
       setError("Ingresa un número de operación válido de 4 a 50 caracteres.");
+
       return;
     }
 
     if (!pedido?.id || !tokenSeguimiento) {
       setError("No se encontraron los datos del pedido.");
+
       return;
     }
 
     if (!archivo) {
       setError("Debes adjuntar una imagen del comprobante de pago.");
+
       return;
     }
 
@@ -632,23 +744,29 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
 
     if (!formatosPermitidos.includes(archivo.type)) {
       setError("El comprobante debe ser JPG, PNG o WebP.");
+
       return;
     }
 
     if (archivo.size > 5 * 1024 * 1024) {
       setError("El comprobante no puede superar los 5 MB.");
+
       return;
     }
 
     enviandoRef.current = true;
+
     setEnviando(true);
+
     setError("");
 
     try {
       // Obtener token CSRF
+
       const csrf = await obtenerCsrf();
 
       // Preparar el archivo y los datos del pedido
+
       const formData = new FormData();
 
       formData.append("pedidoId", String(pedido.id));
@@ -660,20 +778,27 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
       formData.append("comprobante", archivo, archivo.name);
 
       // Enviar al backend Spring Boot
+
       const respuesta = await fetch(
         `${API_URL}/api/pagos/reportar-comprobante`,
+
         {
           method: "POST",
+
           credentials: "include",
+
           headers: {
             Accept: "application/json",
+
             [csrf.headerName]: csrf.token,
           },
+
           body: formData,
         },
       );
 
       // No establecer Content-Type:
+
       // el navegador configura multipart/form-data.
 
       if (!respuesta.ok) {
@@ -690,7 +815,9 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
       }
 
       // Mostrar confirmación solamente
+
       // cuando el backend confirme el reporte.
+
       onPagoReportado(resultado);
     } catch (err) {
       console.error("Error reportando pago:", err);
@@ -702,6 +829,7 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
       );
     } finally {
       enviandoRef.current = false;
+
       setEnviando(false);
     }
   };
@@ -725,6 +853,7 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
           valor={numeroOperacion}
           onChange={(evento) => {
             setNumeroOperacion(evento.target.value);
+
             setError("");
           }}
           placeholder="Ejemplo: 123456789"
@@ -736,6 +865,7 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
         archivo={archivo}
         onSeleccionar={(seleccionado) => {
           setArchivo(seleccionado);
+
           setError("");
         }}
         deshabilitado={enviando}
@@ -769,7 +899,9 @@ function ReportarPago({ pedido, tokenSeguimiento, onPagoReportado }) {
 }
 
 // ======================================================
+
 // RESUMEN DEL FLETE
+
 // ======================================================
 
 function ResumenFlete({ pedido }) {
@@ -839,7 +971,9 @@ function ResumenFlete({ pedido }) {
 }
 
 // ======================================================
+
 // COMPONENTE PRINCIPAL
+
 // ======================================================
 
 export default function Checkout() {
@@ -848,6 +982,10 @@ export default function Checkout() {
   const [datos, setDatos] = useState(DATOS_INICIALES);
 
   const [metodoPago, setMetodoPago] = useState("YAPE");
+
+  // Navegación visual del checkout, sin alterar la lógica del pedido.
+  const [pasoActual, setPasoActual] = useState(1);
+  const formularioRef = useRef(null);
 
   const [registrando, setRegistrando] = useState(false);
 
@@ -868,7 +1006,9 @@ export default function Checkout() {
   );
 
   // ====================================================
+
   // SINCRONIZAR CARRITO
+
   // ====================================================
 
   useEffect(() => {
@@ -886,12 +1026,16 @@ export default function Checkout() {
   }, []);
 
   // ====================================================
+
   // RESUMEN DE COMPRA
+
   // ====================================================
 
   const resumen = useMemo(() => {
     let subtotal = 0;
+
     let unidades = 0;
+
     let sinPrecio = 0;
 
     carrito.forEach((item) => {
@@ -913,7 +1057,9 @@ export default function Checkout() {
 
     return {
       subtotal,
+
       unidades,
+
       sinPrecio,
     };
   }, [carrito]);
@@ -923,6 +1069,7 @@ export default function Checkout() {
 
     setDatos((anterior) => ({
       ...anterior,
+
       [name]: value,
     }));
 
@@ -930,7 +1077,44 @@ export default function Checkout() {
   };
 
   // ====================================================
+
+  // Validar los campos del paso visible antes de avanzar.
+  const avanzarPaso = () => {
+    const seccion = formularioRef.current?.querySelector(
+      `[data-paso="${pasoActual}"]`,
+    );
+    if (!seccion) return;
+
+    const campos = Array.from(
+      seccion.querySelectorAll("input, select, textarea"),
+    );
+    const invalido = campos.find(
+      (campo) => !campo.disabled && !campo.checkValidity(),
+    );
+    if (invalido) {
+      invalido.reportValidity();
+      invalido.focus();
+      return;
+    }
+
+    if (pasoActual === 1 && !/^\d{9}$/.test(datos.telefonoCliente.trim())) {
+      setErrorPedido("Ingresa un teléfono válido de 9 dígitos.");
+      return;
+    }
+
+    setErrorPedido("");
+    setPasoActual((actual) => Math.min(3, actual + 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const retrocederPaso = () => {
+    setErrorPedido("");
+    setPasoActual((actual) => Math.max(1, actual - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // REGISTRAR PEDIDO
+
   // ====================================================
 
   const manejarEnvio = async (evento) => {
@@ -944,16 +1128,19 @@ export default function Checkout() {
 
     if (!carrito.length) {
       setErrorPedido("Tu carrito está vacío.");
+
       return;
     }
 
     if (!/^\d{9}$/.test(datos.telefonoCliente.trim())) {
       setErrorPedido("Ingresa un teléfono válido de 9 dígitos.");
+
       return;
     }
 
     if (!["YAPE", "PLIN", "BCP", "BBVA"].includes(metodoPago)) {
       setErrorPedido("Selecciona un método de pago válido.");
+
       return;
     }
 
@@ -963,6 +1150,7 @@ export default function Checkout() {
       detalles = obtenerDetalles(carrito);
     } catch (error) {
       setErrorPedido(error.message);
+
       return;
     }
 
@@ -993,6 +1181,7 @@ export default function Checkout() {
     };
 
     enviandoRef.current = true;
+
     setRegistrando(true);
 
     try {
@@ -1008,9 +1197,11 @@ export default function Checkout() {
       }
 
       // Verificar el stock actualizado
+
       await verificarInventarioCheckout(carritoActual);
 
       // Obtener token CSRF
+
       const csrf = await obtenerCsrf();
 
       if (JSON.stringify(leerCarrito()) !== JSON.stringify(carritoActual)) {
@@ -1023,14 +1214,20 @@ export default function Checkout() {
       }
 
       // Crear pedido en Spring Boot
+
       const respuesta = await fetch(`${API_URL}/api/pedidos`, {
         method: "POST",
+
         credentials: "include",
+
         headers: {
           "Content-Type": "application/json",
+
           Accept: "application/json",
+
           [csrf.headerName]: csrf.token,
         },
+
         body: JSON.stringify(cuerpo),
       });
 
@@ -1041,6 +1238,7 @@ export default function Checkout() {
       const resultado = await respuesta.json();
 
       const pedido = resultado.pedido;
+
       const token = resultado.tokenSeguimiento;
 
       if (!pedido?.id || !token) {
@@ -1051,13 +1249,16 @@ export default function Checkout() {
       }
 
       setPedidoConfirmado(pedido);
+
       setTokenSeguimiento(token);
 
       try {
         sessionStorage.setItem(
           CLAVE_PEDIDO,
+
           JSON.stringify({
             pedidoId: pedido.id,
+
             tokenSeguimiento: token,
           }),
         );
@@ -1075,6 +1276,7 @@ export default function Checkout() {
 
       window.scrollTo({
         top: 0,
+
         behavior: "smooth",
       });
     } catch (error) {
@@ -1087,12 +1289,15 @@ export default function Checkout() {
       );
     } finally {
       enviandoRef.current = false;
+
       setRegistrando(false);
     }
   };
 
   // ====================================================
+
   // CONFIRMAR REPORTE DE PAGO
+
   // ====================================================
 
   const manejarReporteConfirmado = (resultado) => {
@@ -1100,17 +1305,21 @@ export default function Checkout() {
 
     setPedidoConfirmado((anterior) => ({
       ...anterior,
+
       estadoPago: resultado.estadoPago,
     }));
 
     window.scrollTo({
       top: 0,
+
       behavior: "smooth",
     });
   };
 
   // ====================================================
+
   // PANTALLA DE PEDIDO CONFIRMADO
+
   // ====================================================
 
   if (pedidoConfirmado) {
@@ -1313,7 +1522,9 @@ export default function Checkout() {
   }
 
   // ====================================================
+
   // FORMULARIO DE CHECKOUT
+
   // ====================================================
 
   return (
@@ -1340,6 +1551,58 @@ export default function Checkout() {
           </p>
         </div>
 
+        {carrito.length > 0 && (
+          <nav
+            aria-label="Progreso de compra"
+            className="mb-7 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6"
+          >
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              {[
+                { numero: 1, titulo: "Tus datos", descripcion: "Contacto" },
+                {
+                  numero: 2,
+                  titulo: "Entrega",
+                  descripcion: "Agencia o tienda",
+                },
+                { numero: 3, titulo: "Pago", descripcion: "Confirmar pedido" },
+              ].map((paso) => (
+                <div
+                  key={paso.numero}
+                  className="flex min-w-0 items-center gap-2 sm:gap-3"
+                >
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black sm:h-11 sm:w-11 ${
+                      paso.numero === pasoActual
+                        ? "bg-[#009E49] text-white"
+                        : paso.numero < pasoActual
+                          ? "bg-green-100 text-[#007E3B]"
+                          : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {paso.numero < pasoActual ? "✓" : paso.numero}
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className={`text-xs font-black sm:text-sm ${paso.numero === pasoActual ? "text-[#063D2A]" : "text-gray-500"}`}
+                    >
+                      {paso.titulo}
+                    </p>
+                    <p className="hidden text-xs text-gray-400 sm:block">
+                      {paso.descripcion}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-gray-100">
+              <div
+                className="h-full rounded-full bg-[#009E49] transition-all duration-300"
+                style={{ width: `${(pasoActual / 3) * 100}%` }}
+              />
+            </div>
+          </nav>
+        )}
+
         {carrito.length === 0 ? (
           <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
             <div className="text-5xl">🛒</div>
@@ -1361,305 +1624,358 @@ export default function Checkout() {
           </div>
         ) : (
           <div className="grid items-start gap-6 lg:grid-cols-3">
-            <form onSubmit={manejarEnvio} className="space-y-6 lg:col-span-2">
+            <form
+              ref={formularioRef}
+              onSubmit={manejarEnvio}
+              className="space-y-6 lg:col-span-2"
+            >
               {/* INFORMACIÓN DEL CLIENTE */}
 
-              <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
-                <h2 className="text-xl font-black text-[#063D2A]">
-                  1. Información del cliente
-                </h2>
+              <section
+                data-paso="1"
+                className={pasoActual === 1 ? "" : "hidden"}
+              >
+                <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
+                  <h2 className="text-xl font-black text-[#063D2A]">
+                    1. Información del cliente
+                  </h2>
 
-                <p className="mb-6 mt-2 text-sm text-gray-500">
-                  Ingresa tus datos de contacto.
-                </p>
+                  <p className="mb-6 mt-2 text-sm text-gray-500">
+                    Ingresa tus datos de contacto.
+                  </p>
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Campo
-                    nombre="nombreCliente"
-                    etiqueta="Nombre completo"
-                    valor={datos.nombreCliente}
-                    onChange={cambiarCampo}
-                    placeholder="Nombres y apellidos"
-                  />
-
-                  <Campo
-                    nombre="telefonoCliente"
-                    etiqueta="Teléfono"
-                    valor={datos.telefonoCliente}
-                    onChange={cambiarCampo}
-                    type="tel"
-                    placeholder="987654321"
-                    maxLength={9}
-                  />
-
-                  <div className="sm:col-span-2">
+                  <div className="grid gap-5 sm:grid-cols-2">
                     <Campo
-                      nombre="correoCliente"
-                      etiqueta="Correo electrónico (opcional)"
-                      valor={datos.correoCliente}
+                      nombre="nombreCliente"
+                      etiqueta="Nombre completo"
+                      valor={datos.nombreCliente}
                       onChange={cambiarCampo}
-                      type="email"
-                      placeholder="correo@ejemplo.com"
-                      required={false}
+                      placeholder="Nombres y apellidos"
                     />
+
+                    <Campo
+                      nombre="telefonoCliente"
+                      etiqueta="Teléfono"
+                      valor={datos.telefonoCliente}
+                      onChange={cambiarCampo}
+                      type="tel"
+                      placeholder="987654321"
+                      maxLength={9}
+                    />
+
+                    <div className="sm:col-span-2">
+                      <Campo
+                        nombre="correoCliente"
+                        etiqueta="Correo electrónico (opcional)"
+                        valor={datos.correoCliente}
+                        onChange={cambiarCampo}
+                        type="email"
+                        placeholder="correo@ejemplo.com"
+                        required={false}
+                      />
+                    </div>
                   </div>
-                </div>
+                </section>
               </section>
 
               {/* MÉTODO DE ENTREGA */}
 
-              <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
-                <h2 className="text-xl font-black text-[#063D2A]">
-                  2. Método de entrega
-                </h2>
+              <section
+                data-paso="2"
+                className={pasoActual === 2 ? "" : "hidden"}
+              >
+                <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
+                  <h2 className="text-xl font-black text-[#063D2A]">
+                    2. Método de entrega
+                  </h2>
 
-                <p className="mb-6 mt-2 text-sm text-gray-500">
-                  Selecciona cómo deseas recibir tus productos.
-                </p>
+                  <p className="mb-6 mt-2 text-sm text-gray-500">
+                    Selecciona cómo deseas recibir tus productos.
+                  </p>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {ENTREGAS.map((opcion) => {
-                    const seleccionado = datos.metodoEntrega === opcion.id;
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {ENTREGAS.map((opcion) => {
+                      const seleccionado = datos.metodoEntrega === opcion.id;
 
-                    return (
-                      <label
-                        key={opcion.id}
-                        className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition ${
-                          seleccionado
-                            ? "border-[#009E49] bg-green-50"
-                            : "border-gray-200 hover:border-green-200"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="metodoEntrega"
-                          value={opcion.id}
-                          checked={seleccionado}
-                          onChange={cambiarCampo}
-                          className="shrink-0 accent-[#009E49]"
-                        />
-
-                        <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg bg-white p-1">
-                          <Logo src={opcion.logo} alt={opcion.nombre} />
-                        </div>
-
-                        <div className="min-w-0">
-                          <span className="block text-sm font-black text-[#063D2A]">
-                            {opcion.nombre}
-                          </span>
-
-                          <span className="mt-1 block text-xs text-gray-500">
-                            {opcion.descripcion}
-                          </span>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-
-                {!esRecojo ? (
-                  <>
-                    <div className="mt-7">
-                      <h3 className="text-lg font-black text-[#063D2A]">
-                        Datos de destino
-                      </h3>
-
-                      <p className="mb-5 mt-1 text-sm text-gray-500">
-                        Indica la ubicación o agencia de destino.
-                      </p>
-
-                      <div className="grid gap-5 sm:grid-cols-2">
-                        <Campo
-                          nombre="departamento"
-                          etiqueta="Departamento"
-                          valor={datos.departamento}
-                          onChange={cambiarCampo}
-                        />
-
-                        <Campo
-                          nombre="provincia"
-                          etiqueta="Provincia"
-                          valor={datos.provincia}
-                          onChange={cambiarCampo}
-                        />
-
-                        <Campo
-                          nombre="distrito"
-                          etiqueta="Distrito"
-                          valor={datos.distrito}
-                          onChange={cambiarCampo}
-                        />
-
-                        <div className="sm:col-span-2">
-                          <Campo
-                            nombre="direccionEntrega"
-                            etiqueta="Dirección o agencia de destino"
-                            valor={datos.direccionEntrega}
+                      return (
+                        <label
+                          key={opcion.id}
+                          className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition ${
+                            seleccionado
+                              ? "border-[#009E49] bg-green-50"
+                              : "border-gray-200 hover:border-green-200"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="metodoEntrega"
+                            value={opcion.id}
+                            checked={seleccionado}
                             onChange={cambiarCampo}
-                            placeholder="Dirección o sede de destino"
+                            className="shrink-0 accent-[#009E49]"
                           />
-                        </div>
 
-                        <div className="sm:col-span-2">
+                          <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg bg-white p-1">
+                            <Logo src={opcion.logo} alt={opcion.nombre} />
+                          </div>
+
+                          <div className="min-w-0">
+                            <span className="block text-sm font-black text-[#063D2A]">
+                              {opcion.nombre}
+                            </span>
+
+                            <span className="mt-1 block text-xs text-gray-500">
+                              {opcion.descripcion}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {!esRecojo ? (
+                    <>
+                      <div className="mt-7">
+                        <h3 className="text-lg font-black text-[#063D2A]">
+                          Datos de destino
+                        </h3>
+
+                        <p className="mb-5 mt-1 text-sm text-gray-500">
+                          Indica la ubicación o agencia de destino.
+                        </p>
+
+                        <div className="grid gap-5 sm:grid-cols-2">
                           <Campo
-                            nombre="referencia"
-                            etiqueta="Referencia (opcional)"
-                            valor={datos.referencia}
+                            nombre="departamento"
+                            etiqueta="Departamento"
+                            valor={datos.departamento}
                             onChange={cambiarCampo}
-                            required={false}
                           />
+
+                          <Campo
+                            nombre="provincia"
+                            etiqueta="Provincia"
+                            valor={datos.provincia}
+                            onChange={cambiarCampo}
+                          />
+
+                          <Campo
+                            nombre="distrito"
+                            etiqueta="Distrito"
+                            valor={datos.distrito}
+                            onChange={cambiarCampo}
+                          />
+
+                          <div className="sm:col-span-2">
+                            <Campo
+                              nombre="direccionEntrega"
+                              etiqueta="Dirección o agencia de destino"
+                              valor={datos.direccionEntrega}
+                              onChange={cambiarCampo}
+                              placeholder="Dirección o sede de destino"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <Campo
+                              nombre="referencia"
+                              etiqueta="Referencia (opcional)"
+                              valor={datos.referencia}
+                              onChange={cambiarCampo}
+                              required={false}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
+                      <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5">
+                        <div className="flex flex-col gap-4 sm:flex-row">
+                          <Logo
+                            src={entregaSeleccionada?.logo}
+                            alt={entregaSeleccionada?.nombre}
+                            grande
+                          />
+
+                          <div>
+                            <h3 className="font-black text-[#063D2A]">
+                              ¡Podrás rastrear tu pedido!
+                            </h3>
+
+                            <p className="mt-2 text-sm text-gray-700">
+                              Cuando despachemos tu pedido mediante{" "}
+                              <strong>{entregaSeleccionada?.nombre}</strong>, te
+                              proporcionaremos el número de guía.
+                            </p>
+
+                            <Link
+                              to="/rastrear-pedido"
+                              className="mt-4 inline-flex rounded-xl bg-[#009E49] px-5 py-3 text-sm font-black text-white"
+                            >
+                              📍 Rastrear mi pedido →
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-5">
+                        <h3 className="font-black text-[#C94E14]">
+                          Flete contra entrega
+                        </h3>
+
+                        <p className="mt-2 text-sm text-gray-700">
+                          El costo de transporte se calcula según el peso,
+                          tamaño y destino.
+                        </p>
+
+                        <p className="mt-2 text-sm font-semibold text-[#063D2A]">
+                          Pagarás el flete directamente a la agencia al recoger
+                          tu pedido.
+                        </p>
+
+                        <p className="mt-2 text-xs text-gray-600">
+                          J&G solo recibirá el pago de los productos.
+                        </p>
+                      </div>
+                    </>
+                  ) : (
                     <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5">
-                      <div className="flex flex-col gap-4 sm:flex-row">
-                        <Logo
-                          src={entregaSeleccionada?.logo}
-                          alt={entregaSeleccionada?.nombre}
-                          grande
-                        />
-
-                        <div>
-                          <h3 className="font-black text-[#063D2A]">
-                            ¡Podrás rastrear tu pedido!
-                          </h3>
-
-                          <p className="mt-2 text-sm text-gray-700">
-                            Cuando despachemos tu pedido mediante{" "}
-                            <strong>{entregaSeleccionada?.nombre}</strong>, te
-                            proporcionaremos el número de guía.
-                          </p>
-
-                          <Link
-                            to="/rastrear-pedido"
-                            className="mt-4 inline-flex rounded-xl bg-[#009E49] px-5 py-3 text-sm font-black text-white"
-                          >
-                            📍 Rastrear mi pedido →
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-5">
-                      <h3 className="font-black text-[#C94E14]">
-                        Flete contra entrega
+                      <h3 className="font-black text-[#063D2A]">
+                        🏬 Recojo en tienda
                       </h3>
 
                       <p className="mt-2 text-sm text-gray-700">
-                        El costo de transporte se calcula según el peso, tamaño
-                        y destino.
+                        Podrás recoger tus productos cuando confirmemos que
+                        están listos.
                       </p>
 
-                      <p className="mt-2 text-sm font-semibold text-[#063D2A]">
-                        Pagarás el flete directamente a la agencia al recoger tu
-                        pedido.
-                      </p>
-
-                      <p className="mt-2 text-xs text-gray-600">
-                        J&G solo recibirá el pago de los productos.
+                      <p className="mt-2 text-xs font-semibold text-[#009E49]">
+                        Sin costo de envío.
                       </p>
                     </div>
-                  </>
-                ) : (
-                  <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5">
-                    <h3 className="font-black text-[#063D2A]">
-                      🏬 Recojo en tienda
-                    </h3>
-
-                    <p className="mt-2 text-sm text-gray-700">
-                      Podrás recoger tus productos cuando confirmemos que están
-                      listos.
-                    </p>
-
-                    <p className="mt-2 text-xs font-semibold text-[#009E49]">
-                      Sin costo de envío.
-                    </p>
-                  </div>
-                )}
+                  )}
+                </section>
               </section>
 
               {/* MÉTODO DE PAGO */}
 
-              <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
-                <h2 className="text-xl font-black text-[#063D2A]">
-                  3. Método de pago
-                </h2>
+              <section
+                data-paso="3"
+                className={pasoActual === 3 ? "" : "hidden"}
+              >
+                <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7">
+                  <h2 className="text-xl font-black text-[#063D2A]">
+                    3. Método de pago
+                  </h2>
 
-                <p className="mb-6 mt-2 text-sm text-gray-500">
-                  Selecciona tu método de pago. El pedido se registra antes de
-                  reportar la operación.
-                </p>
-
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {PAGOS.map((opcion) => {
-                    const seleccionado = metodoPago === opcion.id;
-
-                    return (
-                      <label
-                        key={opcion.id}
-                        className={`relative flex flex-col rounded-xl border-2 p-4 transition ${
-                          !opcion.habilitado
-                            ? "cursor-not-allowed border-gray-200 bg-gray-50 opacity-60"
-                            : seleccionado
-                              ? "cursor-pointer border-[#009E49] bg-green-50"
-                              : "cursor-pointer border-gray-200 hover:border-green-200"
-                        }`}
-                      >
-                        {!opcion.habilitado && (
-                          <span className="mb-2 self-start rounded-full bg-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600">
-                            Próximamente
-                          </span>
-                        )}
-
-                        <div className="mb-3 flex justify-end">
-                          <input
-                            type="radio"
-                            name="metodoPago"
-                            value={opcion.id}
-                            checked={seleccionado}
-                            disabled={!opcion.habilitado}
-                            onChange={() => {
-                              setMetodoPago(opcion.id);
-                              setErrorPedido("");
-                            }}
-                            className="accent-[#009E49]"
-                          />
-                        </div>
-
-                        <div className="flex h-16 items-center justify-center">
-                          <Logo src={opcion.logo} alt={opcion.nombre} grande />
-                        </div>
-
-                        <p className="mt-3 text-center text-sm font-black text-[#063D2A]">
-                          {opcion.nombre}
-                        </p>
-
-                        <p className="mt-1 text-center text-xs text-gray-500">
-                          {opcion.descripcion}
-                        </p>
-                      </label>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
-                  <p className="text-sm font-bold text-[#063D2A]">
-                    ¿Cómo funciona el pago?
+                  <p className="mb-6 mt-2 text-sm text-gray-500">
+                    Selecciona tu método de pago. El pedido se registra antes de
+                    reportar la operación.
                   </p>
 
-                  <p className="mt-2 text-sm text-gray-700">
-                    Primero registras tu pedido. Luego recibirás los datos para
-                    realizar tu transferencia. Finalmente, podrás enviar tu
-                    número de operación y una imagen del comprobante.
-                  </p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {PAGOS.map((opcion) => {
+                      const seleccionado = metodoPago === opcion.id;
 
-                  <p className="mt-2 text-xs text-gray-600">
-                    El pago quedará pendiente de verificación por nuestro
-                    equipo.
-                  </p>
-                </div>
+                      return (
+                        <label
+                          key={opcion.id}
+                          className={`relative flex flex-col rounded-xl border-2 p-4 transition ${
+                            !opcion.habilitado
+                              ? "cursor-not-allowed border-gray-200 bg-gray-50 opacity-60"
+                              : seleccionado
+                                ? "cursor-pointer border-[#009E49] bg-green-50"
+                                : "cursor-pointer border-gray-200 hover:border-green-200"
+                          }`}
+                        >
+                          {!opcion.habilitado && (
+                            <span className="mb-2 self-start rounded-full bg-gray-200 px-2 py-1 text-[10px] font-bold text-gray-600">
+                              Próximamente
+                            </span>
+                          )}
+
+                          <div className="mb-3 flex justify-end">
+                            <input
+                              type="radio"
+                              name="metodoPago"
+                              value={opcion.id}
+                              checked={seleccionado}
+                              disabled={!opcion.habilitado}
+                              onChange={() => {
+                                setMetodoPago(opcion.id);
+
+                                setErrorPedido("");
+                              }}
+                              className="accent-[#009E49]"
+                            />
+                          </div>
+
+                          <div className="flex h-16 items-center justify-center">
+                            <Logo
+                              src={opcion.logo}
+                              alt={opcion.nombre}
+                              grande
+                            />
+                          </div>
+
+                          <p className="mt-3 text-center text-sm font-black text-[#063D2A]">
+                            {opcion.nombre}
+                          </p>
+
+                          <p className="mt-1 text-center text-xs text-gray-500">
+                            {opcion.descripcion}
+                          </p>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
+                    <p className="text-sm font-bold text-[#063D2A]">
+                      ¿Cómo funciona el pago?
+                    </p>
+
+                    <p className="mt-2 text-sm text-gray-700">
+                      Primero registras tu pedido. Luego recibirás los datos
+                      para realizar tu transferencia. Finalmente, podrás enviar
+                      tu número de operación y una imagen del comprobante.
+                    </p>
+
+                    <p className="mt-2 text-xs text-gray-600">
+                      El pago quedará pendiente de verificación por nuestro
+                      equipo.
+                    </p>
+                  </div>
+                </section>
               </section>
+
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+                {pasoActual > 1 ? (
+                  <button
+                    type="button"
+                    onClick={retrocederPaso}
+                    disabled={registrando}
+                    className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-bold text-[#063D2A] hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    ← Volver al paso anterior
+                  </button>
+                ) : (
+                  <Link
+                    to="/carrito"
+                    className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-center text-sm font-bold text-[#063D2A] hover:bg-gray-50"
+                  >
+                    ← Volver al carrito
+                  </Link>
+                )}
+                {pasoActual < 3 && (
+                  <button
+                    type="button"
+                    onClick={avanzarPaso}
+                    className="rounded-xl bg-[#FF6600] px-7 py-3 text-sm font-black text-white hover:bg-[#E65C00]"
+                  >
+                    Continuar →
+                  </button>
+                )}
+              </div>
 
               {/* ERRORES */}
 
@@ -1674,15 +1990,17 @@ export default function Checkout() {
 
               {/* CONFIRMAR PEDIDO */}
 
-              <button
-                type="submit"
-                disabled={registrando}
-                className="w-full rounded-xl bg-[#009E49] px-6 py-4 text-base font-black text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-              >
-                {registrando
-                  ? "Verificando inventario y registrando pedido..."
-                  : "Confirmar y registrar mi pedido →"}
-              </button>
+              {pasoActual === 3 && (
+                <button
+                  type="submit"
+                  disabled={registrando}
+                  className="w-full rounded-xl bg-[#009E49] px-6 py-4 text-base font-black text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                >
+                  {registrando
+                    ? "Verificando inventario y registrando pedido..."
+                    : "Confirmar y registrar mi pedido →"}
+                </button>
+              )}
 
               <p className="text-center text-xs text-gray-500">
                 El servidor verificará la disponibilidad y confirmará los
@@ -1706,6 +2024,7 @@ export default function Checkout() {
                 {carrito.map((item, indice) => {
                   const cantidad = Math.max(
                     1,
+
                     Math.floor(Number(item.cantidad) || 1),
                   );
 
