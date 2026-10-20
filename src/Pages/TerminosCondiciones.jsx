@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { LegalLayout, Seccion, Aviso } from "./LegalLayout";
 
+const CORREO = "grupo.comercial@yahoo.es";
+const TELEFONO = "979 501 557";
+
 export default function TerminosCondiciones() {
   return (
     <LegalLayout
@@ -10,20 +13,24 @@ export default function TerminosCondiciones() {
       rutaActual="/terminos-y-condiciones"
     >
       <Aviso>
-        Te recomendamos leer estos términos antes de realizar una compra. Para
-        consultas puedes comunicarte con nuestro equipo de atención comercial.
+        Te recomendamos leer estos términos antes de realizar una compra. Aquí
+        encontrarás información sobre nuestros productos, pedidos, métodos de
+        pago, entregas, garantías y canales de atención.
       </Aviso>
 
-      <Seccion numero="01" titulo="Identificación de la empresa">
+      <Seccion numero="01" titulo="Identificación del establecimiento">
         <p>
           El presente sitio web corresponde a{" "}
-          <strong>Grupo Comercial J&G</strong>, establecimiento comercial
-          dedicado a la venta de maquinaria, equipos, herramientas, accesorios y
-          repuestos para los sectores agrícola, forestal e industrial.
+          <strong>Grupo Comercial J&G</strong>, nombre comercial del negocio
+          cuyo titular es <strong>Jesús Oliver Guevara Torres</strong>, persona
+          natural con negocio identificada con RUC N.º{" "}
+          <strong>10167608308</strong>.
         </p>
 
         <p>
-          <strong>RUC:</strong> 10167608308.
+          El establecimiento se dedica a la comercialización de maquinaria,
+          herramientas, equipos, accesorios y repuestos para actividades
+          agrícolas, forestales e industriales.
         </p>
 
         <p>
@@ -32,147 +39,225 @@ export default function TerminosCondiciones() {
         </p>
 
         <p>
-          <strong>Correo electrónico:</strong> grupo.comercial@yahoo.es.
+          <strong>Correo electrónico:</strong>{" "}
+          <a
+            href={`mailto:${CORREO}`}
+            className="font-bold text-[#007E3B] hover:underline"
+          >
+            {CORREO}
+          </a>
         </p>
 
         <p>
-          <strong>Teléfono:</strong> 979 501 557.
-        </p>
-
-        <p>
-          La identificación legal completa del titular del RUC deberá
-          verificarse y consignarse antes de publicar la versión definitiva.
+          <strong>Teléfono:</strong> {TELEFONO}.
         </p>
       </Seccion>
 
-      <Seccion numero="02" titulo="Acceso y aceptación">
+      <Seccion numero="02" titulo="Acceso y uso de la tienda virtual">
         <p>
           Estos términos regulan el acceso, navegación y utilización de la
           tienda virtual de Grupo Comercial J&G, así como las condiciones
-          generales relacionadas con la consulta y adquisición de productos.
+          generales de adquisición de productos.
         </p>
 
         <p>
-          Los visitantes pueden consultar el catálogo sin necesidad de
-          registrarse. Para realizar determinadas operaciones se podrán
-          solicitar los datos necesarios para gestionar la compra.
+          Los visitantes pueden consultar el catálogo sin necesidad de crear una
+          cuenta. Para registrar un pedido, se solicitará la información
+          necesaria para atender la operación comercial.
         </p>
 
         <p>
-          Antes de confirmar una operación, el cliente deberá tener acceso a la
-          información relevante del producto, precio, entrega y condiciones
-          aplicables.
+          Antes de confirmar un pedido, el comprador debe tener acceso a la
+          información relevante del producto, precio, disponibilidad, modalidad
+          de entrega y condiciones aplicables.
         </p>
       </Seccion>
 
       <Seccion numero="03" titulo="Productos comercializados">
         <p>
-          Grupo Comercial J&G comercializa diferentes categorías de productos,
-          entre ellas motosierras, desbrozadoras, motobombas, fumigadoras,
-          herramientas eléctricas, equipos agrícolas, maquinaria forestal y
-          repuestos.
+          Grupo Comercial J&G comercializa productos como motosierras,
+          desbrozadoras, motobombas, fumigadoras, herramientas eléctricas,
+          maquinaria agrícola, equipos forestales, accesorios y repuestos.
         </p>
 
         <p>
-          Las características técnicas, modelos, dimensiones y demás
-          especificaciones se presentan en las fichas de producto. La
-          disponibilidad puede variar de acuerdo con las existencias del
-          establecimiento.
+          Las características técnicas, marcas, modelos y especificaciones se
+          presentan en las fichas de producto.
         </p>
 
         <p>
-          En la adquisición de repuestos se recomienda verificar previamente el
-          modelo y la compatibilidad con el equipo correspondiente.
+          Las fotografías son referenciales cuando así se indique. Las
+          características esenciales del producto ofrecido deben corresponder
+          con la información comunicada al comprador.
+        </p>
+
+        <p>
+          Para adquirir repuestos, recomendamos verificar la marca, el modelo y
+          la compatibilidad con el equipo correspondiente. Nuestro personal
+          puede orientar al cliente cuando necesite información adicional.
         </p>
       </Seccion>
 
       <Seccion numero="04" titulo="Precios y disponibilidad">
         <p>
-          Los precios de los productos se expresan en soles peruanos (S/). El
-          cliente deberá conocer el importe de la compra y los costos
-          adicionales aplicables antes de confirmar su pedido.
+          Los precios publicados en nuestra tienda virtual se expresan en soles
+          peruanos (S/).
         </p>
 
         <p>
-          Si un producto no estuviera disponible después de realizar una
-          solicitud, Grupo Comercial J&G se comunicará con el cliente para
-          ofrecer una alternativa o gestionar la devolución que corresponda.
+          El cliente debe conocer el importe total correspondiente a los
+          productos y los costos adicionales aplicables antes de confirmar su
+          operación.
+        </p>
+
+        <p>
+          La disponibilidad está sujeta a las existencias reales del
+          establecimiento. La información de inventario puede actualizarse
+          durante la navegación.
+        </p>
+
+        <p>
+          Si después de registrar un pedido se detecta que un producto no está
+          disponible, nos comunicaremos con el comprador para informarle la
+          situación y coordinar una alternativa o la devolución del importe que
+          corresponda.
         </p>
       </Seccion>
 
       <Seccion numero="05" titulo="Proceso de compra">
         <p>
-          El cliente podrá seleccionar productos del catálogo, agregarlos al
-          carrito y proporcionar los datos solicitados para procesar el pedido.
+          Para realizar una compra, el cliente puede seleccionar productos del
+          catálogo, agregarlos al carrito y completar los datos solicitados
+          durante el proceso de pedido.
         </p>
 
         <p>
-          Es responsabilidad del comprador proporcionar información correcta
-          sobre sus datos de contacto y destino de entrega.
+          El comprador deberá proporcionar información correcta y actualizada,
+          especialmente su nombre, teléfono, correo electrónico y datos de
+          entrega.
         </p>
 
         <p>
-          La confirmación de la compra estará sujeta al procedimiento de
-          validación correspondiente, incluida la verificación del pago cuando
-          resulte aplicable.
+          El registro del pedido no implica automáticamente que el pago haya
+          sido aprobado ni que la compra se encuentre lista para despacho.
+        </p>
+
+        <p>
+          La atención y confirmación del pedido estarán sujetas a la validación
+          correspondiente, incluida la verificación del pago y la disponibilidad
+          del producto.
         </p>
       </Seccion>
 
       <Seccion numero="06" titulo="Métodos de pago">
         <p>
-          Grupo Comercial J&G puede aceptar pagos mediante Yape, Plin y
-          transferencias bancarias a las cuentas BCP y BBVA comunicadas por sus
-          canales oficiales.
+          Grupo Comercial J&G acepta los métodos de pago que se encuentren
+          habilitados durante el proceso de compra, entre ellos:
+        </p>
+
+        <ul className="list-disc space-y-2 pl-6">
+          <li>Yape.</li>
+          <li>Plin.</li>
+          <li>Transferencia bancaria BCP.</li>
+          <li>Transferencia bancaria BBVA.</li>
+        </ul>
+
+        <p>
+          Los pagos deben realizarse únicamente a los destinatarios y cuentas
+          indicados por los canales oficiales del establecimiento.
         </p>
 
         <p>
-          El comprador deberá realizar el pago utilizando únicamente los datos
-          proporcionados oficialmente por el establecimiento.
+          Cuando el sistema solicite un comprobante de pago o número de
+          operación, el comprador deberá proporcionar información auténtica que
+          permita verificar la transacción.
         </p>
 
         <p>
-          Los comprobantes o números de operación enviados por el cliente serán
-          revisados antes de confirmar la recepción del dinero. El envío de una
-          captura no constituye por sí solo una aprobación del pago.
+          <strong>
+            El envío de un comprobante no significa que el pago haya sido
+            aprobado.
+          </strong>{" "}
+          La operación será revisada antes de confirmar su recepción.
+        </p>
+
+        <p>
+          Si se identifica alguna inconsistencia, nos comunicaremos con el
+          cliente mediante los datos proporcionados en el pedido.
         </p>
       </Seccion>
 
       <Seccion numero="07" titulo="Envíos y entregas">
         <p>
-          Grupo Comercial J&G atiende solicitudes de compra desde diferentes
-          destinos del territorio peruano, según la disponibilidad de los
-          servicios de transporte.
+          Grupo Comercial J&G atiende pedidos para diferentes destinos del Perú,
+          de acuerdo con la disponibilidad de los servicios de transporte.
         </p>
 
         <p>
-          Las entregas pueden coordinarse mediante agencias como Shalom,
-          Emtrafesa u Olva, cuando estos servicios estén disponibles para el
-          destino solicitado.
+          Las entregas pueden coordinarse mediante empresas como Shalom,
+          Emtrafesa u Olva, según el destino y las condiciones del servicio
+          seleccionado.
         </p>
 
         <p>
-          Cuando se acuerde un envío con flete contra entrega, el cliente
-          realizará el pago del transporte directamente a la agencia
-          correspondiente.
+          También puede coordinarse el recojo en el establecimiento cuando dicha
+          modalidad esté disponible.
         </p>
 
         <p>
-          El costo y las condiciones de envío deberán informarse antes de
-          confirmar la compra. Los plazos estimados pueden variar según el
-          transportista y el destino.
+          Cuando el envío se realice bajo la modalidad de{" "}
+          <strong>flete por pagar</strong>, el cliente abonará el costo del
+          transporte directamente a la agencia correspondiente. Este importe no
+          forma parte del precio de los productos cuando se informa como un
+          cobro separado.
+        </p>
+
+        <p>
+          Antes de confirmar el pedido se deberá informar claramente la
+          modalidad de envío y las condiciones económicas conocidas. Si el
+          importe exacto del transporte depende de una cotización de la agencia,
+          esta circunstancia deberá comunicarse al comprador.
+        </p>
+
+        <p>
+          Los plazos de entrega son estimados y pueden variar por factores
+          relacionados con el destino, la disponibilidad y la operación del
+          transportista.
+        </p>
+
+        <p>
+          Cualquier incidencia durante el envío será evaluada de acuerdo con las
+          circunstancias del caso y los derechos reconocidos al consumidor.
         </p>
       </Seccion>
 
       <Seccion numero="08" titulo="Cambios, devoluciones y garantías">
         <p>
-          Las solicitudes relacionadas con productos defectuosos, problemas de
-          funcionamiento o diferencias respecto de lo ofrecido serán atendidas
-          conforme a la legislación peruana de protección al consumidor.
+          Los productos comercializados están sujetos a las garantías y derechos
+          reconocidos por la legislación peruana de protección al consumidor.
         </p>
 
         <p>
-          Las condiciones comerciales aplicables a cambios voluntarios y las
-          garantías ofrecidas deberán informarse al cliente según el producto.
+          Si un producto presenta defectos, problemas de funcionamiento o no
+          corresponde con las características ofrecidas, el comprador podrá
+          solicitar la atención que corresponda.
+        </p>
+
+        <p>
+          Las condiciones específicas de las garantías comerciales ofrecidas por
+          fabricantes o proveedores se informarán según el producto
+          correspondiente.
+        </p>
+
+        <p>
+          Los cambios voluntarios por motivos distintos de una falla o
+          incumplimiento estarán sujetos a las condiciones comerciales
+          efectivamente ofrecidas e informadas al comprador.
+        </p>
+
+        <p>
+          Ninguna disposición de esta sección limita los derechos irrenunciables
+          reconocidos al consumidor.
         </p>
 
         <p>
@@ -189,40 +274,63 @@ export default function TerminosCondiciones() {
 
       <Seccion numero="09" titulo="Uso adecuado del sitio web">
         <p>
-          Los usuarios deberán utilizar la plataforma de manera lícita y
-          responsable. No está permitido realizar acciones destinadas a
-          perjudicar su funcionamiento, acceder sin autorización a información o
-          comprometer la seguridad del sistema.
+          Los visitantes deberán utilizar la plataforma de manera lícita,
+          responsable y respetando los derechos de terceros.
         </p>
 
         <p>
-          Grupo Comercial J&G podrá adoptar medidas razonables para proteger la
-          integridad y disponibilidad de su plataforma.
+          No está permitido intentar acceder sin autorización a cuentas,
+          sistemas, información privada o funcionalidades restringidas del
+          establecimiento.
+        </p>
+
+        <p>
+          Tampoco está permitido realizar actividades destinadas a comprometer
+          la seguridad, disponibilidad o integridad de la tienda virtual.
+        </p>
+
+        <p>
+          Grupo Comercial J&G podrá adoptar medidas razonables para proteger sus
+          servicios y prevenir usos indebidos de la plataforma.
         </p>
       </Seccion>
 
       <Seccion numero="10" titulo="Propiedad intelectual">
         <p>
-          Los diseños, textos, contenidos originales y elementos propios del
-          sitio web están protegidos por las normas de propiedad intelectual
-          aplicables.
+          Los textos, diseños, fotografías originales y demás contenidos propios
+          de Grupo Comercial J&G están sujetos a la protección prevista por la
+          legislación de propiedad intelectual aplicable.
         </p>
 
         <p>
-          Las marcas comerciales y denominaciones de fabricantes utilizadas para
-          identificar productos pertenecen a sus respectivos titulares.
+          Las marcas, logotipos y denominaciones comerciales de fabricantes como
+          STIHL, Honda y otras marcas utilizadas para identificar productos
+          pertenecen a sus respectivos titulares.
+        </p>
+
+        <p>
+          La aparición de una marca en nuestro catálogo tiene una finalidad de
+          identificación comercial del producto y no implica necesariamente una
+          representación o autorización oficial del fabricante.
         </p>
       </Seccion>
 
       <Seccion numero="11" titulo="Protección de datos personales">
         <p>
-          Los datos proporcionados durante consultas y compras serán utilizados
-          para las finalidades informadas y tratados de acuerdo con la normativa
-          peruana de protección de datos personales.
+          Los datos personales proporcionados durante consultas, pedidos y
+          compras serán tratados conforme a las disposiciones legales
+          aplicables.
         </p>
 
         <p>
-          Para mayor información consulta nuestra{" "}
+          El tratamiento de información personal se encuentra sujeto a la Ley
+          N.º 29733, Ley de Protección de Datos Personales, y a su normativa
+          reglamentaria vigente.
+        </p>
+
+        <p>
+          Para conocer las finalidades de tratamiento, los datos recopilados y
+          los mecanismos de ejercicio de derechos, consulta nuestra{" "}
           <Link
             to="/politica-de-privacidad"
             className="font-bold text-[#007E3B] hover:underline"
@@ -235,29 +343,89 @@ export default function TerminosCondiciones() {
 
       <Seccion numero="12" titulo="Atención y reclamaciones">
         <p>
-          Para consultas sobre productos, pagos, pedidos, garantías o entregas,
-          los clientes pueden comunicarse mediante nuestros canales oficiales de
-          atención.
+          Para consultas relacionadas con productos, pedidos, pagos, garantías,
+          devoluciones o entregas, puedes comunicarte mediante nuestros canales
+          oficiales de atención.
         </p>
 
         <p>
-          El establecimiento deberá disponer de un mecanismo formal de Libro de
+          <strong>Correo:</strong>{" "}
+          <a
+            href={`mailto:${CORREO}`}
+            className="font-bold text-[#007E3B] hover:underline"
+          >
+            {CORREO}
+          </a>
+        </p>
+
+        <p>
+          <strong>Teléfono:</strong> {TELEFONO}.
+        </p>
+
+        <p>
+          El establecimiento debe disponer de un mecanismo formal de Libro de
           Reclamaciones conforme a las disposiciones legales aplicables.
+        </p>
+
+        <p>
+          Actualmente, el formulario mostrado en nuestra página web se encuentra
+          en desarrollo y no registra reclamaciones oficiales. Mientras se
+          implementa el mecanismo correspondiente, el consumidor puede solicitar
+          información sobre el Libro de Reclamaciones disponible en el
+          establecimiento.
+        </p>
+
+        <p>
+          <Link
+            to="/libro-de-reclamaciones"
+            className="font-bold text-[#007E3B] hover:underline"
+          >
+            Consultar información sobre el Libro de Reclamaciones
+          </Link>
+          .
+        </p>
+
+        <p>
+          La presentación de una reclamación no limita los derechos del
+          consumidor ni impide acudir ante las autoridades competentes.
         </p>
       </Seccion>
 
       <Seccion numero="13" titulo="Legislación y actualizaciones">
         <p>
           Las relaciones de consumo se rigen por las normas aplicables de la
-          República del Perú, incluido el Código de Protección y Defensa del
-          Consumidor.
+          República del Perú, incluyendo la Ley N.º 29571, Código de Protección
+          y Defensa del Consumidor.
         </p>
 
         <p>
-          Grupo Comercial J&G podrá actualizar estas condiciones cuando sea
-          necesario, respetando los derechos adquiridos por los consumidores.
+          Grupo Comercial J&G podrá actualizar estos términos para reflejar
+          cambios en sus operaciones comerciales, servicios tecnológicos o
+          disposiciones legales.
+        </p>
+
+        <p>
+          Las modificaciones no afectarán retroactivamente los derechos
+          adquiridos por los consumidores ni las condiciones válidamente
+          acordadas para operaciones anteriores.
         </p>
       </Seccion>
+
+      <div className="mt-10 rounded-2xl bg-[#0A2543] p-7 text-white sm:p-8">
+        <h3 className="text-xl font-black">¿Necesitas ayuda con tu compra?</h3>
+
+        <p className="mt-3 text-sm leading-7 text-slate-300">
+          Nuestro equipo puede orientarte sobre productos, disponibilidad,
+          pagos, entregas y atención posventa.
+        </p>
+
+        <a
+          href={`mailto:${CORREO}`}
+          className="mt-5 inline-flex rounded-xl bg-[#009E49] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#00843D]"
+        >
+          Contactar por correo
+        </a>
+      </div>
     </LegalLayout>
   );
 }
